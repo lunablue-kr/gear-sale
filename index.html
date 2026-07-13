@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>루나블루 스튜디오 장비 판매 — 비공개 입찰</title>
+<meta property="og:title" content="루나블루 스튜디오 장비 판매">
+<meta property="og:description" content="해외 이주로 스튜디오 전 장비 정리합니다. 카메라·조명·배경지 — 원하는 품목에 가격을 제안해 주세요.">
+<style>
+  :root {
+    --bg: #f7f7f5;
+    --card: #ffffff;
+    --ink: #1a1a1a;
+    --sub: #6b6b6b;
+    --line: #e6e4df;
+    --accent: #2f6b4f;
+    --accent-soft: #e8f1ec;
+    --danger: #b04a3a;
+    --radius: 14px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Pretendard", "Noto Sans KR", sans-serif;
+    background: var(--bg); color: var(--ink);
+    line-height: 1.55;
+    padding-bottom: 90px;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; padding: 0 16px; }
+
+  /* ===== 헤더 ===== */
+  header { background: var(--card); border-bottom: 1px solid var(--line); padding: 36px 0 28px; }
+  header h1 { font-size: 26px; font-weight: 800; letter-spacing: -0.5px; }
+  header .tagline { color: var(--sub); margin-top: 6px; font-size: 15px; }
+  .notice {
+    margin-top: 18px; background: var(--accent-soft); border: 1px solid #cfe0d6;
+    border-radius: var(--radius); padding: 14px 16px; font-size: 14px;
+  }
+  .notice strong { color: var(--accent); }
+  .notice ul { margin: 6px 0 0 18px; }
+  .notice li { margin-top: 3px; }
+
+  /* ===== 필터 ===== */
+  .toolbar {
+    position: sticky; top: 0; z-index: 30;
+    background: rgba(247,247,245,0.92); backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--line); padding: 10px 0;
+  }
+  .toolbar-inner { display: flex; flex-direction: column; gap: 8px; }
+  #search {
+    width: 100%; padding: 10px 14px; border: 1px solid var(--line);
+    border-radius: 10px; font-size: 15px; background: var(--card);
+  }
+  #search:focus { outline: 2px solid var(--accent); border-color: transparent; }
+  .chips { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px; -webkit-overflow-scrolling: touch; }
+  .chip {
+    flex: 0 0 auto; padding: 6px 13px; border-radius: 999px; font-size: 13.5px;
+    border: 1px solid var(--line); background: var(--card); cursor: pointer; white-space: nowrap;
+  }
+  .chip.on { background: var(--ink); color: #fff; border-color: var(--ink); }
+
+  /* ===== 품목 ===== */
+  .section-title { font-size: 17px; font-weight: 700; margin: 28px 0 10px; display: flex; align-items: baseline; gap: 8px; }
+  .section-title .count { font-size: 13px; color: var(--sub); font-weight: 400; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 10px; }
+  .card {
+    background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 14px 15px; display: flex; flex-direction: column; gap: 8px;
+    transition: border-color .15s, box-shadow .15s;
+  }
+  .card.picked { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); }
+  .card.sold { opacity: 0.55; }
+  .card-top { display: flex; justify-content: space-between; gap: 8px; align-items: flex-start; }
+  .card h3 { font-size: 15px; font-weight: 700; letter-spacing: -0.2px; }
+  .badge { flex: 0 0 auto; font-size: 11px; padding: 3px 8px; border-radius: 999px; font-weight: 600; }
+  .badge.sale { background: var(--accent-soft); color: var(--accent); }
+  .badge.hold { background: #fdf3e0; color: #9a6b1a; }
+  .badge.sold { background: #eee; color: #888; }
+  .meta { display: flex; flex-wrap: wrap; gap: 5px; }
+  .tag { font-size: 11.5px; color: var(--sub); background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 2px 7px; }
+  .note { font-size: 13px; color: var(--sub); }
+  .card-foot { margin-top: auto; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding-top: 2px; }
+  .ask { font-size: 14px; font-weight: 800; color: var(--accent); white-space: nowrap; }
+  .ask em { font-size: 11px; font-weight: 600; font-style: normal; color: var(--sub); margin-left: 2px; }
+  .ask.tbd { color: var(--sub); font-weight: 600; font-size: 12.5px; }
+  .pick-btn {
+    align-self: flex-start;
+    border: 1px solid var(--line); background: var(--card); border-radius: 9px;
+    padding: 7px 14px; font-size: 13.5px; font-weight: 600; cursor: pointer;
+  }
+  .card.picked .pick-btn { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .pick-btn:disabled { cursor: default; color: #aaa; }
+  .empty { color: var(--sub); text-align: center; padding: 50px 0; }
+
+  /* ===== 하단 바 ===== */
+  #bidbar {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 40;
+    background: var(--ink); color: #fff; padding: 13px 16px;
+    display: none; align-items: center; justify-content: space-between; gap: 12px;
+  }
+  #bidbar.show { display: flex; }
+  #bidbar .info { font-size: 14px; }
+  #bidbar button {
+    background: #fff; color: var(--ink); border: none; border-radius: 10px;
+    padding: 10px 20px; font-size: 15px; font-weight: 700; cursor: pointer;
+  }
+
+  /* ===== 입찰 모달 ===== */
+  #overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 50;
+    display: none; align-items: flex-end; justify-content: center;
+  }
+  #overlay.show { display: flex; }
+  #sheet {
+    background: var(--card); width: 100%; max-width: 620px;
+    border-radius: 20px 20px 0 0; padding: 22px 20px 30px;
+    max-height: 88vh; overflow-y: auto;
+  }
+  #sheet h2 { font-size: 19px; margin-bottom: 4px; }
+  #sheet .sub { font-size: 13.5px; color: var(--sub); margin-bottom: 16px; }
+  .bid-item {
+    display: flex; align-items: center; gap: 10px; padding: 10px 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .bid-item .bname { flex: 1; font-size: 14px; font-weight: 600; }
+  .bid-item .bname small { display: block; font-size: 11.5px; font-weight: 500; color: var(--accent); margin-top: 2px; }
+  .bid-item input {
+    width: 130px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px;
+    font-size: 14px; text-align: right;
+  }
+  .bid-item .won { font-size: 13px; color: var(--sub); }
+  .bid-item .rm { border: none; background: none; color: var(--danger); font-size: 17px; cursor: pointer; padding: 4px; }
+  .field { margin-top: 14px; }
+  .field label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 5px; }
+  .field input, .field textarea {
+    width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: 9px; font-size: 15px;
+    font-family: inherit;
+  }
+  .field textarea { resize: vertical; min-height: 70px; }
+  #submit-bid {
+    width: 100%; margin-top: 20px; padding: 14px; border: none; border-radius: 12px;
+    background: var(--accent); color: #fff; font-size: 16px; font-weight: 700; cursor: pointer;
+  }
+  #submit-bid:disabled { background: #aaa; cursor: wait; }
+  #close-sheet { border: none; background: none; font-size: 22px; cursor: pointer; float: right; color: var(--sub); }
+  #form-msg { margin-top: 12px; font-size: 14px; text-align: center; display: none; }
+  #form-msg.ok { display: block; color: var(--accent); }
+  #form-msg.err { display: block; color: var(--danger); }
+
+  footer { margin-top: 50px; padding: 24px 0 40px; color: var(--sub); font-size: 12.5px; border-top: 1px solid var(--line); }
+
+  @media (max-width: 520px) {
+    header h1 { font-size: 22px; }
+    .grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <h1>루나블루 스튜디오 장비 판매</h1>
+    <p class="tagline">해외 이주(2026년 9월)로 스튜디오 전 장비를 정리합니다.</p>
+    <div class="notice">
+      <strong>비공개 입찰 방식으로 진행해요.</strong>
+      <ul>
+        <li>원하는 품목을 담고 <strong>희망 구매가</strong>를 적어 보내주시면, 검토 후 개별 연락드립니다.</li>
+        <li>품목에 표시된 <strong>희망 판매가</strong>는 참고용이에요. 그보다 높게·낮게 모두 제안 가능합니다.</li>
+        <li>제안가는 다른 분에게 공개되지 않습니다. 여러 품목 일괄 구매 시 우대해 드려요.</li>
+        <li>거래: 서울 스튜디오 직거래 우선 (상세 위치는 연락 시 안내) · <strong>9월 초까지</strong> 순차 마감</li>
+        <li>실물 사진·상세 상태는 요청 주시면 바로 보내드립니다.</li>
+      </ul>
+    </div>
+  </div>
+</header>
+
+<div class="toolbar">
+  <div class="wrap toolbar-inner">
+    <input id="search" type="search" placeholder="모델명·브랜드 검색 (예: profoto, 소프트박스, 배경지)">
+    <div class="chips" id="chips"></div>
+  </div>
+</div>
+
+<main class="wrap" id="list"></main>
+
+<footer>
+  <div class="wrap">
+    루나블루 스튜디오 · 장비는 모두 실사용 관리 이력이 있으며 정비 내역은 각 품목에 표기했습니다.<br>
+    본 페이지는 판매 완료 시 수시로 업데이트됩니다. (마지막 업데이트: 2026-07-07 · 재고 반영)
+  </div>
+</footer>
+
+<div id="bidbar">
+  <span class="info"><b id="pick-count">0</b>개 품목 선택됨</span>
+  <button onclick="openSheet()">입찰서 작성</button>
+</div>
+
+<div id="overlay">
+  <div id="sheet">
+    <button id="close-sheet" onclick="closeSheet()">✕</button>
+    <h2>입찰서 작성</h2>
+    <p class="sub">품목별 희망 구매가를 적어주세요. 검토 후 연락드립니다.</p>
+    <div id="bid-items"></div>
+    <div class="field">
+      <label>이름 / 닉네임 *</label>
+      <input id="f-name" type="text" placeholder="홍길동">
+    </div>
+    <div class="field">
+      <label>연락처 *</label>
+      <input id="f-contact" type="text" placeholder="전화번호, 이메일, 오픈채팅 링크 등">
+    </div>
+    <div class="field">
+      <label>메시지 (선택)</label>
+      <textarea id="f-msg" placeholder="일괄 구매 문의, 직거래 가능 일정, 사진 요청 등"></textarea>
+    </div>
+    <button id="submit-bid" onclick="submitBid()">입찰 보내기</button>
+    <p id="form-msg"></p>
+  </div>
+</div>
+
+<script src="data/items.js"></script>
+<script>
+// ============================================================
+// 품목 데이터
+//   status: 'sale' 판매중 | 'hold' 예약중 | 'sold' 판매완료
+//   판매되면 status만 바꿔서 다시 배포하면 됩니다.
+// ============================================================
+
+const STATUS_LABEL = { sale: "판매중", hold: "예약중", sold: "판매완료" };
+const FORM_ENDPOINT = "https://formsubmit.co/ajax/4daba310c39387b2cac62a9e9796d9c6";
+
+let activeCat = "all";
+let query = "";
+const picked = new Set();
+
+// ---------- 렌더 ----------
+function renderChips() {
+  const el = document.getElementById("chips");
+  const cats = [["all", "전체"], ...Object.entries(CATS)];
+  el.innerHTML = cats.map(([k, label]) => {
+    const n = k === "all" ? ITEMS.length : ITEMS.filter(i => i.cat === k).length;
+    return `<button class="chip ${activeCat === k ? "on" : ""}" data-cat="${k}">${label} ${n}</button>`;
+  }).join("");
+  el.querySelectorAll(".chip").forEach(b =>
+    b.addEventListener("click", () => { activeCat = b.dataset.cat; renderChips(); renderList(); }));
+}
+
+function matches(it) {
+  if (activeCat !== "all" && it.cat !== activeCat) return false;
+  if (!query) return true;
+  const q = query.toLowerCase();
+  return (it.name + " " + it.brand + " " + it.note + " " + CATS[it.cat]).toLowerCase().includes(q);
+}
+
+function cardHTML(it) {
+  const sel = picked.has(it.id);
+  const soldish = it.status !== "sale";
+  return `
+  <div class="card ${sel ? "picked" : ""} ${it.status === "sold" ? "sold" : ""}" id="card-${it.id}">
+    <div class="card-top">
+      <h3>${it.name}</h3>
+      <span class="badge ${it.status}">${STATUS_LABEL[it.status]}</span>
+    </div>
+    <div class="meta">
+      ${it.brand ? `<span class="tag">${it.brand}</span>` : ""}
+      ${it.qty > 1 ? `<span class="tag">수량 ${it.qty}</span>` : ""}
+      ${it.year ? `<span class="tag">${it.year}</span>` : ""}
+    </div>
+    ${it.note ? `<p class="note">${it.note}</p>` : ""}
+    <div class="card-foot">
+      <button class="pick-btn" data-id="${it.id}" ${soldish ? "disabled" : ""}>
+        ${soldish ? "입찰 마감" : sel ? "✓ 담김" : "입찰 담기"}
+      </button>
+      ${it.ask
+        ? `<span class="ask">희망 ₩${it.ask.toLocaleString("ko-KR")}${it.askUnit ? `<em>${it.askUnit}</em>` : ""}</span>`
+        : `<span class="ask tbd">가격 문의</span>`}
+    </div>
+  </div>`;
+}
+
+function renderList() {
+  const el = document.getElementById("list");
+  const cats = activeCat === "all" ? Object.keys(CATS) : [activeCat];
+  let html = "";
+  let total = 0;
+  for (const c of cats) {
+    const items = ITEMS.filter(i => i.cat === c && matches(i));
+    if (!items.length) continue;
+    total += items.length;
+    html += `<h2 class="section-title">${CATS[c]} <span class="count">${items.length}개</span></h2>
+             <div class="grid">${items.map(cardHTML).join("")}</div>`;
+  }
+  el.innerHTML = html || `<p class="empty">검색 결과가 없어요.</p>`;
+  el.querySelectorAll(".pick-btn:not([disabled])").forEach(b =>
+    b.addEventListener("click", () => togglePick(+b.dataset.id)));
+}
+
+function togglePick(id) {
+  picked.has(id) ? picked.delete(id) : picked.add(id);
+  renderList();
+  updateBar();
+}
+
+function updateBar() {
+  document.getElementById("pick-count").textContent = picked.size;
+  document.getElementById("bidbar").classList.toggle("show", picked.size > 0);
+}
+
+// ---------- 입찰 모달 ----------
+function openSheet() {
+  const box = document.getElementById("bid-items");
+  box.innerHTML = [...picked].map(id => {
+    const it = ITEMS[id];
+    return `
+    <div class="bid-item" data-id="${id}">
+      <span class="bname">${it.name}${it.ask ? `<small>희망 ₩${it.ask.toLocaleString("ko-KR")}${it.askUnit ? " " + it.askUnit : ""}</small>` : ""}</span>
+      <input type="text" inputmode="numeric" class="bid-price" placeholder="${it.ask ? "예: " + it.ask.toLocaleString("ko-KR") : "희망가"}">
+      <span class="won">원</span>
+      <button class="rm" title="빼기">✕</button>
+    </div>`;
+  }).join("");
+  box.querySelectorAll(".rm").forEach(b =>
+    b.addEventListener("click", () => {
+      const row = b.closest(".bid-item");
+      picked.delete(+row.dataset.id);
+      row.remove();
+      renderList(); updateBar();
+      if (!picked.size) closeSheet();
+    }));
+  box.querySelectorAll(".bid-price").forEach(inp =>
+    inp.addEventListener("input", () => {
+      const n = inp.value.replace(/[^\d]/g, "");
+      inp.value = n ? Number(n).toLocaleString("ko-KR") : "";
+    }));
+  document.getElementById("form-msg").className = "";
+  document.getElementById("overlay").classList.add("show");
+}
+
+function closeSheet() {
+  document.getElementById("overlay").classList.remove("show");
+}
+document.getElementById("overlay").addEventListener("click", e => {
+  if (e.target.id === "overlay") closeSheet();
+});
+
+async function submitBid() {
+  const name = document.getElementById("f-name").value.trim();
+  const contact = document.getElementById("f-contact").value.trim();
+  const msgEl = document.getElementById("form-msg");
+  if (!name || !contact) {
+    msgEl.textContent = "이름과 연락처를 입력해 주세요.";
+    msgEl.className = "err";
+    return;
+  }
+  const lines = [...document.querySelectorAll(".bid-item")].map(row => {
+    const it = ITEMS[+row.dataset.id];
+    const price = row.querySelector(".bid-price").value.trim();
+    return `${it.name} — ${price ? price + "원" : "가격 미기재"}`;
+  });
+  const btn = document.getElementById("submit-bid");
+  btn.disabled = true; btn.textContent = "보내는 중…";
+  try {
+    const res = await fetch(FORM_ENDPOINT, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Accept": "application/json" },
+      body: JSON.stringify({
+        _subject: `[장비 입찰] ${name} — ${lines.length}개 품목`,
+        "이름": name,
+        "연락처": contact,
+        "입찰 품목": lines.join("\n"),
+        "메시지": document.getElementById("f-msg").value.trim() || "-",
+      }),
+    });
+    if (!res.ok) throw new Error();
+    msgEl.textContent = "입찰이 접수되었어요. 검토 후 연락드릴게요!";
+    msgEl.className = "ok";
+    btn.textContent = "접수 완료";
+  } catch {
+    msgEl.textContent = "전송에 실패했어요. 잠시 후 다시 시도해 주세요.";
+    msgEl.className = "err";
+    btn.disabled = false; btn.textContent = "입찰 보내기";
+  }
+}
+
+// ---------- 검색 ----------
+document.getElementById("search").addEventListener("input", e => {
+  query = e.target.value.trim();
+  renderList();
+});
+
+renderChips();
+renderList();
+</script>
+</body>
+</html>
