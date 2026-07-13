@@ -75,6 +75,9 @@
   #lightbox.show { display: flex; }
   #lightbox img { max-width: 96%; max-height: 96%; border-radius: 8px; box-shadow: 0 12px 48px rgba(0,0,0,0.6); }
   .card-thumb.swatch { cursor: default; }
+  .thumb-wrap { position: relative; }
+  .thumb-count { position: absolute; right: 7px; bottom: 7px; background: rgba(0,0,0,0.72); color: #fff; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px; }
+  #lightbox .lb-count { position: fixed; top: 18px; left: 0; right: 0; text-align: center; color: #fff; font-size: 14px; font-weight: 700; text-shadow: 0 1px 3px rgba(0,0,0,0.6); }
   .card h3 { font-size: 15px; font-weight: 700; letter-spacing: -0.2px; }
   .pnum { display: inline-block; min-width: 1.4em; padding: 1px 6px; margin-right: 7px; background: var(--accent); color: #fff; border-radius: 6px; font-size: 12px; font-weight: 700; text-align: center; vertical-align: 1px; font-variant-numeric: tabular-nums; }
   .badge { flex: 0 0 auto; font-size: 11px; padding: 3px 8px; border-radius: 999px; font-weight: 600; }
@@ -223,7 +226,7 @@
   </div>
 </div>
 
-<div id="lightbox"><img alt=""></div>
+<div id="lightbox"><img alt=""><span class="lb-count"></span></div>
 
 <script src="data/items.js"></script>
 <script>
@@ -262,13 +265,16 @@ function matches(it) {
 function cardHTML(it) {
   const sel = picked.has(it.id);
   const soldish = it.status !== "sale";
+  const thumbs = it.imgs || (it.img ? [it.img] : []);
   return `
   <div class="card ${sel ? "picked" : ""} ${it.status === "sold" ? "sold" : ""}" id="card-${it.id}">
     <div class="card-top">
       <h3><span class="pnum">${it.num}</span>${it.name}</h3>
       <span class="badge ${it.status}">${STATUS_LABEL[it.status]}</span>
     </div>
-    ${it.img ? `<img class="card-thumb" src="${it.img}" alt="${it.name}" loading="lazy">` : it.swatch ? `<div class="card-thumb swatch" style="background:${it.swatch}"></div>` : ""}
+    ${thumbs.length
+      ? `<div class="thumb-wrap"><img class="card-thumb" src="${thumbs[0]}" alt="${it.name}" loading="lazy" data-imgs="${encodeURIComponent(JSON.stringify(thumbs))}">${thumbs.length > 1 ? `<span class="thumb-count">📷 ${thumbs.length}</span>` : ""}</div>`
+      : it.swatch ? `<div class="card-thumb swatch" style="background:${it.swatch}"></div>` : ""}
     <div class="meta">
       ${it.brand ? `<span class="tag">${it.brand}</span>` : ""}
       ${it.qty > 1 ? `<span class="tag">수량 ${it.qty}</span>` : ""}
@@ -399,13 +405,23 @@ document.getElementById("search").addEventListener("input", e => {
 { const _cc = {}; ITEMS.forEach(it => { _cc[it.cat] = (_cc[it.cat] || 0) + 1; it.num = _cc[it.cat]; }); }
 
 const _lb = document.getElementById("lightbox");
+let _gal = [], _gi = 0;
+function _lbCount() { _lb.querySelector(".lb-count").textContent = _gal.length > 1 ? `${_gi + 1} / ${_gal.length}` : ""; }
 document.addEventListener("click", e => {
-  if (e.target.classList.contains("card-thumb")) {
-    _lb.querySelector("img").src = e.target.src;
+  if (e.target.classList.contains("card-thumb") && !e.target.classList.contains("swatch")) {
+    try { _gal = JSON.parse(decodeURIComponent(e.target.dataset.imgs || "")); } catch { _gal = []; }
+    if (!_gal.length) _gal = [e.target.src];
+    _gi = 0; _lb.querySelector("img").src = _gal[0]; _lbCount();
     _lb.classList.add("show");
   }
 });
-_lb.addEventListener("click", () => _lb.classList.remove("show"));
+_lb.addEventListener("click", e => {
+  if (e.target.tagName === "IMG" && _gal.length > 1) {
+    _gi = (_gi + 1) % _gal.length; e.target.src = _gal[_gi]; _lbCount();
+  } else {
+    _lb.classList.remove("show");
+  }
+});
 
 renderChips();
 renderList();
