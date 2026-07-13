@@ -134,7 +134,7 @@ const ITEMS = [
   { cat:"fabric", name:"White 실크", brand:"", qty:1, year:"", note:"111cm x 73cm", img:"assets/fabric8.jpg", status:"sale" },
   { cat:"fabric", name:"Black 실크", brand:"", qty:1, year:"", note:"730cm x 278cm", img:"assets/fabric9.jpg", status:"sale" },
   { cat:"fabric", name:"Gray 실크", brand:"", qty:1, year:"", note:"270cm x 150cm", img:"assets/fabric10.jpg", status:"sale" },
-  { cat:"fabric", name:"Beige 실크", brand:"", qty:1, year:"", note:"270cm x 150cm", status:"sale" },
+  { cat:"fabric", name:"Beige 실크", brand:"", qty:1, year:"", note:"270cm x 150cm", img:"assets/fabric_beige11.jpg", status:"sale" },
   { cat:"fabric", name:"Brown 실크", brand:"", qty:1, year:"", note:"270cm x 150cm", img:"assets/fabric12.jpg", status:"sale" },
   { cat:"fabric", name:"Gray 실크", brand:"", qty:1, year:"", note:"270cm x 150cm", img:"assets/fabric13.jpg", status:"sale" },
   { cat:"fabric", name:"Beige 실크", brand:"", qty:1, year:"", note:"270cm x 150cm", img:"assets/fabric14.jpg", status:"sale" },
@@ -143,7 +143,7 @@ const ITEMS = [
   { cat:"fabric", name:"Gray 면", brand:"", qty:1, year:"", note:"280cm x 270cm", img:"assets/fabric17.jpg", status:"sale" },
   { cat:"fabric", name:"Pink 실크", brand:"", qty:1, year:"", note:"262cm x 116cm", img:"assets/fabric18.jpg", status:"sale" },
   { cat:"fabric", name:"Pink 털", brand:"", qty:1, year:"", note:"260cm x 150cm", img:"assets/fabric19.jpg", status:"sale" },
-  { cat:"fabric", name:"Green 인조잔디", brand:"", qty:1, year:"", note:"100cm x 200cm", status:"sale" },
+  { cat:"fabric", name:"Green 인조잔디", brand:"", qty:1, year:"", note:"100cm x 200cm", img:"assets/fabric_green20.jpg", status:"sale" },
 
   // ---------- 소품 · 유리/아크릴 ----------
   { cat:"propA", name:"화이트 포맥스 단상자", brand:"", qty:1, year:"", note:"40 x 7 x 25 · 수량 3", img:"assets/propA1.jpg", status:"sale" },
@@ -179,7 +179,7 @@ const ITEMS = [
   { cat:"propB", name:"석고 트레이", brand:"", qty:1, year:"", note:"13 x 9 x 1.5 · 수량 3", img:"assets/propB4.jpg", status:"sale" },
   { cat:"propB", name:"나무 트레이", brand:"", qty:1, year:"", note:"지름 17                           높이 2 · 수량 1", img:"assets/propB5.jpg", status:"sale" },
   { cat:"propB", name:"도기 트레이", brand:"", qty:1, year:"", note:"8 x 8 x 1 · 수량 1", img:"assets/propB6.jpg", status:"sale" },
-  { cat:"propB", name:"투명 자갈", brand:"", qty:1, year:"", note:"1 ~ 2 cm · 수량 약 40개", status:"sale" },
+  { cat:"propB", name:"투명 자갈", brand:"", qty:1, year:"", note:"1 ~ 2 cm · 수량 약 40개", img:"assets/propB_gravel7.jpg", status:"sale" },
   { cat:"propB", name:"옥색 자갈", brand:"", qty:1, year:"", note:"3 ~ 4 cm · 수량 8", img:"assets/propB8.jpg", status:"sale" },
   { cat:"propB", name:"베이지 천연석", brand:"", qty:1, year:"", note:"4 ~ 9 cm · 수량 약 10개", img:"assets/propB9.jpg", status:"sale" },
   { cat:"propB", name:"대형 이끼 유목", brand:"", qty:1, year:"", note:"15 x 16 x 50 · 수량 1", img:"assets/propB10.jpg", status:"sale" },
