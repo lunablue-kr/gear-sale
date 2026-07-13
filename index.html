@@ -70,6 +70,7 @@
   .card.picked { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); }
   .card.sold { opacity: 0.55; }
   .card-top { display: flex; justify-content: space-between; gap: 8px; align-items: flex-start; }
+  .card-thumb { width: 100%; height: 160px; object-fit: cover; border-radius: 9px; background: var(--bg); border: 1px solid var(--line); }
   .card h3 { font-size: 15px; font-weight: 700; letter-spacing: -0.2px; }
   .badge { flex: 0 0 auto; font-size: 11px; padding: 3px 8px; border-radius: 999px; font-weight: 600; }
   .badge.sale { background: var(--accent-soft); color: var(--accent); }
@@ -260,6 +261,7 @@ function cardHTML(it) {
       <h3>${it.name}</h3>
       <span class="badge ${it.status}">${STATUS_LABEL[it.status]}</span>
     </div>
+    ${it.img ? `<img class="card-thumb" src="${it.img}" alt="${it.name}" loading="lazy">` : ""}
     <div class="meta">
       ${it.brand ? `<span class="tag">${it.brand}</span>` : ""}
       ${it.qty > 1 ? `<span class="tag">수량 ${it.qty}</span>` : ""}
