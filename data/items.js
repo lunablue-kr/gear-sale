@@ -18,12 +18,11 @@ const ITEMS = [
   // ---------- 카메라 · 액세서리 ----------
   { cat:"camera", name:"EF 50mm F1.8 STM", brand:"Canon", qty:1, year:"", note:"", status:"sale" },
   { cat:"camera", name:"마운트 어댑터 EF-EOS R (컨트롤 링)", brand:"Canon", qty:1, year:"2021.11 구입", note:"", status:"sale" },
-  { cat:"camera", name:"SD카드 128GB", brand:"SanDisk", qty:1, year:"", note:"", status:"sale" },
   { cat:"camera", name:"Godox Xpro-C TTL 동조기", brand:"Godox", qty:1, year:"2020.10 구입", note:"캐논용", status:"sale" },
   { cat:"camera", name:"CT-16 트리거", brand:"Godox", qty:1, year:"2023.09 구입", note:"", status:"sale" },
 
   // ---------- 스트로보 · 조명 ----------
-  { cat:"strobe", name:"Profoto D2 1000 AirTTL", brand:"Profoto", qty:3, year:"2018.06 구입", note:"모델링 램프·플래시 튜브·컨덴서 등 정기 정비 이력, 펌웨어 최신. 분리 판매 가능", ask:2000000, askUnit:"대당", imgs:["assets/loc_st1_1.jpg", "assets/loc_st1_2.jpg", "assets/loc_st1_3.jpg", "assets/loc_st1_4.jpg"], status:"sale" },
+  { cat:"strobe", name:"Profoto D2 1000 AirTTL", brand:"Profoto", qty:3, year:"2018.06 구입", note:"모델링 램프·플래시 튜브·컨덴서 등 정기 정비 이력, 펌웨어 최신. 분리 판매 가능 · 2개 이상 구매 시 듀오세트 가방 증정 (개별 구매 시 미포함)", ask:2000000, askUnit:"대당", imgs:["assets/loc_st1_1.jpg", "assets/loc_st1_2.jpg", "assets/loc_st1_3.jpg", "assets/loc_st1_4.jpg"], status:"sale" },
   { cat:"strobe", name:"Profoto Acute2 2400 파워팩 + 헤드 ×2", brand:"Profoto", qty:1, year:"2019.09 구입", note:"Acute2/D4 헤드 2개 포함 세트. ⚠️ 헤드 1클립의 노출이 왔다갔다 해 점검이 필요합니다 — 이 점 감안해 저렴하게 내놓습니다", ask:1300000, imgs:["assets/loc_st2_1.jpg", "assets/loc_st2_2.jpg", "assets/loc_st2_3.jpg", "assets/loc_st2_4.jpg", "assets/loc_st2_5.jpg", "assets/loc_st2_6.jpg"], status:"sale" },
   { cat:"strobe", name:"Godox QT1200IIM ×2", brand:"Godox", qty:2, year:"2020.10 구입", note:"플래시 튜브 교체·점검 이력. 분리 판매 가능 · 리플렉터(보웬스) 포함", ask:450000, askUnit:"대당", imgs:["assets/loc_st3_1.jpg", "assets/loc_st3_2.jpg", "assets/loc_st3_3.jpg", "assets/loc_st3_4.jpg", "assets/loc_st3_5.jpg", "assets/loc_st3_6.jpg"], status:"sale" },
   { cat:"strobe", name:"Nanlite Forza 720", brand:"Nanlite", qty:1, year:"2022.06 구입", note:"리플렉터 포함", ask:1600000, imgs:["assets/loc_st4_1.jpg", "assets/loc_st4_2.jpg"], status:"sale" },
@@ -34,7 +33,7 @@ const ITEMS = [
 
   // ---------- 모디파이어 ----------
   { cat:"mod", name:"RFi 소프트박스 1×4'", brand:"Profoto", qty:1, year:"2018.06 구입", note:"", imgs:["assets/loc_md1_1.jpg", "assets/loc_md1_2.jpg", "assets/loc_md1_3.jpg"], status:"sale" },
-  { cat:"mod", name:"RFi 소프트박스 3×4'", brand:"Profoto", qty:1, year:"", note:"모서리 수선 이력 (2026.02)", imgs:["assets/loc_md2_1.jpg", "assets/loc_md2_2.jpg", "assets/loc_md2_3.jpg"], status:"sale" },
+  { cat:"mod", name:"RFi 소프트박스 3×4'", brand:"Profoto", qty:1, year:"2018.06 구입", note:"모서리 수선 이력 (2026.02)", imgs:["assets/loc_md2_1.jpg", "assets/loc_md2_2.jpg", "assets/loc_md2_3.jpg"], status:"sale" },
   { cat:"mod", name:"RFi 소프트박스 4' OCTA", brand:"Profoto", qty:1, year:"2021.06 구입", note:"그리드 포함", imgs:["assets/loc_md3_1.jpg", "assets/loc_md3_2.jpg", "assets/loc_md3_3.jpg", "assets/loc_md3_4.jpg", "assets/loc_md3_5.jpg", "assets/loc_md3_6.jpg"], status:"sale" },
   { cat:"mod", name:"Jemball Diffuser JBL-80", brand:"Aurora", qty:1, year:"2022.01 구입", note:"", imgs:["assets/loc_md4_1.jpg", "assets/loc_md4_2.jpg", "assets/loc_md4_3.jpg", "assets/loc_md4_4.jpg", "assets/loc_md4_5.jpg"], status:"sale" },
   { cat:"mod", name:"7인치 허니컴 그리드 50°", brand:"", qty:1, year:"2021.06 구입", note:"", imgs:["assets/loc_md5_1.jpg", "assets/loc_md5_2.jpg"], status:"sale" },
@@ -43,7 +42,7 @@ const ITEMS = [
   { cat:"mod", name:"원형 반사판 LD-60 S/W", brand:"Aurora", qty:1, year:"2024.12 구입", note:"", imgs:["assets/loc_md8_1.jpg", "assets/loc_md8_2.jpg"], status:"sale" },
   { cat:"mod", name:"Butterfly (240×240cm)", brand:"PERI", qty:1, year:"2019.06 구입", note:"전용 가방 포함", imgs:["assets/loc_md9_1.jpg"], status:"sale" },
   { cat:"mod", name:"뷰티디쉬 Softlight Silver (프로포토)", brand:"Profoto", qty:1, year:"", note:"허니컴 + 디퓨저 포함", status:"sale" },
-  { cat:"mod", name:"뷰티디쉬 Softlight Silver (고독스)", brand:"Godox", qty:1, year:"", note:"디퓨저 포함 (2024.12 신품 교체)", status:"sale" },
+  { cat:"mod", name:"뷰티디쉬 Softlight Silver (보웬스)", brand:"Godox", qty:1, year:"", note:"디퓨저 포함 (2024.12 신품 교체)", status:"sale" },
   { cat:"mod", name:"엄브렐러 Deep Silver M", brand:"Profoto", qty:1, year:"2018.06 구입", note:"", status:"sale" },
   { cat:"mod", name:"엄브렐러 Deep Silver U-160C", brand:"Aurora", qty:1, year:"2021.06 구입", note:"디퓨저 포함", status:"sale" },
   { cat:"mod", name:"엄브렐러 Deep White U-160A", brand:"Aurora", qty:1, year:"", note:"", status:"sale" },
@@ -51,14 +50,14 @@ const ITEMS = [
   { cat:"mod", name:"스피드링 (프로포토) ×2", brand:"Profoto", qty:2, year:"2018.06 구입", note:"", status:"sale" },
   { cat:"mod", name:"LEE 컬러젤 Pro-Pack (24색) + 낱장 필터", brand:"LEE Filters", qty:1, year:"", note:"CTO·CTB·디퓨전 낱장 포함", status:"sale" },
   { cat:"mod", name:"프리즘 렌즈 FX Dream 77mm", brand:"Prism Lens FX", qty:1, year:"", note:"", status:"sale" },
-  { cat:"mod", name:"반도어 ALR-018 + 젤필터", brand:"Aurora", qty:1, year:"", note:"", status:"sale" },
+  { cat:"mod", name:"반도어 ALR-018 + 젤필터", brand:"Aurora", qty:1, year:"", note:"", imgs:["assets/loc_md19_1.jpg"], status:"sale" },
   { cat:"mod", name:"Meking 실크 프레임 120×120cm", brand:"Meking", qty:1, year:"2022.11 구입", note:"실크천 포함", imgs:["assets/loc_md20_1.jpg"], status:"sale" },
   { cat:"mod", name:"Aurora FRM79 라이트커터 ×2 (75×90cm)", brand:"Aurora", qty:2, year:"2022.11 구입", note:"", imgs:["assets/loc_md21_1.jpg"], status:"sale" },
   { cat:"mod", name:"실크 프레임 (블랙) ×2 (45×60cm)", brand:"", qty:2, year:"2022.11 구입", note:"", imgs:["assets/loc_md22_1.jpg"], status:"sale" },
   { cat:"mod", name:"LEE 216 화이트 디퓨전 롤 ×3", brand:"LEE Filters", qty:3, year:"", note:"", status:"sale" },
 
   // ---------- 스탠드 · 그립 ----------
-  { cat:"grip", name:"KUPO CT-40M C스탠드 ×3", brand:"KUPO", qty:3, year:"", note:"", imgs:["assets/loc_gr1_1.jpg", "assets/loc_gr1_2.jpg", "assets/loc_gr1_3.jpg"], status:"sale" },
+  { cat:"grip", name:"KUPO CT-40M C스탠드 ×3", brand:"KUPO", qty:3, year:"", note:"", imgs:["assets/loc_gr1_1.jpg", "assets/loc_gr1_2.jpg"], status:"sale" },
   { cat:"grip", name:"KUPO CT-20M C스탠드 ×3", brand:"KUPO", qty:3, year:"2022.11 구입", note:"", status:"sale" },
   { cat:"grip", name:"KUPO CT-BS 센추리 스탠드 베이스 ×3", brand:"KUPO", qty:3, year:"", note:"", status:"sale" },
   { cat:"grip", name:"KUPO 350 런웨이 베이스 스탠드 ×3", brand:"KUPO", qty:3, year:"", note:"", status:"sale" },
