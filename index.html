@@ -61,6 +61,7 @@
   /* ===== 품목 ===== */
   .section-title { font-size: 17px; font-weight: 700; margin: 28px 0 10px; display: flex; align-items: baseline; gap: 8px; }
   .section-title .count { font-size: 13px; color: var(--sub); font-weight: 400; }
+  .cat-note { margin: -4px 0 12px; font-size: 13px; color: var(--accent); background: var(--accent-soft); border: 1px solid #cfe0d6; border-radius: 9px; padding: 8px 12px; }
   .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 10px; }
   .card {
     background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
@@ -293,6 +294,11 @@ function cardHTML(it) {
   </div>`;
 }
 
+const CATNOTE = {
+  propA: "목록에 아직 반영되지 않은 소품이 더 있습니다. 현장에서 확인 후 추가 구매도 가능합니다.",
+  propB: "목록에 아직 반영되지 않은 소품이 더 있습니다. 현장에서 확인 후 추가 구매도 가능합니다.",
+};
+
 function renderList() {
   const el = document.getElementById("list");
   const cats = activeCat === "all" ? Object.keys(CATS) : [activeCat];
@@ -303,6 +309,7 @@ function renderList() {
     if (!items.length) continue;
     total += items.length;
     html += `<h2 class="section-title">${CATS[c]} <span class="count">${items.length}개</span></h2>
+             ${CATNOTE[c] ? `<p class="cat-note">${CATNOTE[c]}</p>` : ""}
              <div class="grid">${items.map(cardHTML).join("")}</div>`;
   }
   el.innerHTML = html || `<p class="empty">검색 결과가 없어요.</p>`;
