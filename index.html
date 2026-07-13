@@ -137,6 +137,7 @@
     font-size: 14px; text-align: right;
   }
   .bid-item .won { font-size: 13px; color: var(--sub); }
+  .bid-item input.miss { border-color: var(--danger); background: #fbece9; }
   .bid-item .rm { border: none; background: none; color: var(--danger); font-size: 17px; cursor: pointer; padding: 4px; }
   .field { margin-top: 14px; }
   .field label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 5px; }
@@ -366,10 +367,20 @@ async function submitBid() {
     msgEl.className = "err";
     return;
   }
-  const lines = [...document.querySelectorAll(".bid-item")].map(row => {
+  const rows = [...document.querySelectorAll(".bid-item")];
+  const missing = rows.filter(r => !r.querySelector(".bid-price").value.trim());
+  rows.forEach(r => r.querySelector(".bid-price").classList.remove("miss"));
+  if (missing.length) {
+    missing.forEach(r => r.querySelector(".bid-price").classList.add("miss"));
+    missing[0].querySelector(".bid-price").focus();
+    msgEl.textContent = "모든 품목의 희망가를 입력해 주세요.";
+    msgEl.className = "err";
+    return;
+  }
+  const lines = rows.map(row => {
     const it = ITEMS[+row.dataset.id];
     const price = row.querySelector(".bid-price").value.trim();
-    return `[${it.num}] ${it.name} — ${price ? price + "원" : "가격 미기재"}`;
+    return `[${it.num}] ${it.name} — ${price}원`;
   });
   const btn = document.getElementById("submit-bid");
   btn.disabled = true; btn.textContent = "보내는 중…";
