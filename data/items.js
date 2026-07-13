@@ -119,13 +119,13 @@ const ITEMS = [
   { cat:"etc", name:"액체 흡입기", brand:"", qty:1, year:"", note:"", status:"sale" },
 
   // ---------- 배경지 (배실장님) ----------
-  { cat:"bg", name:"배경지 #01 슈퍼 화이트 (하프)", brand:"SAVAGE", qty:1, year:"", note:"SUPER WHITE · 1_12", status:"sale" },
-  { cat:"bg", name:"배경지 #93 아틱 화이트", brand:"SUPERIOR", qty:1, year:"", note:"ARCTIC WHITE · P111493", status:"sale" },
-  { cat:"bg", name:"배경지 #03 코랄", brand:"SAVAGE", qty:1, year:"", note:"CORAL · 3_12", status:"sale" },
-  { cat:"bg", name:"배경지 #40 민트그린", brand:"SAVAGE", qty:1, year:"", note:"MINT GREEN", status:"sale" },
-  { cat:"bg", name:"배경지 #67 루비", brand:"SAVAGE", qty:1, year:"", note:"RUBY", status:"sale" },
-  { cat:"bg", name:"배경지 #46 테크 그린", brand:"SAVAGE", qty:1, year:"", note:"TECH GREEN", status:"sale" },
-  { cat:"bg", name:"배경지 #08 프라이머리 레드", brand:"SAVAGE", qty:1, year:"", note:"PRIMARY RED", status:"sale" },
+  { cat:"bg", name:"배경지 #01 슈퍼 화이트 (하프)", brand:"SAVAGE", qty:1, year:"", note:"SUPER WHITE · 1_12",swatch:"#f2f1ee",  status:"sale" },
+  { cat:"bg", name:"배경지 #93 아틱 화이트", brand:"SUPERIOR", qty:1, year:"", note:"ARCTIC WHITE · P111493",swatch:"#f5f1ed",  status:"sale" },
+  { cat:"bg", name:"배경지 #03 코랄", brand:"SAVAGE", qty:1, year:"", note:"CORAL · 3_12",swatch:"#fab8be",  status:"sale" },
+  { cat:"bg", name:"배경지 #40 민트그린", brand:"SAVAGE", qty:1, year:"", note:"MINT GREEN",swatch:"#9fd68c",  status:"sale" },
+  { cat:"bg", name:"배경지 #67 루비", brand:"SAVAGE", qty:1, year:"", note:"RUBY",swatch:"#b05570",  status:"sale" },
+  { cat:"bg", name:"배경지 #46 테크 그린", brand:"SAVAGE", qty:1, year:"", note:"TECH GREEN",swatch:"#38983a",  status:"sale" },
+  { cat:"bg", name:"배경지 #08 프라이머리 레드", brand:"SAVAGE", qty:1, year:"", note:"PRIMARY RED",swatch:"#cb262d",  status:"sale" },
 
   // ---------- 원단 ----------
   { cat:"fabric", name:"White 면", brand:"", qty:1, year:"", note:"240cm x 165cm", img:"assets/fabric1.jpg", status:"sale" },
