@@ -70,7 +70,10 @@
   .card.picked { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); }
   .card.sold { opacity: 0.55; }
   .card-top { display: flex; justify-content: space-between; gap: 8px; align-items: flex-start; }
-  .card-thumb { width: 100%; height: 160px; object-fit: cover; border-radius: 9px; background: var(--bg); border: 1px solid var(--line); }
+  .card-thumb { width: 100%; height: 160px; object-fit: cover; border-radius: 9px; background: var(--bg); border: 1px solid var(--line); cursor: zoom-in; }
+  #lightbox { position: fixed; inset: 0; background: rgba(0,0,0,0.88); display: none; align-items: center; justify-content: center; z-index: 60; cursor: zoom-out; padding: 24px; }
+  #lightbox.show { display: flex; }
+  #lightbox img { max-width: 96%; max-height: 96%; border-radius: 8px; box-shadow: 0 12px 48px rgba(0,0,0,0.6); }
   .card h3 { font-size: 15px; font-weight: 700; letter-spacing: -0.2px; }
   .badge { flex: 0 0 auto; font-size: 11px; padding: 3px 8px; border-radius: 999px; font-weight: 600; }
   .badge.sale { background: var(--accent-soft); color: var(--accent); }
@@ -217,6 +220,8 @@
     <p id="form-msg"></p>
   </div>
 </div>
+
+<div id="lightbox"><img alt=""></div>
 
 <script src="data/items.js"></script>
 <script>
@@ -388,6 +393,15 @@ document.getElementById("search").addEventListener("input", e => {
   query = e.target.value.trim();
   renderList();
 });
+
+const _lb = document.getElementById("lightbox");
+document.addEventListener("click", e => {
+  if (e.target.classList.contains("card-thumb")) {
+    _lb.querySelector("img").src = e.target.src;
+    _lb.classList.add("show");
+  }
+});
+_lb.addEventListener("click", () => _lb.classList.remove("show"));
 
 renderChips();
 renderList();
