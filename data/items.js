@@ -142,7 +142,7 @@ const ITEMS = [
   { cat:"fabric", name:"Beige 면", brand:"", qty:1, year:"", note:"280cm x 270cm", img:"assets/fabric16.jpg", status:"sale" },
   { cat:"fabric", name:"Gray 면", brand:"", qty:1, year:"", note:"280cm x 270cm", img:"assets/fabric17.jpg", status:"sale" },
   { cat:"fabric", name:"Pink 실크", brand:"", qty:1, year:"", note:"262cm x 116cm", img:"assets/fabric18.jpg", status:"sale" },
-  { cat:"fabric", name:"Pink 털", brand:"", qty:1, year:"", note:"260cm x 150cm", img:"assets/fabric19.jpg", status:"sale" },
+  { cat:"fabric", name:"Pink 털", brand:"", qty:1, year:"", note:"260cm x 150cm", img:"assets/fabric_pink19.jpg", status:"sale" },
   { cat:"fabric", name:"Green 인조잔디", brand:"", qty:1, year:"", note:"100cm x 200cm", img:"assets/fabric_green20.jpg", status:"sale" },
 
   // ---------- 소품 · 유리/아크릴 ----------
