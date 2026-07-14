@@ -91,7 +91,6 @@ const ITEMS = [
   { cat:"pc", name:"MacBook Pro 16\" M1 Pro (2021)", brand:"Apple", qty:1, year:"2021.12 구입", note:"정품 충전기 포함", status:"sale" },
   { cat:"pc", name:"iMac 27\" Retina 5K (2017)", brand:"Apple", qty:1, year:"2018.05 구입", note:"HDMI 변환선 포함", status:"sale" },
   { cat:"pc", name:"Apple Studio Display ×2", brand:"Apple", qty:2, year:"", note:"분리 판매 가능", status:"sale" },
-  { cat:"pc", name:"LG 27UP850 4K 모니터", brand:"LG", qty:1, year:"2021.11 구입", note:"키보드·마우스 포함 가능", status:"sale" },
   { cat:"pc", name:"제우스랩 Z16P 16\" 포터블 모니터", brand:"Zeuslap", qty:1, year:"2022.11 구입", note:"", status:"sale" },
   { cat:"pc", name:"Wacom Intuos Pro PTH-860 (대형) ×2", brand:"Wacom", qty:2, year:"2021.02 / 2023.04 구입", note:"펜 포함, 분리 판매 가능", status:"sale" },
 
