@@ -44,7 +44,7 @@ const ITEMS = [
   { cat:"mod", name:"뷰티디쉬 Softlight Silver (프로포토)", brand:"Profoto", qty:1, year:"", note:"허니컴 + 디퓨저 포함 · 사용감 있음", ask:250000, status:"sale" },
   { cat:"mod", name:"Godox 뷰티디쉬 Softlight Silver (보웬스)", brand:"Godox", qty:1, year:"", note:"디퓨저 포함 (2024.12 신품 교체)", ask:30000, status:"sale" },
   { cat:"mod", name:"Profoto 엄브렐러 Deep Silver M", brand:"Profoto", qty:1, year:"2018.06 구입", note:"", ask:150000, status:"hold" },
-  { cat:"mod", name:"Aurora 엄브렐러 Deep Silver U-160C + Deep White U-160A (2개 일괄)", brand:"Aurora", qty:1, year:"2021.06 구입", note:"디퓨저 포함", ask:120000, status:"hold" },
+  { cat:"mod", name:"Aurora 엄브렐러 Deep Silver U-160C + Deep White U-160A (2개 일괄)", brand:"Aurora", qty:1, year:"2021.06 구입", note:"디퓨저 포함", ask:120000, askUnit:"일괄", status:"hold" },
   { cat:"mod", name:"Godox 스피드링 (보웬스) ×2", brand:"Godox", qty:2, year:"2020.10 구입", note:"2개 일괄 가격", ask:10000, imgs:["assets/loc_md14_1.jpg", "assets/loc_md14_2.jpg"], askUnit:"일괄", status:"sale" },
   { cat:"mod", name:"스피드링 (프로포토) ×2", brand:"Profoto", qty:2, year:"2018.06 구입", note:"2개 일괄 가격", ask:130000, imgs:["assets/loc_md15_1.jpg"], askUnit:"일괄", status:"sale" },
   { cat:"mod", name:"LEE 컬러젤 Pro-Pack (24색) + 낱장 필터", brand:"LEE Filters", qty:1, year:"", note:"CTO·CTB·디퓨전 낱장 포함 · 사용감 다소 있음", ask:50000, status:"sale" },
