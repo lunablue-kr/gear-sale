@@ -53,7 +53,7 @@ const ITEMS = [
   { cat:"mod", name:"Meking 실크 프레임 120×120cm", brand:"Meking", qty:1, year:"2022.11 구입", note:"실크천 · 반사천 포함", ask:30000, imgs:["assets/loc_md19_1.jpg"], status:"sale" },
   { cat:"mod", name:"Aurora FRM79 라이트커터 ×2 (75×90cm)", brand:"Aurora", qty:2, year:"2022.11 구입", note:"실크천 · 화이트/골드/실버 반사천 포함", ask:50000, imgs:["assets/loc_md20_1.jpg"], status:"hold" },
   { cat:"mod", name:"실크 프레임 (블랙) ×2 (45×60cm)", brand:"", qty:2, year:"2022.11 구입", note:"", ask:30000, imgs:["assets/loc_md21_1.jpg"], status:"sale" },
-  { cat:"mod", name:"LEE 216 화이트 디퓨전 롤 ×3", brand:"LEE Filters", qty:3, year:"", note:"3롤 일괄 판매 · 사용감·절단 부분 있음 (가격 반영)", ask:100000, imgs:["assets/loc_md22_1.jpg"], status:"sale" },
+  { cat:"mod", name:"LEE 216 화이트 디퓨전 롤 ×3", brand:"LEE Filters", qty:3, year:"", note:"3롤 일괄 판매 · 사용감·절단 부분 있음 (가격 반영)", ask:80000, imgs:["assets/loc_md22_1.jpg"], status:"sale" },
 
   // ---------- 스탠드 · 그립 ----------
   { cat:"grip", name:"KUPO CT-40M C스탠드 ×3", brand:"KUPO", qty:3, year:"", note:"", imgs:["assets/loc_gr1_1.jpg", "assets/loc_gr1_2.jpg", "assets/loc_gr1_3.jpg", "assets/loc_gr1_4.jpg", "assets/loc_gr1_5.jpg"], status:"sale" },
