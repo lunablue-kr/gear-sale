@@ -83,7 +83,7 @@
   .pnum { display: inline-block; min-width: 1.4em; padding: 1px 6px; margin-right: 7px; background: var(--accent); color: #fff; border-radius: 6px; font-size: 12px; font-weight: 700; text-align: center; vertical-align: 1px; font-variant-numeric: tabular-nums; }
   .badge { flex: 0 0 auto; font-size: 11px; padding: 3px 8px; border-radius: 999px; font-weight: 600; }
   .badge.sale { background: var(--accent-soft); color: var(--accent); }
-  .badge.hold { background: #fdf3e0; color: #9a6b1a; }
+  .badge.hold { background: #e8730c; color: #fff; box-shadow: 0 0 0 2px #fbe0c4; }
   .badge.sold { background: #eee; color: #888; }
   .meta { display: flex; flex-wrap: wrap; gap: 5px; }
   .tag { font-size: 11.5px; color: var(--sub); background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 2px 7px; }
@@ -238,7 +238,7 @@
 //   판매되면 status만 바꿔서 다시 배포하면 됩니다.
 // ============================================================
 
-const STATUS_LABEL = { sale: "판매중", hold: "예약중", sold: "판매완료" };
+const STATUS_LABEL = { sale: "판매중", hold: "🔖 예약중", sold: "판매완료" };
 const FORM_ENDPOINT = "https://formsubmit.co/ajax/4daba310c39387b2cac62a9e9796d9c6";
 const SHEET_ENDPOINT = "https://script.google.com/macros/s/AKfycbx4wOLUzlKJYdBJEGH2J8I2NEQAz77lShix8bxDaNELDKEXHcs_XZ7-bZilpfBdANU_yA/exec";
 
@@ -270,7 +270,7 @@ function cardHTML(it) {
   const soldish = it.status === "sold"; // 예약중(hold)도 입찰 허용, 판매완료(sold)만 마감
   const thumbs = it.imgs || (it.img ? [it.img] : []);
   return `
-  <div class="card ${sel ? "picked" : ""} ${it.status === "sold" ? "sold" : ""}" id="card-${it.id}">
+  <div class="card ${sel ? "picked" : ""} ${it.status === "sold" ? "sold" : ""} ${it.status === "hold" ? "reserved" : ""}" id="card-${it.id}">
     <div class="card-top">
       <h3><span class="pnum">${it.num}</span>${it.name}</h3>
       <span class="badge ${it.status}">${STATUS_LABEL[it.status]}</span>
