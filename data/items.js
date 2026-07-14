@@ -53,7 +53,7 @@ const ITEMS = [
   { cat:"mod", name:"Meking 실크 프레임 120×120cm", brand:"Meking", qty:1, year:"2022.11 구입", note:"실크천 · 반사천 포함", ask:30000, imgs:["assets/loc_md19_1.jpg"], status:"sale" },
   { cat:"mod", name:"Aurora FRM79 라이트커터 ×2 (75×90cm)", brand:"Aurora", qty:2, year:"2022.11 구입", note:"실크천 · 화이트/골드/실버 반사천 포함", ask:50000, askUnit:"일괄", imgs:["assets/loc_md20_1.jpg"], status:"hold" },
   { cat:"mod", name:"실크 프레임 (블랙) ×2 (45×60cm)", brand:"", qty:2, year:"2022.11 구입", note:"", ask:30000, askUnit:"일괄", imgs:["assets/loc_md21_1.jpg"], status:"sale" },
-  { cat:"mod", name:"LEE 216 화이트 디퓨전 롤 ×3", brand:"LEE Filters", qty:3, year:"", note:"3롤 일괄 판매 · 사용감·절단 부분 있음 (가격 반영)", ask:80000, askUnit:"일괄", imgs:["assets/loc_md22_1.jpg", "assets/loc_md22_2.jpg"], status:"sale" },
+  { cat:"mod", name:"LEE 216 화이트 디퓨전 롤 ×3", brand:"LEE Filters", qty:3, year:"", note:"3롤 일괄 판매 · 사용감·절단 부분 있음 (가격 반영)", ask:80000, askUnit:"일괄", imgs:["assets/loc_md22_1.jpg"], status:"sale" },
 
   // ---------- 스탠드 · 그립 ----------
   { cat:"grip", name:"KUPO CT-40M C스탠드 ×3", brand:"KUPO", qty:3, year:"", note:"기본 스탠드+베이스 조합 · 스탠드 일괄 문의 가능", imgs:["assets/loc_gr1_1.jpg"], status:"sale" },
@@ -77,7 +77,7 @@ const ITEMS = [
   { cat:"grip", name:"Avenger E600 스냅인 핀", brand:"Avenger", qty:1, year:"", note:"", imgs:["assets/loc_gr19_1.jpg"], status:"sale" },
   { cat:"grip", name:"Valens VL-01 나사 변환 어댑터 1/4\"→3/8\"", brand:"Valens", qty:1, year:"", note:"", imgs:["assets/loc_gr20_1.jpg", "assets/loc_gr20_2.jpg"], status:"sale" },
   { cat:"grip", name:"Valens VL-01 나사 변환 어댑터 3/8\"→1/4\"", brand:"Valens", qty:1, year:"", note:"", imgs:["assets/loc_gr21_1.jpg"], status:"sale" },
-  { cat:"grip", name:"Xiletu XJ-15 태블릿 홀더", brand:"Xiletu", qty:1, year:"", note:"", imgs:["assets/loc_gr22_1.jpg"], status:"sale" },
+  { cat:"grip", name:"Xiletu XJ-15 태블릿 홀더", brand:"Xiletu", qty:1, year:"", note:"", status:"sale" },
   { cat:"grip", name:"KUPO KCP-710B 콘비 클램프", brand:"KUPO", qty:1, year:"", note:"", imgs:["assets/loc_gr23_1.jpg"], status:"sale" },
   { cat:"grip", name:"Manfrotto 155RC 더블 볼 틸트헤드", brand:"Manfrotto", qty:1, year:"", note:"", imgs:["assets/loc_gr24_1.jpg"], status:"sale" },
   { cat:"grip", name:"KUPO KS-097 베이비 볼헤드 어댑터", brand:"KUPO", qty:1, year:"", note:"", status:"sale" },
@@ -95,21 +95,19 @@ const ITEMS = [
 
   // ---------- 기타 ----------
   { cat:"etc", name:"아크릴 봉 ×5", brand:"", qty:5, year:"", note:"사각 3 · 원형 2, 제품 촬영 받침용", status:"sale" },
-  { cat:"etc", name:"케이블릴 seise-HJR-4", brand:"seise", qty:1, year:"", note:"", status:"sale" },
-  { cat:"etc", name:"케이블릴 seise-HJR-2A", brand:"seise", qty:1, year:"", note:"", status:"sale" },
-  { cat:"etc", name:"케이블릴 LUG", brand:"Lug", qty:1, year:"", note:"", status:"sale" },
-  { cat:"etc", name:"3단 사다리", brand:"", qty:1, year:"", note:"", imgs:["assets/loc_et5_1.jpg"], status:"sale" },
-  { cat:"etc", name:"멀티탭 ×2", brand:"", qty:2, year:"", note:"", imgs:["assets/loc_et6_1.jpg", "assets/loc_et6_2.jpg"], status:"sale" },
+  { cat:"etc", name:"케이블릴 ×5 일괄", brand:"seise", qty:1, year:"", note:"seise HJR-4·HJR-2A · LUG 등 5개 일괄", imgs:["assets/loc_et2_1.jpg", "assets/loc_et2_2.jpg", "assets/loc_et2_3.jpg"], status:"sale" },
+  { cat:"etc", name:"3단 사다리", brand:"", qty:1, year:"", note:"", imgs:["assets/loc_et3_1.jpg"], status:"sale" },
+  { cat:"etc", name:"멀티탭 ×2", brand:"", qty:2, year:"", note:"", imgs:["assets/loc_et4_1.jpg"], status:"sale" },
   { cat:"etc", name:"도킹스테이션", brand:"", qty:1, year:"", note:"", status:"sale" },
   { cat:"etc", name:"메모리카드 리더기", brand:"", qty:1, year:"", note:"", status:"sale" },
   { cat:"etc", name:"IpTIME AX2004 공유기", brand:"ipTIME", qty:1, year:"2023.09 구입", note:"", status:"sale" },
   { cat:"etc", name:"Sanyo 충전지 세트 (AA ×7 · AAA ×8)", brand:"Sanyo", qty:1, year:"", note:"", status:"sale" },
   { cat:"etc", name:"Lii-S8 충전기", brand:"Liitokala", qty:1, year:"", note:"", status:"sale" },
-  { cat:"etc", name:"HDMI 케이블 ×2", brand:"", qty:2, year:"", note:"어댑터 포함", imgs:["assets/loc_et12_1.jpg", "assets/loc_et12_2.jpg"], status:"sale" },
-  { cat:"etc", name:"깊은 수조 (35×60×40cm)", brand:"", qty:1, year:"", note:"물 촬영용", imgs:["assets/loc_et13_1.jpg", "assets/loc_et13_2.jpg"], status:"sale" },
-  { cat:"etc", name:"낮은 수조 (100×80×10cm)", brand:"", qty:1, year:"", note:"물 촬영용", imgs:["assets/loc_et14_1.jpg", "assets/loc_et14_2.jpg", "assets/loc_et14_3.jpg", "assets/loc_et14_4.jpg", "assets/loc_et14_5.jpg"], status:"sale" },
-  { cat:"etc", name:"호스릴 15m", brand:"", qty:1, year:"", note:"", imgs:["assets/loc_et15_1.jpg", "assets/loc_et15_2.jpg"], status:"sale" },
-  { cat:"etc", name:"액체 흡입기", brand:"", qty:1, year:"", note:"", imgs:["assets/loc_et16_1.jpg"], status:"sale" },
+  { cat:"etc", name:"HDMI 케이블 ×2", brand:"", qty:2, year:"", note:"어댑터 포함", imgs:["assets/loc_et10_1.jpg", "assets/loc_et10_2.jpg"], status:"sale" },
+  { cat:"etc", name:"깊은 수조 (35×60×40cm)", brand:"", qty:1, year:"", note:"물 촬영용", imgs:["assets/loc_et11_1.jpg", "assets/loc_et11_2.jpg"], status:"sale" },
+  { cat:"etc", name:"낮은 수조 (100×80×10cm)", brand:"", qty:1, year:"", note:"물 촬영용", imgs:["assets/loc_et12_1.jpg", "assets/loc_et12_2.jpg", "assets/loc_et12_3.jpg", "assets/loc_et12_4.jpg", "assets/loc_et12_5.jpg"], status:"sale" },
+  { cat:"etc", name:"호스릴 15m", brand:"", qty:1, year:"", note:"", imgs:["assets/loc_et13_1.jpg", "assets/loc_et13_2.jpg"], status:"sale" },
+  { cat:"etc", name:"액체 흡입기", brand:"", qty:1, year:"", note:"", imgs:["assets/loc_et14_1.jpg"], status:"sale" },
 
   // ---------- 배경지 (배실장님) ----------
   { cat:"bg", name:"배경지 #01 슈퍼 화이트 (하프)", brand:"SAVAGE", qty:1, year:"", note:"SUPER WHITE · 1_12",swatch:"#f2f1ee",  status:"sale" },
