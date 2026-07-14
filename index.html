@@ -435,6 +435,17 @@ document.getElementById("search").addEventListener("input", e => {
 
 { const _cc = {}; ITEMS.forEach(it => { _cc[it.cat] = (_cc[it.cat] || 0) + 1; it.num = _cc[it.cat]; }); }
 
+// 품목 카탈로그를 시트에 자동 동기화 (바뀐 경우에만 전송)
+(function () {
+  const cat = ITEMS.map(it => ({ cat: CATS[it.cat], num: it.num, name: it.name }));
+  const body = JSON.stringify({ action: "catalog", items: cat });
+  let h = 0; for (let i = 0; i < body.length; i++) h = (h * 31 + body.charCodeAt(i)) | 0;
+  if (localStorage.getItem("catHash") !== String(h)) {
+    fetch(SHEET_ENDPOINT, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body })
+      .then(() => localStorage.setItem("catHash", String(h))).catch(() => {});
+  }
+})();
+
 const _lb = document.getElementById("lightbox");
 let _gal = [], _gi = 0;
 function _lbCount() { _lb.querySelector(".lb-count").textContent = _gal.length > 1 ? `${_gi + 1} / ${_gal.length}` : ""; }
