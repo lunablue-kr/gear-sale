@@ -266,7 +266,7 @@ function matches(it) {
 
 function cardHTML(it) {
   const sel = picked.has(it.id);
-  const soldish = it.status !== "sale";
+  const soldish = it.status === "sold"; // 예약중(hold)도 입찰 허용, 판매완료(sold)만 마감
   const thumbs = it.imgs || (it.img ? [it.img] : []);
   return `
   <div class="card ${sel ? "picked" : ""} ${it.status === "sold" ? "sold" : ""}" id="card-${it.id}">
