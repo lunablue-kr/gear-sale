@@ -72,7 +72,7 @@ const ITEMS = [
   { cat:"grip", name:"KUPO 그립암 (Grip Arm) ×3", brand:"KUPO", qty:3, year:"", note:"", imgs:["assets/loc_gr14_1.jpg", "assets/loc_gr14_2.jpg"], status:"sale" },
   { cat:"grip", name:"KUPO KCP-210 그립헤드 (고정핀)", brand:"KUPO", qty:1, year:"", note:"", imgs:["assets/loc_gr15_1.jpg", "assets/loc_gr15_2.jpg"], status:"sale" },
   { cat:"grip", name:"Manfrotto 042 익스텐션 암", brand:"Manfrotto", qty:1, year:"", note:"", imgs:["assets/loc_gr16_1.jpg", "assets/loc_gr16_2.jpg", "assets/loc_gr16_3.jpg", "assets/loc_gr16_4.jpg", "assets/loc_gr16_5.jpg"], status:"sale" },
-  { cat:"grip", name:"Manfrotto 035 슈퍼클램프 ×4 + KUPO KCP-710B 콘비 클램프", brand:"Manfrotto", qty:4, year:"", note:"", imgs:["assets/loc_gr17_1.jpg", "assets/loc_gr17_2.jpg", "assets/loc_gr17_3.jpg"], status:"sale" },
+  { cat:"grip", name:"Manfrotto 035 슈퍼클램프 ×4 + KUPO KCP-710B 콘비 클램프", brand:"Manfrotto", qty:5, year:"", note:"", imgs:["assets/loc_gr17_1.jpg", "assets/loc_gr17_2.jpg", "assets/loc_gr17_3.jpg"], ask:25000, askUnit:"개", status:"sale" },
   { cat:"grip", name:"KUPO KS-017 16mm 라이트 스터드", brand:"KUPO", qty:1, year:"", note:"", ask:3000, imgs:["assets/loc_gr18_1.jpg", "assets/loc_gr18_2.jpg", "assets/loc_gr18_3.jpg"], status:"sale" },
   { cat:"grip", name:"Avenger E600 스냅인 핀", brand:"Avenger", qty:1, year:"", note:"", ask:8000, imgs:["assets/loc_gr19_1.jpg", "assets/loc_gr19_2.jpg", "assets/loc_gr19_3.jpg"], status:"sale" },
   { cat:"grip", name:"Valens VL-01 나사 변환 어댑터 1/4\"→3/8\"", brand:"Valens", qty:1, year:"", note:"", status:"sale" },
@@ -93,9 +93,9 @@ const ITEMS = [
   { cat:"pc", name:"Wacom Intuos Pro PTH-860 (대형) ×2", brand:"Wacom", qty:2, year:"2021.02 / 2023.04 구입", note:"펜 포함, 분리 판매 가능", status:"sale" },
 
   // ---------- 기타 ----------
-  { cat:"etc", name:"아크릴 봉 ×5", brand:"", qty:5, year:"", note:"사각 3 · 원형 2, 제품 촬영 받침용", status:"sale" },
-  { cat:"etc", name:"케이블릴 ×5 일괄", brand:"seise", qty:1, year:"", note:"seise HJR-4·HJR-2A · LUG 등 5개 일괄", imgs:["assets/loc_et2_1.jpg", "assets/loc_et2_2.jpg", "assets/loc_et2_3.jpg"], status:"sale" },
-  { cat:"etc", name:"3단 사다리", brand:"", qty:1, year:"", note:"", imgs:["assets/loc_et3_1.jpg"], status:"sale" },
+  { cat:"etc", name:"아크릴 봉 ×5", brand:"", qty:5, year:"", note:"사각 3 · 원형 2, 제품 촬영 받침용", status:"hold" },
+  { cat:"etc", name:"코드릴 ×5 일괄", brand:"seise", qty:1, year:"", note:"seise HJR-4·HJR-2A · LUG 등 5개 일괄", imgs:["assets/loc_et2_1.jpg", "assets/loc_et2_2.jpg", "assets/loc_et2_3.jpg"], ask:60000, askUnit:"일괄", status:"sale" },
+  { cat:"etc", name:"3단 사다리", brand:"", qty:1, year:"", note:"", imgs:["assets/loc_et3_1.jpg"], ask:5000, status:"sale" },
   { cat:"etc", name:"멀티탭 ×2", brand:"", qty:2, year:"", note:"", imgs:["assets/loc_et4_1.jpg"], status:"sale" },
   { cat:"etc", name:"도킹스테이션", brand:"", qty:1, year:"", note:"", status:"sale" },
   { cat:"etc", name:"메모리카드 리더기", brand:"", qty:1, year:"", note:"", status:"sale" },
@@ -103,8 +103,8 @@ const ITEMS = [
   { cat:"etc", name:"Sanyo 충전지 세트 (AA ×7 · AAA ×8)", brand:"Sanyo", qty:1, year:"", note:"", status:"sale" },
   { cat:"etc", name:"Lii-S8 충전기", brand:"Liitokala", qty:1, year:"", note:"", status:"sale" },
   { cat:"etc", name:"HDMI 케이블 ×2", brand:"", qty:2, year:"", note:"어댑터 포함", imgs:["assets/loc_et10_1.jpg", "assets/loc_et10_2.jpg"], status:"sale" },
-  { cat:"etc", name:"유리 수조 세트 (수조+호스릴+흡입기)", brand:"", qty:1, year:"", note:"소재 유리 · 35×60×40cm 수조 + 호스릴 15m + 흡입기 · 까짐·기스 일부 · 박스 있음", ask:30000, askUnit:"일괄", imgs:["assets/loc_et11_1.jpg", "assets/loc_et11_2.jpg", "assets/loc_et11_3.jpg", "assets/loc_et11_4.jpg"], status:"sale" },
-  { cat:"etc", name:"아크릴 수조 (100×80×10cm)", brand:"", qty:1, year:"", note:"소재 아크릴 · 까짐·기스 있음 · 뽁뽁이 포장", ask:20000, imgs:["assets/loc_et12_1.jpg", "assets/loc_et12_2.jpg", "assets/loc_et12_3.jpg", "assets/loc_et12_4.jpg"], status:"sale" },
+  { cat:"etc", name:"유리 수조 세트 (수조+호스릴+흡입기)", brand:"", qty:1, year:"", note:"소재 유리 · 35×60×40cm 수조 + 호스릴 15m + 흡입기 · 까짐·기스 일부 · 박스 있음", ask:40000, askUnit:"일괄", imgs:["assets/loc_et11_1.jpg", "assets/loc_et11_2.jpg", "assets/loc_et11_3.jpg", "assets/loc_et11_4.jpg"], status:"sale" },
+  { cat:"etc", name:"아크릴 수조 (100×80×10cm)", brand:"", qty:1, year:"", note:"소재 아크릴 · 까짐·기스 있음 · 뽁뽁이 포장", ask:30000, imgs:["assets/loc_et12_1.jpg", "assets/loc_et12_2.jpg", "assets/loc_et12_3.jpg", "assets/loc_et12_4.jpg"], status:"sale" },
 
   // ---------- 배경지 (배실장님) ----------
   { cat:"bg", name:"배경지 #01 슈퍼 화이트 (하프)", brand:"SAVAGE", qty:1, year:"", note:"SUPER WHITE · 1_12",swatch:"#f2f1ee",  status:"sale" },
