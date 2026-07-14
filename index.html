@@ -240,6 +240,7 @@
 
 const STATUS_LABEL = { sale: "판매중", hold: "예약중", sold: "판매완료" };
 const FORM_ENDPOINT = "https://formsubmit.co/ajax/4daba310c39387b2cac62a9e9796d9c6";
+const SHEET_ENDPOINT = "https://script.google.com/macros/s/AKfycbx4wOLUzlKJYdBJEGH2J8I2NEQAz77lShix8bxDaNELDKEXHcs_XZ7-bZilpfBdANU_yA/exec";
 
 let activeCat = "all";
 let query = "";
@@ -336,7 +337,7 @@ function openSheet() {
     return `
     <div class="bid-item" data-id="${id}">
       <span class="bname"><span class="pnum">${it.num}</span>${it.name}${it.ask ? `<small>희망 ₩${it.ask.toLocaleString("ko-KR")}${it.askUnit ? " " + it.askUnit : ""}</small>` : ""}</span>
-      <input type="text" inputmode="numeric" class="bid-price" placeholder="${it.ask ? "예: " + it.ask.toLocaleString("ko-KR") : "희망가"}">
+      <input type="text" inputmode="numeric" class="bid-price" value="${it.ask ? it.ask.toLocaleString("ko-KR") : ""}" placeholder="희망가">
       <span class="won">원</span>
       <button class="rm" title="빼기">✕</button>
     </div>`;
@@ -389,6 +390,15 @@ async function submitBid() {
     const price = row.querySelector(".bid-price").value.trim();
     return `[${it.num}] ${it.name} — ${price}원`;
   });
+  const bidsForSheet = rows.map(row => {
+    const it = ITEMS[+row.dataset.id];
+    return { name: it.name, price: row.querySelector(".bid-price").value.replace(/[^\d]/g, "") };
+  });
+  // 구글시트 수집 (best-effort, 응답 대기 안 함)
+  fetch(SHEET_ENDPOINT, {
+    method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
+    body: JSON.stringify({ name, contact, message: document.getElementById("f-msg").value.trim(), items: bidsForSheet }),
+  }).catch(() => {});
   const btn = document.getElementById("submit-bid");
   btn.disabled = true; btn.textContent = "보내는 중…";
   try {
@@ -407,6 +417,9 @@ async function submitBid() {
     msgEl.textContent = "입찰이 접수되었어요. 검토 후 연락드릴게요!";
     msgEl.className = "ok";
     btn.textContent = "접수 완료";
+    // 입찰된 품목 즉시 예약중 표시(입찰은 계속 가능)
+    bidsForSheet.forEach(b => { const it = ITEMS.find(i => i.name === b.name); if (it && it.status === "sale") it.status = "hold"; });
+    renderList();
   } catch {
     msgEl.textContent = "전송에 실패했어요. 잠시 후 다시 시도해 주세요.";
     msgEl.className = "err";
@@ -443,6 +456,15 @@ _lb.addEventListener("click", e => {
 
 renderChips();
 renderList();
+
+// 입찰 접수된 품목 자동 예약중 표시 (시트에서 조회, 실패해도 무시)
+fetch(SHEET_ENDPOINT).then(r => r.json()).then(d => {
+  if (!d || !d.reserved) return;
+  const set = new Set(d.reserved);
+  let changed = false;
+  ITEMS.forEach(it => { if (it.status === "sale" && set.has(it.name)) { it.status = "hold"; changed = true; } });
+  if (changed) renderList();
+}).catch(() => {});
 </script>
 </body>
 </html>
