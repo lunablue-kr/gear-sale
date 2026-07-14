@@ -406,12 +406,8 @@ async function submitBid() {
     const it = ITEMS[+row.dataset.id];
     return { name: it.name, price: row.querySelector(".bid-price").value.replace(/[^\d]/g, "") };
   });
-  // 구글시트 수집 (best-effort, 응답 대기 안 함)
-  fetch(SHEET_ENDPOINT, {
-    method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
-    body: JSON.stringify({ name, contact, message: document.getElementById("f-msg").value.trim(), items: bidsForSheet }),
-  }).catch(() => {});
   const btn = document.getElementById("submit-bid");
+  if (btn.disabled) return;                 // 중복 전송 방지 (더블클릭 차단)
   btn.disabled = true; btn.textContent = "보내는 중…";
   try {
     const res = await fetch(FORM_ENDPOINT, {
@@ -426,6 +422,11 @@ async function submitBid() {
       }),
     });
     if (!res.ok) throw new Error();
+    // 성공 시에만 시트 기록 (실패 후 재시도 중복 방지)
+    fetch(SHEET_ENDPOINT, {
+      method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({ name, contact, message: document.getElementById("f-msg").value.trim(), items: bidsForSheet }),
+    }).catch(() => {});
     msgEl.textContent = "입찰이 접수되었어요. 검토 후 연락드릴게요!";
     msgEl.className = "ok";
     btn.textContent = "접수 완료";
