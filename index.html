@@ -109,10 +109,12 @@
   }
   #bidbar.show { display: flex; }
   #bidbar .info { font-size: 14px; }
+  #bidbar .bidbar-btns { display: flex; gap: 8px; }
   #bidbar button {
     background: #fff; color: var(--ink); border: none; border-radius: 10px;
     padding: 10px 20px; font-size: 15px; font-weight: 700; cursor: pointer;
   }
+  #bidbar button.clear { background: transparent; color: #fff; border: 1px solid rgba(255,255,255,0.45); padding: 10px 14px; }
 
   /* ===== 입찰 모달 ===== */
   #overlay {
@@ -202,7 +204,10 @@
 
 <div id="bidbar">
   <span class="info"><b id="pick-count">0</b>개 품목 선택됨</span>
-  <button onclick="openSheet()">입찰서 작성</button>
+  <span class="bidbar-btns">
+    <button class="clear" onclick="clearPicks()">전체 해제</button>
+    <button onclick="openSheet()">입찰서 작성</button>
+  </span>
 </div>
 
 <div id="overlay">
@@ -289,7 +294,7 @@ function cardHTML(it) {
         ${soldish ? "입찰 마감" : sel ? "✓ 담김" : "입찰 담기"}
       </button>
       ${it.ask
-        ? `<span class="ask">희망 ₩${it.ask.toLocaleString("ko-KR")}${it.askUnit ? `<em>${it.askUnit}</em>` : ""}</span>`
+        ? `<span class="ask">희망 ₩${it.ask.toLocaleString("ko-KR")}${it.askUnit ? `<em>/${it.askUnit}</em>` : ""}</span>`
         : `<span class="ask tbd">시세 확인 중</span>`}
     </div>
   </div>`;
@@ -324,6 +329,13 @@ function togglePick(id) {
   updateBar();
 }
 
+function clearPicks() {
+  picked.clear();
+  renderList();
+  updateBar();
+  closeSheet();
+}
+
 function updateBar() {
   document.getElementById("pick-count").textContent = picked.size;
   document.getElementById("bidbar").classList.toggle("show", picked.size > 0);
@@ -336,7 +348,7 @@ function openSheet() {
     const it = ITEMS[id];
     return `
     <div class="bid-item" data-id="${id}">
-      <span class="bname"><span class="pnum">${it.num}</span>${it.name}${it.ask ? `<small>희망 ₩${it.ask.toLocaleString("ko-KR")}${it.askUnit ? " " + it.askUnit : ""}</small>` : ""}</span>
+      <span class="bname"><span class="pnum">${it.num}</span>${it.name}${it.ask ? `<small>희망 ₩${it.ask.toLocaleString("ko-KR")}${it.askUnit ? " /" + it.askUnit : ""}</small>` : ""}</span>
       <input type="text" inputmode="numeric" class="bid-price" value="${it.ask ? it.ask.toLocaleString("ko-KR") : ""}" placeholder="희망가">
       <span class="won">원</span>
       <button class="rm" title="빼기">✕</button>

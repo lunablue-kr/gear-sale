@@ -22,9 +22,9 @@ const ITEMS = [
   { cat:"camera", name:"Godox CT-16 트리거", brand:"Godox", qty:1, year:"2023.09 구입", note:"", status:"sale" },
 
   // ---------- 스트로보 · 조명 ----------
-  { cat:"strobe", name:"Profoto D2 1000 AirTTL", brand:"Profoto", qty:3, year:"2018.06 구입", note:"모델링 램프·플래시 튜브·컨덴서 등 정기 정비 이력, 펌웨어 최신. 분리 판매 가능 · 2개 이상 구매 시 듀오세트 가방 증정 (개별 구매 시 미포함)", ask:2000000, askUnit:"대당", imgs:["assets/loc_st1_1.jpg", "assets/loc_st1_2.jpg", "assets/loc_st1_3.jpg", "assets/loc_st1_4.jpg"], status:"sale" },
+  { cat:"strobe", name:"Profoto D2 1000 AirTTL", brand:"Profoto", qty:3, year:"2018.06 구입", note:"모델링 램프·플래시 튜브·컨덴서 등 정기 정비 이력, 펌웨어 최신. 분리 판매 가능 · 2개 이상 구매 시 듀오세트 가방 증정 (개별 구매 시 미포함)", ask:2000000, askUnit:"개", imgs:["assets/loc_st1_1.jpg", "assets/loc_st1_2.jpg", "assets/loc_st1_3.jpg", "assets/loc_st1_4.jpg"], status:"sale" },
   { cat:"strobe", name:"Profoto Acute2 2400 파워팩 + 헤드 ×2", brand:"Profoto", qty:1, year:"2019.09 구입", note:"Acute2/D4 헤드 2개 포함 세트. ⚠️ 헤드 1클립의 노출이 왔다갔다 해 점검이 필요합니다 — 이 점 감안해 저렴하게 내놓습니다", ask:1200000, imgs:["assets/loc_st2_1.jpg", "assets/loc_st2_2.jpg", "assets/loc_st2_3.jpg", "assets/loc_st2_4.jpg", "assets/loc_st2_5.jpg", "assets/loc_st2_6.jpg"], status:"sale" },
-  { cat:"strobe", name:"Godox QT1200IIM ×2", brand:"Godox", qty:2, year:"2020.10 구입", note:"플래시 튜브 교체·점검 이력. 분리 판매 가능 · 리플렉터(보웬스) 포함 · 2개 일괄 구매 시 오로라 가방 증정 (개별 구매 시 미포함)", ask:400000, askUnit:"대당", imgs:["assets/loc_st3_1.jpg", "assets/loc_st3_2.jpg", "assets/loc_st3_3.jpg", "assets/loc_st3_4.jpg", "assets/loc_st3_5.jpg", "assets/loc_st3_6.jpg"], status:"sale" },
+  { cat:"strobe", name:"Godox QT1200IIM ×2", brand:"Godox", qty:2, year:"2020.10 구입", note:"플래시 튜브 교체·점검 이력. 분리 판매 가능 · 리플렉터(보웬스) 포함 · 2개 일괄 구매 시 오로라 가방 증정 (개별 구매 시 미포함)", ask:400000, askUnit:"개", imgs:["assets/loc_st3_1.jpg", "assets/loc_st3_2.jpg", "assets/loc_st3_3.jpg", "assets/loc_st3_4.jpg", "assets/loc_st3_5.jpg", "assets/loc_st3_6.jpg"], status:"sale" },
   { cat:"strobe", name:"Nanlite Forza 720", brand:"Nanlite", qty:1, year:"2022.06 구입", note:"리플렉터 포함", ask:800000, imgs:["assets/loc_st4_1.jpg", "assets/loc_st4_2.jpg"], status:"sale" },
   { cat:"strobe", name:"Nanlite Forza 500 II", brand:"Nanlite", qty:1, year:"2024.12 구입", note:"", ask:900000, status:"hold" },
   { cat:"strobe", name:"Nanlite FS-300B", brand:"Nanlite", qty:1, year:"2025.12 구입", note:"최근 구입", ask:240000, status:"hold" },
@@ -45,15 +45,15 @@ const ITEMS = [
   { cat:"mod", name:"Godox 뷰티디쉬 Softlight Silver (보웬스)", brand:"Godox", qty:1, year:"", note:"디퓨저 포함 (2024.12 신품 교체)", ask:30000, status:"sale" },
   { cat:"mod", name:"Profoto 엄브렐러 Deep Silver M", brand:"Profoto", qty:1, year:"2018.06 구입", note:"", ask:150000, status:"hold" },
   { cat:"mod", name:"Aurora 엄브렐러 Deep Silver U-160C + Deep White U-160A (2개 일괄)", brand:"Aurora", qty:1, year:"2021.06 구입", note:"디퓨저 포함", ask:120000, status:"hold" },
-  { cat:"mod", name:"Godox 스피드링 (보웬스) ×2", brand:"Godox", qty:2, year:"2020.10 구입", note:"2개 일괄 가격", ask:10000, imgs:["assets/loc_md14_1.jpg", "assets/loc_md14_2.jpg"], status:"sale" },
-  { cat:"mod", name:"스피드링 (프로포토) ×2", brand:"Profoto", qty:2, year:"2018.06 구입", note:"2개 일괄 가격", ask:130000, imgs:["assets/loc_md15_1.jpg"], status:"sale" },
+  { cat:"mod", name:"Godox 스피드링 (보웬스) ×2", brand:"Godox", qty:2, year:"2020.10 구입", note:"2개 일괄 가격", ask:10000, imgs:["assets/loc_md14_1.jpg", "assets/loc_md14_2.jpg"], askUnit:"일괄", status:"sale" },
+  { cat:"mod", name:"스피드링 (프로포토) ×2", brand:"Profoto", qty:2, year:"2018.06 구입", note:"2개 일괄 가격", ask:130000, imgs:["assets/loc_md15_1.jpg"], askUnit:"일괄", status:"sale" },
   { cat:"mod", name:"LEE 컬러젤 Pro-Pack (24색) + 낱장 필터", brand:"LEE Filters", qty:1, year:"", note:"CTO·CTB·디퓨전 낱장 포함 · 사용감 다소 있음", ask:50000, status:"sale" },
   { cat:"mod", name:"프리즘 렌즈 FX Dream 77mm", brand:"Prism Lens FX", qty:1, year:"", note:"", status:"sale" },
   { cat:"mod", name:"Aurora 반도어 ALR-018 + 젤필터", brand:"Aurora", qty:1, year:"", note:"", ask:5000, imgs:["assets/loc_md18_1.jpg"], status:"sale" },
   { cat:"mod", name:"Meking 실크 프레임 120×120cm", brand:"Meking", qty:1, year:"2022.11 구입", note:"실크천 · 반사천 포함", ask:30000, imgs:["assets/loc_md19_1.jpg"], status:"sale" },
-  { cat:"mod", name:"Aurora FRM79 라이트커터 ×2 (75×90cm)", brand:"Aurora", qty:2, year:"2022.11 구입", note:"실크천 · 화이트/골드/실버 반사천 포함", ask:50000, imgs:["assets/loc_md20_1.jpg"], status:"hold" },
-  { cat:"mod", name:"실크 프레임 (블랙) ×2 (45×60cm)", brand:"", qty:2, year:"2022.11 구입", note:"", ask:30000, imgs:["assets/loc_md21_1.jpg"], status:"sale" },
-  { cat:"mod", name:"LEE 216 화이트 디퓨전 롤 ×3", brand:"LEE Filters", qty:3, year:"", note:"3롤 일괄 판매 · 사용감·절단 부분 있음 (가격 반영)", ask:80000, imgs:["assets/loc_md22_1.jpg"], status:"sale" },
+  { cat:"mod", name:"Aurora FRM79 라이트커터 ×2 (75×90cm)", brand:"Aurora", qty:2, year:"2022.11 구입", note:"실크천 · 화이트/골드/실버 반사천 포함", ask:50000, imgs:["assets/loc_md20_1.jpg"], askUnit:"일괄", status:"hold" },
+  { cat:"mod", name:"실크 프레임 (블랙) ×2 (45×60cm)", brand:"", qty:2, year:"2022.11 구입", note:"", ask:30000, imgs:["assets/loc_md21_1.jpg"], askUnit:"일괄", status:"sale" },
+  { cat:"mod", name:"LEE 216 화이트 디퓨전 롤 ×3", brand:"LEE Filters", qty:3, year:"", note:"3롤 일괄 판매 · 사용감·절단 부분 있음 (가격 반영)", ask:80000, imgs:["assets/loc_md22_1.jpg"], askUnit:"일괄", status:"sale" },
 
   // ---------- 스탠드 · 그립 ----------
   { cat:"grip", name:"KUPO CT-40M C스탠드 ×3", brand:"KUPO", qty:3, year:"", note:"", imgs:["assets/loc_gr1_1.jpg", "assets/loc_gr1_2.jpg", "assets/loc_gr1_3.jpg", "assets/loc_gr1_4.jpg", "assets/loc_gr1_5.jpg"], status:"sale" },
@@ -88,9 +88,9 @@ const ITEMS = [
   { cat:"grip", name:"KUPO KS-312B 플레이트", brand:"KUPO", qty:1, year:"", note:"", imgs:["assets/loc_gr30_1.jpg", "assets/loc_gr30_2.jpg"], status:"sale" },
 
   // ---------- 컴퓨터 · 모니터 ----------
-  { cat:"pc", name:"MacBook Pro 16\" M1 Pro (2021)", brand:"Apple", qty:1, year:"2021.12 구입", note:"정품 충전기 포함", status:"sale" },
-  { cat:"pc", name:"iMac 27\" Retina 5K (2017)", brand:"Apple", qty:1, year:"2018.05 구입", note:"HDMI 변환선 포함", status:"sale" },
-  { cat:"pc", name:"Apple Studio Display ×2", brand:"Apple", qty:2, year:"", note:"분리 판매 가능", status:"sale" },
+  { cat:"pc", name:"MacBook Pro 16\" M1 Pro (2021)", brand:"Apple", qty:1, year:"2021.12 구입", note:"16GB 메모리 · 1TB 저장공간 · 외관 데미지 없음 (액정 상태 불안정, 외부 액정 연결 사용 가능) · 정품 맥세이프 포함 풀박스 · 배터리 82.9% / 사이클 169 · 8월 중순 이후 거래 가능", ask:600000, status:"sale" },
+  { cat:"pc", name:"iMac 27\" Retina 5K (2017)", brand:"Apple", qty:1, year:"2018.05 구입", note:"애플 정품 키보드·마우스 포함 · 풀박스 · 64GB 메모리 · 512GB 저장공간", ask:450000, status:"sale" },
+  { cat:"pc", name:"Apple Studio Display ×2", brand:"Apple", qty:2, year:"2024.04 / 2025.05 구입", note:"기본 모델 · 썬더볼트 케이블 포함 풀박스 · 분리 판매 가능", ask:1400000, askUnit:"개", status:"sale" },
   { cat:"pc", name:"제우스랩 Z16P 16\" 포터블 모니터", brand:"Zeuslap", qty:1, year:"2022.11 구입", note:"", status:"sale" },
   { cat:"pc", name:"Wacom Intuos Pro PTH-860 (대형) ×2", brand:"Wacom", qty:2, year:"2021.02 / 2023.04 구입", note:"펜 포함, 분리 판매 가능", status:"sale" },
 
