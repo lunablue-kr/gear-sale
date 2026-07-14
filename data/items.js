@@ -130,7 +130,7 @@ const ITEMS = [
   { cat:"fabric", name:"White", brand:"", qty:1, year:"", note:"238cm x 151cm", img:"assets/fabric6.jpg", ask:5000, status:"sale" },
   { cat:"fabric", name:"Pink 메쉬", brand:"", qty:1, year:"", note:"246cm x 152cm", img:"assets/fabric7.jpg", ask:5000, status:"sale" },
   { cat:"fabric", name:"White 실크", brand:"", qty:1, year:"", note:"111cm x 73cm", img:"assets/fabric8.jpg", ask:5000, status:"sale" },
-  { cat:"fabric", name:"Black 실크", brand:"", qty:1, year:"", note:"730cm x 278cm", img:"assets/fabric9.jpg", ask:8000, status:"sale" },
+  { cat:"fabric", name:"Black 실크 (암막)", brand:"", qty:1, year:"", note:"730cm x 278cm", img:"assets/fabric9.jpg", ask:8000, status:"sale" },
   { cat:"fabric", name:"Gray 실크", brand:"", qty:1, year:"", note:"270cm x 150cm", img:"assets/fabric10.jpg", ask:5000, status:"sale" },
   { cat:"fabric", name:"Beige 실크", brand:"", qty:1, year:"", note:"270cm x 150cm", img:"assets/fabric_beige11.jpg", ask:5000, status:"sale" },
   { cat:"fabric", name:"Brown 실크", brand:"", qty:1, year:"", note:"270cm x 150cm", img:"assets/fabric12.jpg", ask:5000, status:"sale" },
