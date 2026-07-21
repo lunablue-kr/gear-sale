@@ -28,7 +28,7 @@ const ITEMS = [
   { cat:"strobe", name:"Nanlite Forza 720", brand:"Nanlite", qty:1, year:"2022.06 구입", note:"리플렉터 포함", ask:800000, imgs:["assets/loc_st4_1.jpg", "assets/loc_st4_2.jpg"], status:"sale" },
   { cat:"strobe", name:"Nanlite Forza 500 II", brand:"Nanlite", qty:1, year:"2024.12 구입", note:"", ask:900000, status:"sale" },
   { cat:"strobe", name:"Nanlite FS-300B", brand:"Nanlite", qty:1, year:"2025.12 구입", note:"최근 구입", ask:240000, status:"sale" },
-  { cat:"strobe", name:"Nanlite PavoTube 6C", brand:"Nanlite", qty:1, year:"", note:"", ask:60000, status:"sale" },
+  { cat:"strobe", name:"Nanlite PavoTube 6C ×2", brand:"Nanlite", qty:2, year:"", note:"", ask:60000, status:"sale" },
   { cat:"strobe", name:"Nanlite FL-20G 프레넬 렌즈", brand:"Nanlite", qty:1, year:"2022.06 구입", note:"반도어 포함, Forza 시리즈용", ask:130000, status:"sale" },
 
   // ---------- 모디파이어 ----------
