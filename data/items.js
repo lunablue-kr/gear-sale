@@ -28,7 +28,7 @@ const ITEMS = [
   { cat:"strobe", name:"Godox QT1200IIM ×2", brand:"Godox", qty:2, year:"2020.10 구입", note:"플래시 튜브 교체·점검 이력. 분리 판매 가능 · 리플렉터(보웬스) 포함 · 2개 일괄 구매 시 오로라 가방 증정 (개별 구매 시 미포함)", ask:400000, askUnit:"개", imgs:["assets/loc_st3_1.jpg", "assets/loc_st3_2.jpg", "assets/loc_st3_3.jpg", "assets/loc_st3_4.jpg", "assets/loc_st3_5.jpg", "assets/loc_st3_6.jpg", "assets/loc_st3_7.jpg", "assets/loc_st3_8.jpg", "assets/loc_st3_9.jpg"], status:"sale" },
   { cat:"strobe", name:"Nanlite Forza 720", brand:"Nanlite", qty:1, year:"2022.06 구입", note:"리플렉터 포함", ask:750000, imgs:["assets/loc_st4_1.jpg", "assets/loc_st4_2.jpg"], status:"sale" },
   { cat:"strobe", name:"Nanlite Forza 500 II", brand:"Nanlite", qty:1, year:"2024.12 구입", note:"", ask:850000, status:"sale" },
-  { cat:"strobe", name:"Nanlite FS-300B", brand:"Nanlite", qty:1, year:"2025.12 구입", note:"최근 구입", ask:260000, status:"sale" },
+  { cat:"strobe", name:"Nanlite FS-300B", brand:"Nanlite", qty:1, year:"2025.12 구입", note:"최근 구입", ask:280000, status:"sale" },
   { cat:"strobe", name:"Nanlite PavoTube II 6C", brand:"Nanlite", qty:1, year:"", note:"전원 버튼 까짐", ask:60000, status:"sale" },
   { cat:"strobe", name:"Nanlite FL-20G 프레넬 렌즈", brand:"Nanlite", qty:1, year:"2022.06 구입", note:"반도어 포함, Forza 시리즈용", ask:130000, status:"sale" },
 
@@ -69,7 +69,7 @@ const ITEMS = [
   { cat:"grip", name:"Manfrotto MT190XPRO3 삼각대", brand:"Manfrotto", qty:1, year:"", note:"", ask:120000, imgs:["assets/loc_gr11_1.jpg", "assets/loc_gr11_2.jpg"], status:"sale" },
   { cat:"grip", name:"KUPO KCP-200 그립헤드 ×3", brand:"KUPO", qty:3, year:"", note:"헤드·암 전체 일괄 15만", ask:25000, askUnit:"개", imgs:["assets/loc_gr13_1.jpg"], status:"sale" },
   { cat:"grip", name:"KUPO 40인치 그립암 ×3", brand:"KUPO", qty:3, year:"", note:"KCP-241 (육각핀) 2개 · KCP-240 1개 · 헤드·암 전체 일괄 15만", ask:30000, askUnit:"개", imgs:["assets/loc_gr14_1.jpg"], status:"sale" },
-  { cat:"grip", name:"KUPO KCP-210 그립헤드 (고정핀)", brand:"KUPO", qty:1, year:"", note:"", imgs:["assets/loc_gr15_1.jpg"], status:"sale" },
+  { cat:"grip", name:"KUPO KCP-210 그립헤드 (고정핀)", brand:"KUPO", qty:1, year:"", note:"", ask:30000, imgs:["assets/loc_gr15_1.jpg"], status:"sale" },
   { cat:"grip", name:"Manfrotto 042 익스텐션 암", brand:"Manfrotto", qty:1, year:"", note:"", ask:18000, imgs:["assets/loc_gr16_1.jpg", "assets/loc_gr16_2.jpg", "assets/loc_gr16_3.jpg", "assets/loc_gr16_4.jpg", "assets/loc_gr16_5.jpg"], status:"sale" },
   { cat:"grip", name:"Manfrotto 035 슈퍼클램프 ×4 + KUPO KCP-710B 콘비 클램프", brand:"Manfrotto", qty:5, year:"", note:"5개 일괄 10만", ask:25000, askUnit:"개", imgs:["assets/loc_gr17_1.jpg", "assets/loc_gr17_2.jpg", "assets/loc_gr17_3.jpg"], status:"sale" },
   { cat:"grip", name:"KUPO KS-017 16mm 라이트 스터드", brand:"KUPO", qty:1, year:"", note:"", ask:3000, imgs:["assets/loc_gr18_1.jpg", "assets/loc_gr18_2.jpg", "assets/loc_gr18_3.jpg"], status:"sale" },
