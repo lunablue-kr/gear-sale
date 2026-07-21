@@ -20,7 +20,7 @@ const ITEMS = [
   { cat:"camera", name:"Canon 마운트 어댑터 EF-EOS R (컨트롤 링)", brand:"Canon", qty:1, year:"2021.11 구입", note:"", ask:160000, status:"hold" },
   { cat:"camera", name:"Godox Xpro-C TTL 동조기", brand:"Godox", qty:1, year:"2020.10 구입", note:"캐논용", ask:40000, status:"sale" },
   { cat:"camera", name:"Godox CT-16 트리거", brand:"Godox", qty:1, year:"2023.09 구입", note:"", ask:5000, status:"sale" },
-  { cat:"camera", name:"프리즘 렌즈 FX Dream 77mm 필터", brand:"Prism Lens FX", qty:1, year:"", note:"", status:"sale" },
+  { cat:"camera", name:"프리즘 렌즈 FX Dream 77mm 필터", brand:"Prism Lens FX", qty:1, year:"", note:"", ask:90000, status:"sale" },
 
   // ---------- 스트로보 · 조명 ----------
   { cat:"strobe", name:"Profoto D2 1000 AirTTL", brand:"Profoto", qty:3, year:"2018.06 구입", note:"모델링 램프·플래시 튜브·컨덴서 등 정기 정비 이력, 펌웨어 최신. 분리 판매 가능 · 2개 이상 구매 시 듀오세트 가방 증정 (개별 구매 시 미포함)", ask:2000000, askUnit:"개", imgs:["assets/loc_st1_1.jpg", "assets/loc_st1_2.jpg", "assets/loc_st1_3.jpg", "assets/loc_st1_4.jpg"], status:"sale" },
