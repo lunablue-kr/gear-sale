@@ -76,7 +76,7 @@ const ITEMS = [
   { cat:"grip", name:"Avenger E600 스냅인 핀", brand:"Avenger", qty:1, year:"", note:"", ask:5000, imgs:["assets/loc_gr19_1.jpg", "assets/loc_gr19_2.jpg", "assets/loc_gr19_3.jpg"], status:"sale" },
   { cat:"grip", name:"Valens VL-01 나사 변환 어댑터 1/4\"→3/8\"", brand:"Valens", qty:1, year:"", note:"", ask:3000, status:"sale" },
   { cat:"grip", name:"Valens VL-01 나사 변환 어댑터 3/8\"→1/4\"", brand:"Valens", qty:1, year:"", note:"", ask:3000, status:"sale" },
-  { cat:"grip", name:"Xiletu XJ-15 태블릿 홀더", brand:"Xiletu", qty:1, year:"", note:"아이패드 12.9인치 체결 가능", ask:2000, imgs:["assets/loc_gr22_1.jpg"], status:"sale" },
+  { cat:"grip", name:"Xiletu XJ-15 태블릿 홀더", brand:"Xiletu", qty:1, year:"", note:"아이패드 12.9인치 체결 가능", ask:15000, imgs:["assets/loc_gr22_1.jpg"], status:"sale" },
   { cat:"grip", name:"Manfrotto 155RC 더블 볼 틸트헤드", brand:"Manfrotto", qty:1, year:"", note:"플레이트 포함", ask:30000, imgs:["assets/loc_gr23_1.jpg", "assets/loc_gr23_2.jpg"], status:"sale" },
   { cat:"grip", name:"KUPO KS-097 베이비 볼헤드 어댑터", brand:"KUPO", qty:1, year:"", note:"3/8 핀", ask:20000, imgs:["assets/loc_gr24_1.jpg", "assets/loc_gr24_2.jpg"], status:"sale" },
   { cat:"grip", name:"J 훅 (내로우 U 훅) ×3", brand:"", qty:3, year:"", note:"", ask:5000, askUnit:"개", status:"sale" },
