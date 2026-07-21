@@ -23,12 +23,12 @@ const ITEMS = [
 
   // ---------- 스트로보 · 조명 ----------
   { cat:"strobe", name:"Profoto D2 1000 AirTTL", brand:"Profoto", qty:3, year:"2018.06 구입", note:"모델링 램프·플래시 튜브·컨덴서 등 정기 정비 이력, 펌웨어 최신. 분리 판매 가능 · 2개 이상 구매 시 듀오세트 가방 증정 (개별 구매 시 미포함)", ask:2000000, askUnit:"개", imgs:["assets/loc_st1_1.jpg", "assets/loc_st1_2.jpg", "assets/loc_st1_3.jpg", "assets/loc_st1_4.jpg"], status:"sale" },
-  { cat:"strobe", name:"Profoto Acute2 2400 파워팩 + 헤드 ×2", brand:"Profoto", qty:1, year:"2019.09 구입", note:"Acute2/D4 헤드 2개 포함 세트. ⚠️ 헤드 1클립의 노출이 왔다갔다 해 점검이 필요합니다 — 이 점 감안해 저렴하게 내놓습니다", ask:1200000, imgs:["assets/loc_st2_1.jpg", "assets/loc_st2_2.jpg", "assets/loc_st2_3.jpg", "assets/loc_st2_4.jpg", "assets/loc_st2_5.jpg", "assets/loc_st2_6.jpg"], status:"sale" },
+  { cat:"strobe", name:"Profoto Acute2 2400 파워팩 + 헤드 ×2", brand:"Profoto", qty:1, year:"2019.09 구입", note:"Acute2/D4 헤드 2개 포함 세트. ⚠️ 헤드 1클립의 노출이 왔다갔다 해 점검이 필요합니다 — 이 점 감안해 저렴하게 내놓습니다 · 가방 있음", ask:1200000, imgs:["assets/loc_st2_1.jpg", "assets/loc_st2_2.jpg", "assets/loc_st2_3.jpg", "assets/loc_st2_4.jpg", "assets/loc_st2_5.jpg", "assets/loc_st2_6.jpg"], status:"sale" },
   { cat:"strobe", name:"Godox QT1200IIM ×2", brand:"Godox", qty:2, year:"2020.10 구입", note:"플래시 튜브 교체·점검 이력. 분리 판매 가능 · 리플렉터(보웬스) 포함 · 2개 일괄 구매 시 오로라 가방 증정 (개별 구매 시 미포함)", ask:400000, askUnit:"개", imgs:["assets/loc_st3_1.jpg", "assets/loc_st3_2.jpg", "assets/loc_st3_3.jpg", "assets/loc_st3_4.jpg", "assets/loc_st3_5.jpg", "assets/loc_st3_6.jpg", "assets/loc_st3_7.jpg", "assets/loc_st3_8.jpg", "assets/loc_st3_9.jpg"], status:"sale" },
   { cat:"strobe", name:"Nanlite Forza 720", brand:"Nanlite", qty:1, year:"2022.06 구입", note:"리플렉터 포함", ask:800000, imgs:["assets/loc_st4_1.jpg", "assets/loc_st4_2.jpg"], status:"sale" },
   { cat:"strobe", name:"Nanlite Forza 500 II", brand:"Nanlite", qty:1, year:"2024.12 구입", note:"", ask:900000, status:"sale" },
   { cat:"strobe", name:"Nanlite FS-300B", brand:"Nanlite", qty:1, year:"2025.12 구입", note:"최근 구입", ask:240000, status:"sale" },
-  { cat:"strobe", name:"Nanlite PavoTube 6C ×2", brand:"Nanlite", qty:2, year:"", note:"", ask:60000, status:"sale" },
+  { cat:"strobe", name:"Nanlite PavoTube II 6C", brand:"Nanlite", qty:1, year:"", note:"전원 버튼 까짐", ask:60000, status:"sale" },
   { cat:"strobe", name:"Nanlite FL-20G 프레넬 렌즈", brand:"Nanlite", qty:1, year:"2022.06 구입", note:"반도어 포함, Forza 시리즈용", ask:130000, status:"sale" },
 
   // ---------- 모디파이어 ----------
@@ -40,8 +40,8 @@ const ITEMS = [
   { cat:"mod", name:"Profoto 7\" Grid Reflector", brand:"Profoto", qty:1, year:"2023.11 구입", note:"안쪽에 미세한 찍힘 있음", ask:80000, imgs:["assets/loc_md6_1.jpg", "assets/loc_md6_2.jpg"], status:"sale" },
   { cat:"mod", name:"Aurora 원형 반사판 실버", brand:"Aurora", qty:1, year:"", note:"", imgs:["assets/loc_md7_1.jpg", "assets/loc_md7_2.jpg"], status:"sale" },
   { cat:"mod", name:"Aurora 원형 반사판 LD-60 S/W", brand:"Aurora", qty:1, year:"2024.12 구입", note:"", ask:3000, imgs:["assets/loc_md8_1.jpg", "assets/loc_md8_2.jpg"], status:"sale" },
-  { cat:"mod", name:"PERI Butterfly (240×240cm)", brand:"PERI", qty:1, year:"2019.06 구입", note:"스탠드 미포함 · 디퓨저 천 사용감 있음", ask:250000, imgs:["assets/loc_md9_1.jpg"], status:"sale" },
-  { cat:"mod", name:"뷰티디쉬 Softlight Silver (프로포토)", brand:"Profoto", qty:1, year:"", note:"허니컴 + 디퓨저 포함 · 사용감 있음", ask:250000, imgs:["assets/loc_md10_1.jpg", "assets/loc_md10_2.jpg"], status:"sale" },
+  { cat:"mod", name:"PERI Butterfly (240×240cm)", brand:"PERI", qty:1, year:"2019.06 구입", note:"스탠드 미포함 · 디퓨저 천 사용감 있음 · 전용 가방 있음", ask:250000, imgs:["assets/loc_md9_1.jpg"], status:"sale" },
+  { cat:"mod", name:"뷰티디쉬 Softlight Silver (프로포토)", brand:"Profoto", qty:1, year:"", note:"허니컴 + 디퓨저 포함 · 사용감 있음 · 가방 있음", ask:250000, imgs:["assets/loc_md10_1.jpg", "assets/loc_md10_2.jpg"], status:"sale" },
   { cat:"mod", name:"Godox 뷰티디쉬 Softlight Silver (보웬스)", brand:"Godox", qty:1, year:"", note:"디퓨저 포함 (2024.12 신품 교체)", ask:30000, imgs:["assets/loc_md11_1.jpg"], status:"sale" },
   { cat:"mod", name:"Profoto 엄브렐러 Deep Silver M", brand:"Profoto", qty:1, year:"2018.06 구입", note:"", ask:150000, status:"hold" },
   { cat:"mod", name:"Aurora 엄브렐러 Deep Silver U-160C + Deep White U-160A (2개 일괄)", brand:"Aurora", qty:1, year:"2021.06 구입", note:"디퓨저 포함", ask:120000, askUnit:"일괄", status:"hold" },
@@ -87,7 +87,7 @@ const ITEMS = [
   { cat:"pc", name:"iMac 27\" Retina 5K (2017)", brand:"Apple", qty:1, year:"2018.05 구입", note:"애플 정품 키보드·마우스 포함 · 풀박스 · 64GB 메모리 · 512GB 저장공간", ask:450000, status:"sale" },
   { cat:"pc", name:"Apple Studio Display ×2", brand:"Apple", qty:2, year:"2024.04 / 2025.05 구입", note:"기본 모델 · 썬더볼트 케이블 포함 풀박스 · 분리 판매 가능 · 8월 말 이후 거래 가능", ask:1400000, askUnit:"개", status:"sale" },
   { cat:"pc", name:"제우스랩 Z16P 16\" 포터블 모니터", brand:"Zeuslap", qty:1, year:"2022.11 구입", note:"", status:"sale" },
-  { cat:"pc", name:"Wacom Intuos Pro PTH-860 (대형) ×2", brand:"Wacom", qty:2, year:"2021.02 / 2023.04 구입", note:"펜 포함, 분리 판매 가능", status:"sale" },
+  { cat:"pc", name:"Wacom Intuos Pro PTH-860 (대형) ×2", brand:"Wacom", qty:2, year:"2021.02 / 2023.04 구입", note:"펜 포함, 분리 판매 가능 · 박스 있음", status:"sale" },
 
   // ---------- 기타 ----------
   { cat:"etc", name:"아크릴 봉 ×5", brand:"", qty:5, year:"", note:"사각 3 · 원형 2, 제품 촬영 받침용", status:"hold" },
