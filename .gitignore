@@ -1,1 +1,4 @@
 pictures/
+
+# 입찰자 개인정보(이름·연락처) 포함 — 절대 배포 금지
+data/bids-local.js

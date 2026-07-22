@@ -69,7 +69,11 @@
     transition: border-color .15s, box-shadow .15s;
   }
   .card.picked { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); }
-  .card.sold { opacity: 0.55; }
+  .card.sold { opacity: 0.4; background: #f2f1ee; }
+  .card.sold:hover { opacity: 0.75; }
+  .card.sold .card-thumb { filter: grayscale(1); }
+  .card.sold h3 { text-decoration: line-through; text-decoration-color: #bbb; }
+  .ask.sold-ask { color: #999; font-weight: 500; }
   .card-top { display: flex; justify-content: space-between; gap: 8px; align-items: flex-start; }
   .card-thumb { width: 100%; height: 160px; object-fit: cover; border-radius: 9px; background: var(--bg); border: 1px solid var(--line); cursor: zoom-in; }
   #lightbox { position: fixed; inset: 0; background: rgba(0,0,0,0.88); display: none; align-items: center; justify-content: center; z-index: 60; cursor: zoom-out; padding: 24px; }
@@ -293,7 +297,9 @@ function cardHTML(it) {
       <button class="pick-btn" data-id="${it.id}" ${soldish ? "disabled" : ""}>
         ${soldish ? "입찰 마감" : sel ? "✓ 담김" : "입찰 담기"}
       </button>
-      ${it.ask
+      ${soldish
+        ? `<span class="ask sold-ask">거래 완료</span>`
+        : it.ask
         ? `<span class="ask">희망 ₩${it.ask.toLocaleString("ko-KR")}${it.askUnit ? `<em>/${it.askUnit}</em>` : ""}</span>`
         : `<span class="ask tbd">시세 확인 중</span>`}
     </div>
@@ -311,7 +317,9 @@ function renderList() {
   let html = "";
   let total = 0;
   for (const c of cats) {
-    const items = ITEMS.filter(i => i.cat === c && matches(i));
+    // 판매완료는 카테고리 맨 아래로 내려 눈에 덜 띄게
+    const items = ITEMS.filter(i => i.cat === c && matches(i))
+      .sort((a, b) => (a.status === "sold" ? 1 : 0) - (b.status === "sold" ? 1 : 0));
     if (!items.length) continue;
     total += items.length;
     html += `<h2 class="section-title">${CATS[c]} <span class="count">${items.length}개</span></h2>
@@ -481,14 +489,34 @@ _lb.addEventListener("click", e => {
 renderChips();
 renderList();
 
-// 입찰 접수된 품목 자동 예약중 표시 (시트에서 조회, 실패해도 무시)
-fetch(SHEET_ENDPOINT).then(r => r.json()).then(d => {
-  if (!d || !d.reserved) return;
-  const set = new Set(d.reserved);
-  let changed = false;
-  ITEMS.forEach(it => { if (it.status === "sale" && set.has(it.name)) { it.status = "hold"; changed = true; } });
-  if (changed) renderList();
-}).catch(() => {});
+// 시트에서 현황 조회해 반영 (실패해도 무시)
+//  · reserved : 입찰 들어온 품목 → 예약중
+//  · sold/sale: 관리자가 정한 판매상태 (판매완료가 예약중보다 우선)
+function syncFromSheet() {
+  const jobs = [
+    fetch(SHEET_ENDPOINT).then(r => r.json()).catch(() => null),
+    fetch(SHEET_ENDPOINT + "?action=status").then(r => r.json()).catch(() => null),
+  ];
+  return Promise.all(jobs).then(([bidRes, stRes]) => {
+    let changed = false;
+    if (bidRes && bidRes.reserved) {
+      const set = new Set(bidRes.reserved);
+      ITEMS.forEach(it => { if (it.status === "sale" && set.has(it.name)) { it.status = "hold"; changed = true; } });
+    }
+    if (stRes && stRes.ok) {
+      const sold = new Set(stRes.sold || []), sale = new Set(stRes.sale || []);
+      ITEMS.forEach(it => {
+        const want = sold.has(it.name) ? "sold" : sale.has(it.name) ? "sale" : null;
+        if (want && it.status !== want) { it.status = want; changed = true; }
+      });
+    }
+    if (changed) { picked.forEach(id => { if (ITEMS[id] && ITEMS[id].status === "sold") picked.delete(id); }); renderList(); updateBar(); }
+  });
+}
+syncFromSheet();
+// 탭을 다시 열어보면 최신 상태로 (관리자 변경이 바로 반영되게)
+document.addEventListener("visibilitychange", () => { if (!document.hidden) syncFromSheet(); });
+setInterval(syncFromSheet, 60000);
 </script>
 </body>
 </html>

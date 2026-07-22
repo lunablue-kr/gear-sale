@@ -1,0 +1,1070 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>입찰 현황 — 관리자</title>
+<style>
+  :root {
+    --bg: #f7f7f5; --card: #ffffff; --ink: #1a1a1a; --sub: #6b6b6b;
+    --line: #e6e4df; --accent: #2f6b4f; --accent-soft: #e8f1ec;
+    --danger: #b04a3a; --gold: #b8860b; --radius: 14px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Pretendard", "Noto Sans KR", sans-serif;
+    background: var(--bg); color: var(--ink); line-height: 1.55; padding-bottom: 60px;
+  }
+  .wrap { max-width: 960px; margin: 0 auto; padding: 0 16px; }
+
+  header { background: var(--card); border-bottom: 1px solid var(--line); padding: 24px 0; }
+  header h1 { font-size: 21px; font-weight: 800; letter-spacing: -0.4px; }
+  header .sub { color: var(--sub); font-size: 13.5px; margin-top: 4px; }
+
+  /* 로그인 */
+  #gate { max-width: 360px; margin: 80px auto; background: var(--card);
+    border: 1px solid var(--line); border-radius: var(--radius); padding: 24px; }
+  #gate h2 { font-size: 17px; margin-bottom: 4px; }
+  #gate p { font-size: 13.5px; color: var(--sub); margin-bottom: 16px; }
+  input[type=password], input[type=text], select {
+    width: 100%; padding: 10px 13px; border: 1px solid var(--line);
+    border-radius: 10px; font-size: 15px; background: var(--card); color: var(--ink);
+  }
+  input:focus, select:focus { outline: 2px solid var(--accent); border-color: transparent; }
+  button {
+    padding: 10px 16px; border-radius: 10px; border: 1px solid var(--ink);
+    background: var(--ink); color: #fff; font-size: 14.5px; cursor: pointer; font-weight: 600;
+  }
+  button.ghost { background: var(--card); color: var(--ink); border-color: var(--line); font-weight: 500; }
+  button:disabled { opacity: .5; cursor: default; }
+  #gate button { width: 100%; margin-top: 12px; }
+  .err { color: var(--danger); font-size: 13.5px; margin-top: 10px; }
+  .ok { color: var(--accent); font-size: 13.5px; margin-top: 10px; }
+
+  /* 툴바 */
+  .toolbar { position: sticky; top: 0; z-index: 20; background: rgba(247,247,245,.93);
+    backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); padding: 10px 0; }
+  .toolbar-inner { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .toolbar-inner input { flex: 1 1 200px; }
+  .toolbar-inner select { flex: 0 0 auto; width: auto; }
+
+  .stats { display: flex; gap: 10px; flex-wrap: wrap; margin: 16px 0; }
+  .stat { background: var(--card); border: 1px solid var(--line); border-radius: 10px;
+    padding: 9px 14px; font-size: 13.5px; }
+  .stat b { font-size: 17px; display: block; }
+
+  /* 품목 카드 */
+  .item { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 15px 16px; margin-bottom: 12px; }
+  .item-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px;
+    padding-bottom: 10px; border-bottom: 1px solid var(--line); }
+  .item-name { font-weight: 700; font-size: 15.5px; }
+  .pnum { display: inline-block; font-size: 11.5px; font-weight: 700; vertical-align: 2px;
+    background: var(--accent-soft); color: var(--accent); border-radius: 5px;
+    padding: 1px 6px; margin-right: 6px; }
+  .pnum.warn { background: #fbe6e2; color: var(--danger); }
+  .pnum.dup { background: #fdf3e0; color: #8a6510; font-weight: 500; }
+  .was { font-weight: 400; font-size: 12px; color: var(--sub); margin-top: 3px; }
+  .item-meta { color: var(--sub); font-size: 13px; white-space: nowrap; }
+
+  .bid { display: grid; grid-template-columns: 34px 1fr auto; gap: 10px;
+    align-items: center; padding: 9px 0; border-bottom: 1px dashed var(--line); }
+  .bid:last-child { border-bottom: none; }
+  .rank { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center;
+    font-size: 13px; font-weight: 700; background: #eee; color: var(--sub); }
+  .rank.r1 { background: var(--gold); color: #fff; }
+  .rank.r2 { background: #9aa0a6; color: #fff; }
+  .rank.r3 { background: #cd7f32; color: #fff; }
+  .who { font-size: 14.5px; font-weight: 600; }
+  .who .contact { font-weight: 400; color: var(--sub); font-size: 13px; margin-left: 6px; }
+  .when { color: var(--sub); font-size: 12.5px; }
+  .msg { color: var(--sub); font-size: 12.5px; font-style: italic; margin-top: 2px; }
+  .price { font-weight: 700; font-size: 15px; text-align: right; white-space: nowrap; }
+  .price.none { color: var(--sub); font-weight: 400; }
+
+  .empty { text-align: center; color: var(--sub); padding: 50px 0; }
+
+  /* ===== 표 ===== */
+  .gridwrap { background: var(--card); border: 1px solid var(--line);
+    border-radius: var(--radius); overflow: auto; max-height: calc(100vh - 260px); }
+  table.grid { border-collapse: separate; border-spacing: 0; width: 100%; font-size: 13.5px; }
+  table.grid th, table.grid td { padding: 7px 10px; border-bottom: 1px solid var(--line);
+    text-align: left; white-space: nowrap; }
+  table.grid thead th { position: sticky; top: 0; z-index: 2; background: var(--accent-soft);
+    font-size: 12.5px; font-weight: 700; cursor: pointer; user-select: none; }
+  table.grid thead th:hover { background: #dceae2; }
+  table.grid th .arw { color: var(--accent); margin-left: 3px; }
+  table.grid tbody tr:hover { background: #fafaf8; }
+  table.grid tr.sel { background: #eef5f1 !important; }
+  table.grid td.num, table.grid td.money { text-align: right; font-variant-numeric: tabular-nums; }
+  table.grid td.item { white-space: normal; min-width: 190px; font-weight: 600; }
+  /* 메모: 기본 한 줄 말줄임 → 클릭하면 그 칸만 펼쳐짐 (행 높이 들쭉날쭉 방지) */
+  table.grid td.msg { color: var(--sub); font-size: 12px; cursor: pointer; }
+  table.grid td.msg .msgtxt { display: block; max-width: 240px;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  table.grid td.msg.open .msgtxt { white-space: normal; max-width: 340px; }
+  table.grid td.msg:hover { color: var(--ink); }
+  tr.grouphead td { background: #f0efec; font-weight: 700; font-size: 13px; }
+  tr.grouphead .gsum { float: right; font-weight: 700; color: var(--accent); }
+  tr.grouphead .gnote { font-weight: 500; font-size: 12px; color: #35508f; margin-left: 8px; }
+  .tag { display: inline-block; font-size: 11px; border-radius: 4px; padding: 0 5px; margin-left: 4px; }
+  .tag.top { background: #e5f3ea; color: var(--accent); }
+  .tag.r1 { background: #fdf1d8; color: #8a6510; }
+  .tag.hold { background: #fdf3e0; color: #8a6510; }
+  .tag.split { background: #fdf3e0; color: #8a6510; }
+  /* 접수 시각: 날짜만, 클릭하면 시각까지 */
+  table.grid td.ts { cursor: pointer; }
+  table.grid td.ts .tst { display: none; color: var(--sub); margin-left: 5px; font-size: 12px; }
+  table.grid td.ts.open .tst { display: inline; }
+
+  /* 상태별 행 구분 */
+  select.stsel { font-size: 12px; padding: 2px 5px; border-radius: 6px;
+    border: 1px solid var(--line); background: var(--card); width: auto; }
+  select.stsel.hold { background: #fdf3e0; color: #8a6510; border-color: #e8d5a8; }
+  select.stsel.done { background: var(--accent-soft); color: var(--accent); border-color: #cfe0d6; }
+  select.stsel.drop { background: #f3f3f1; color: var(--sub); }
+  tr.st-done td:not(.state) { opacity: .5; }
+  tr.st-done td.item { text-decoration: line-through; text-decoration-color: #bbb; }
+  tr.st-drop td:not(.state) { opacity: .35; text-decoration: line-through; text-decoration-color: #ccc; }
+  tr.st-hold td.item { color: #8a6510; }
+  input.pedit { width: 96px; padding: 3px 6px; font-size: 13px; text-align: right;
+    border: 1px solid var(--accent); border-radius: 6px; }
+  input.nedit { width: 230px; padding: 3px 7px; font-size: 12.5px;
+    border: 1px solid var(--accent); border-radius: 6px; }
+
+  /* 내 메모 */
+  table.grid td.note { cursor: pointer; font-size: 12px; color: #35508f; }
+  table.grid td.note .notetxt { display: block; max-width: 230px;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .noteadd { color: #b9b9b4; font-size: 11.5px; }
+  table.grid td.note:hover .noteadd { color: var(--accent); }
+
+  /* 왼쪽 고정 열 */
+  table.grid .stick { position: sticky; z-index: 1; background: var(--card); }
+  table.grid thead .stick { z-index: 4; background: var(--accent-soft); }
+  table.grid tbody tr:hover .stick { background: #fafaf8; }
+  table.grid tbody tr.sel .stick { background: #eef5f1; }
+  table.grid .stick-last { box-shadow: 1px 0 0 var(--line); }
+  table.grid tr.grouphead td { position: sticky; left: 0; }
+  .tag.edited { background: #e8eefb; color: #35508f; }
+  .diff { font-size: 11.5px; }
+  .diff.up { color: var(--accent); }
+  .diff.dn { color: var(--danger); }
+  .cbx { width: 30px; text-align: center !important; }
+
+  /* ===== 선택 합계 바 ===== */
+  #selbar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 40;
+    background: var(--ink); color: #fff; padding: 11px 0; }
+  .selbar-inner { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  #selinfo { flex: 1; font-size: 14px; }
+  #selinfo b { font-size: 16px; }
+  #selbar button { background: transparent; color: #fff; border-color: #555; }
+  .banner { background: #fdf3e0; border: 1px solid #e8d5a8; border-radius: var(--radius);
+    padding: 13px 15px; font-size: 13.5px; margin: 16px 0 0; }
+  .banner b { color: #8a6510; }
+  .syncmsg { font-size: 13px; color: var(--sub); margin-top: 10px; min-height: 0; }
+  .syncmsg:not(:empty) { min-height: 20px; }
+  .syncmsg.ok { color: var(--accent); font-weight: 600; }
+  .syncmsg.err { color: var(--danger); font-weight: 600; }
+  details.raw { margin-top: 26px; }
+  details.raw summary { cursor: pointer; color: var(--sub); font-size: 13.5px; }
+  .rawtable { overflow-x: auto; margin-top: 10px; }
+  table { border-collapse: collapse; font-size: 12.5px; width: 100%; }
+  th, td { border: 1px solid var(--line); padding: 5px 8px; text-align: left;
+    white-space: nowrap; max-width: 280px; overflow: hidden; text-overflow: ellipsis; }
+  th { background: var(--accent-soft); position: sticky; top: 0; }
+  .hide { display: none !important; }
+</style>
+</head>
+<body>
+
+<div id="gate">
+  <h2>입찰 현황</h2>
+  <p>관리자 비밀번호를 입력하세요.</p>
+  <input type="password" id="pw" placeholder="비밀번호" autocomplete="current-password">
+  <button id="login">확인</button>
+  <button class="ghost" id="preview" style="width:100%;margin-top:8px">품목만 미리보기</button>
+  <div id="gate-msg"></div>
+</div>
+
+<div id="app" class="hide">
+  <header>
+    <div class="wrap">
+      <h1>입찰 현황</h1>
+      <div class="sub">품목별 접수 순서대로 순위 표시 · 먼저 넣은 사람이 1순위</div>
+    </div>
+  </header>
+
+  <div class="toolbar">
+    <div class="wrap toolbar-inner">
+      <input type="text" id="q" placeholder="품목 · 이름 · 연락처 검색">
+      <select id="cat"><option value="">전체 카테고리</option></select>
+      <select id="who"><option value="">전체 입찰자</option></select>
+      <select id="state">
+        <option value="">전체 상태</option>
+        <option value="bid">입찰 (진행중)</option>
+        <option value="done">거래완료</option>
+        <option value="drop">취소</option>
+      </select>
+      <select id="group">
+        <option value="none">그룹 없음</option>
+        <option value="bidder">입찰자별 묶기</option>
+        <option value="item">품목별 묶기</option>
+      </select>
+      <select id="sort" class="hide">
+        <option value="recent">최근 입찰순</option>
+        <option value="bids">입찰 많은 순</option>
+        <option value="price">최고 금액순</option>
+        <option value="name">품목 이름순</option>
+      </select>
+      <button class="ghost" id="view">카드로 보기</button>
+      <button class="ghost" id="export">변경 내보내기</button>
+      <button class="ghost" id="reload">새로고침</button>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <div id="banner" class="hide"></div>
+    <div id="syncmsg" class="syncmsg"></div>
+    <div class="stats" id="stats"></div>
+    <div id="grid"></div>
+    <div id="list" class="hide"></div>
+    <details class="raw">
+      <summary>원본 데이터 보기 (시트 그대로)</summary>
+      <div class="rawtable" id="raw"></div>
+    </details>
+  </div>
+
+  <div id="selbar" class="hide">
+    <div class="wrap selbar-inner">
+      <span id="selinfo"></span>
+      <button class="ghost" id="selcopy">선택 내역 복사</button>
+      <button class="ghost" id="selclear">선택 해제</button>
+    </div>
+  </div>
+</div>
+
+<script src="data/items.js"></script>
+<!-- 로컬 전용 입찰 스냅샷 (.gitignore — 배포본엔 없음, 없으면 조용히 무시됨) -->
+<script src="data/bids-local.js" onerror="void 0"></script>
+<script>
+const ENDPOINT = "https://script.google.com/macros/s/AKfycbx4wOLUzlKJYdBJEGH2J8I2NEQAz77lShix8bxDaNELDKEXHcs_XZ7-bZilpfBdANU_yA/exec";
+
+let PW = "", DATA = null, BIDS = [], PREVIEW = false;
+
+/* ============================================================
+   시트의 옛 품목명 → 현재 배포 페이지 품목으로 매칭
+   (시트·판매페이지는 안 건드리고 여기서만 변환해 표시)
+   ============================================================ */
+ITEMS.forEach(it => { it.num = 0; });
+{ const c = {}; ITEMS.forEach(it => { c[it.cat] = (c[it.cat] || 0) + 1; it.num = c[it.cat]; }); }
+
+// 자동 매칭이 안 되는 이름은 여기에 직접 지정 (시트 이름 : 현재 이름)
+const ALIAS = {
+  "Jemball Diffuser JBL-80": "Aurora Jemball Diffuser JBL-80",
+  "낮은 수조 (100×80×10cm)": "아크릴 수조 (100×80×10cm)",
+};
+// 데이터가 아닌 값 (헤더가 섞여 들어온 것 등)
+const JUNK = new Set(["품목", "품목명", "item", ""]);
+
+const norm = s => String(s).toLowerCase()
+  .replace(/[×x]\s*\d+/g, "")          // ×2, x3 같은 수량 표기 제거
+  .replace(/["'`]/g, "")
+  .replace(/[\s·,\-–—_]/g, "");        // 공백·구분자 제거
+
+const BY_EXACT = new Map(), BY_NORM = new Map();
+ITEMS.forEach(it => {
+  for (const [m, k] of [[BY_EXACT, it.name], [BY_NORM, norm(it.name)]]) {
+    if (!m.has(k)) m.set(k, []);
+    m.get(k).push(it);
+  }
+});
+
+/* 시트의 품목명 하나 → 현재 품목 목록.
+   같은 이름 품목이 여러 개면(예: 원단 Gray 실크 10·13) 시트 카탈로그와 같이
+   양쪽 모두에 입찰이 걸린 것으로 보고 번호별로 나눠서 반환한다. */
+function resolveAll(raw) {
+  const name = String(raw || "").trim();
+  if (JUNK.has(name)) return null;
+  const target = ALIAS[name] || name;
+
+  let hit = BY_EXACT.get(target) || BY_NORM.get(norm(target));
+  if (!hit) {
+    // 한쪽이 다른 쪽을 포함 (브랜드 접두어가 붙거나 빠진 경우)
+    const k = norm(target);
+    const cands = ITEMS.filter(x => { const n = norm(x.name); return n.includes(k) || k.includes(n); });
+    if (cands.length) hit = cands;
+  }
+  if (!hit || !hit.length)
+    return [{ key: "?" + name, name, cat: "", num: null, matched: false, split: false }];
+
+  return hit.map(it => ({
+    key: it.cat + "#" + it.num, name: it.name, cat: CATS[it.cat], catKey: it.cat, num: it.num,
+    ask: it.ask || 0, askUnit: it.askUnit || "", status: it.status,
+    matched: true, split: hit.length > 1,
+  }));
+}
+
+/* 시트에 010 앞자리 0이 잘려 저장된 번호 보기 좋게 */
+function fmtContact(c) {
+  const d = String(c || "").replace(/[^\d]/g, "");
+  if (/^1\d{9}$/.test(d)) return "0" + d.slice(0, 2) + "-" + d.slice(2, 6) + "-" + d.slice(6);
+  if (/^01\d{8,9}$/.test(d)) return d.replace(/^(01\d)(\d{3,4})(\d{4})$/, "$1-$2-$3");
+  return String(c || "");
+}
+
+/* 같은 사람이 같은 품목에 중복 입찰한 경우 하나로 (먼저 넣은 시각 유지, 금액은 최신) */
+function dedupe(bids) {
+  const seen = new Map();
+  bids.forEach(b => {
+    const k = b.name + "|" + b.contact + "|" + b.resolved.key;
+    const prev = seen.get(k);
+    if (!prev) { seen.set(k, b); return; }
+    prev.dupes = (prev.dupes || 1) + 1;
+    if (b.price) prev.price = b.price;
+    if (b.message) prev.message = b.message;
+  });
+  return [...seen.values()];
+}
+
+/* ---------- 헤더 이름으로 컬럼 찾기 (시트 구조가 달라도 동작) ---------- */
+const KEYS = {
+  ts:      ["타임", "시간", "일시", "날짜", "접수", "timestamp", "date", "time"],
+  name:    ["이름", "입찰자", "구매자", "성함", "name"],
+  contact: ["연락처", "전화", "휴대", "contact", "phone", "tel"],
+  item:    ["품목", "제품", "장비", "item", "product"],
+  price:   ["금액", "입찰가", "가격", "희망", "price", "amount"],
+  message: ["메시지", "메모", "내용", "message", "memo", "note"],
+};
+function findCol(headers, key) {
+  const cands = KEYS[key];
+  for (let i = 0; i < headers.length; i++) {
+    const h = String(headers[i] || "").toLowerCase().replace(/\s/g, "");
+    if (cands.some(c => h.includes(c.toLowerCase()))) return i;
+  }
+  return -1;
+}
+
+/* ---------- 시트들 중 입찰 시트 고르기 ---------- */
+function pickBidSheet(sheets) {
+  let best = null, bestScore = 0;
+  sheets.forEach(sh => {
+    const h = sh.headers || [];
+    let score = 0;
+    ["name", "item", "price", "contact"].forEach(k => { if (findCol(h, k) >= 0) score++; });
+    if (score > bestScore && (sh.rows || []).length) { bestScore = score; best = sh; }
+  });
+  return bestScore >= 2 ? best : null;
+}
+
+/* ---------- 행 → 입찰 목록 정규화 ---------- */
+function normalize(sheet) {
+  const h = sheet.headers, out = [];
+  const c = {
+    ts: findCol(h, "ts"), name: findCol(h, "name"), contact: findCol(h, "contact"),
+    item: findCol(h, "item"), price: findCol(h, "price"), message: findCol(h, "message"),
+  };
+  sheet.rows.forEach((row, ri) => {
+    const get = i => (i >= 0 && row[i] != null ? String(row[i]).trim() : "");
+    const name = get(c.name), itemRaw = get(c.item);
+    if (!name && !itemRaw) return;
+    // 한 셀에 여러 품목이 줄바꿈으로 들어있는 경우 분리
+    const parts = itemRaw ? itemRaw.split(/\r?\n/).map(s => s.trim()).filter(Boolean) : [""];
+    const priceRaw = get(c.price);
+    parts.forEach(p => {
+      // "[번호] 품목명 — 12000원" 형태면 품목/금액 분리
+      let item = p, price = priceRaw;
+      const m = p.match(/^(.*?)\s*[—-]\s*([\d,]+)\s*원?$/);
+      if (m) { item = m[1]; price = m[2]; }
+      item = item.replace(/^\[\d+\]\s*/, "").trim();
+      const list = resolveAll(item);
+      if (!list) return;                    // 헤더 등 데이터 아닌 값은 제외
+      list.forEach(rs => out.push({
+        ts: get(c.ts), name, contact: get(c.contact), message: get(c.message),
+        item, resolved: rs, price: (price || "").replace(/[^\d]/g, ""), row: ri + 2,
+      }));
+    });
+  });
+  return out;
+}
+
+/* ---------- 품목별 그룹 + 순위 ---------- */
+function group(bids) {
+  const map = new Map();
+  bids.forEach(b => {
+    const k = b.resolved.key;
+    if (!map.has(k)) map.set(k, []);
+    map.get(k).push(b);
+  });
+  // 접수 순서 = 시트 행 순서 (타임스탬프 있으면 우선)
+  map.forEach(list => {
+    list.sort((a, b) => {
+      const ta = Date.parse(a.ts), tb = Date.parse(b.ts);
+      if (!isNaN(ta) && !isNaN(tb) && ta !== tb) return ta - tb;
+      return a.row - b.row;
+    });
+    list.forEach((b, i) => b.rank = i + 1);
+  });
+  return map;
+}
+
+const won = n => n ? "₩" + Number(n).toLocaleString() : "";
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+/* ============================================================
+   표 보기
+   ============================================================ */
+let VIEW = "grid", SORT = { col: "cat", dir: 1 }, SEL = new Set();
+
+/* ============================================================
+   상태 · 입찰가 수정 (브라우저 localStorage에 저장 → 내보내기로 반영)
+   ============================================================ */
+const STATE_LABEL = { bid: "입찰", done: "거래완료", drop: "취소" };
+const STATE_ORDER = { bid: 0, done: 1, drop: 2 };
+const OV_KEY = "gearAdminOverrides", NOTE_KEY = "gearAdminNotes";
+let OV = {}, NOTES = {};
+try { OV = JSON.parse(localStorage.getItem(OV_KEY) || "{}"); } catch { OV = {}; }
+try { NOTES = JSON.parse(localStorage.getItem(NOTE_KEY) || "{}"); } catch { NOTES = {}; }
+const saveOV = () => localStorage.setItem(OV_KEY, JSON.stringify(OV));
+const saveNotes = () => localStorage.setItem(NOTE_KEY, JSON.stringify(NOTES));
+
+/* 거래 메모는 입찰자 단위 (만날 시간·장소·거래 방법) */
+const noteKey = r => r.name + "|" + r.contact;
+const noteOf = r => NOTES[noteKey(r)] || "";
+function setNote(k, v) {
+  if (v) NOTES[k] = v; else delete NOTES[k];
+  saveNotes();
+}
+
+let SHEET_SOLD = new Set();                    // 시트에 저장된 판매완료 품목
+
+const stateOf = r => {
+  const s = OV[r.uid] && OV[r.uid].state;
+  if (s && STATE_LABEL[s]) return s;           // 지금은 안 쓰는 옛 값(예약확정)은 입찰로 취급
+  if (SHEET_SOLD.has(r.rs.name)) return "done";
+  return r.rs.status === "sold" ? "done" : "bid";
+};
+
+/* 다른 기기에서 바꾼 판매상태 가져오기 (공개 조회라 비밀번호 불필요) */
+async function pullStatus() {
+  try {
+    const d = await (await fetch(ENDPOINT + "?action=status")).json();
+    if (d && d.ok) {
+      SHEET_SOLD = new Set(d.sold || []);
+      // 시트에서 판매중으로 되돌린 품목은 로컬의 거래완료 표시도 해제
+      new Set(d.sale || []).forEach(name => {
+        Object.keys(OV).forEach(uid => {
+          const r = ROWMAP.get(uid);
+          if (r && r.rs.name === name && OV[uid].state === "done") { delete OV[uid].state; }
+        });
+      });
+      saveOV();
+      return true;
+    }
+  } catch { /* 실패해도 로컬 값으로 계속 */ }
+  return false;
+}
+const priceOf = r => {
+  const o = OV[r.uid];
+  return o && o.price != null ? String(o.price) : String(r.rawPrice ?? r.price ?? "");
+};
+/* ---------- 시트에 판매상태 저장 → 구매페이지 실시간 반영 ---------- */
+function adminPw() {
+  let pw = sessionStorage.getItem("adminPw");
+  if (!pw) {
+    pw = prompt("구매페이지에 반영하려면 관리자 비밀번호가 필요해요.\n(취소하면 이 브라우저에만 저장됩니다)");
+    if (pw) sessionStorage.setItem("adminPw", pw);
+  }
+  return pw;
+}
+
+function syncFlag(msg, cls) {
+  const el = document.getElementById("syncmsg");
+  if (!el) return;
+  el.textContent = msg; el.className = "syncmsg " + (cls || "");
+  if (cls === "ok") setTimeout(() => { el.textContent = ""; el.className = "syncmsg"; }, 2500);
+}
+
+async function pushStatus(itemName, status) {
+  const pw = adminPw();
+  if (!pw) { syncFlag("구매페이지 미반영 (비밀번호 없음)", "err"); return; }
+  syncFlag("구매페이지에 반영 중…");
+  try {
+    const res = await fetch(ENDPOINT, {
+      method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({ action: "setStatus", pw, items: [{ name: itemName, status }] }),
+    });
+    const d = JSON.parse(await res.text());
+    if (!d.ok) throw new Error(d.error === "unauthorized" ? "비밀번호가 맞지 않아요" : d.error);
+    syncFlag(`구매페이지 반영됨 · ${itemName} → ${status === "sold" ? "판매완료" : "판매중"}`, "ok");
+  } catch (e) {
+    sessionStorage.removeItem("adminPw");
+    syncFlag("구매페이지 반영 실패: " + e.message + " (로컬에는 저장됨)", "err");
+  }
+}
+
+function setOV(uid, patch) {
+  OV[uid] = Object.assign({}, OV[uid], patch);
+  if (!OV[uid].state && OV[uid].price == null) delete OV[uid];
+  saveOV();
+}
+
+const COLS = [
+  { k: "item",  label: "품목",     get: r => r.rs.name, cls: "item",
+    html: r => `${esc(r.rs.name)}${r.rs.split ? `<span class="tag split">번호분리</span>` : ""}` },
+  { k: "cat",   label: "카테고리", get: r => r.rs.cat },
+  { k: "num",   label: "번호",     get: r => r.rs.num, cls: "num" },
+  { k: "ask",   label: "희망가",   get: r => r.rs.ask, cls: "money",
+    html: r => r.rs.ask ? won(r.rs.ask) + (r.rs.askUnit ? `<small>/${esc(r.rs.askUnit)}</small>` : "") : "—" },
+  { k: "price", label: "입찰가 (차액)", get: r => +r.price || 0, cls: "money price",
+    html: r => (r.price ? won(r.price) : `<span style="color:var(--sub)">미기재</span>`) +
+      (r.edited ? `<span class="tag edited">수정</span>` : "") +
+      (r.rs.ask && r.price
+        ? ` <span class="diff ${r.diff >= 0 ? "up" : "dn"}">${r.diff >= 0 ? "+" : "−"}${Number(Math.abs(r.diff)).toLocaleString()}</span>`
+        : "") +
+      (r.isTop && r.competing ? `<span class="tag top">최고가</span>` : "") },
+  { k: "rank",  label: "순위",     get: r => r.rank, cls: "num",
+    html: r => `${r.rank}${r.rank === 1 ? `<span class="tag r1">최선착</span>` : ""}` },
+  { k: "who",   label: "입찰자",   get: r => r.name },
+  { k: "contact", label: "연락처", get: r => r.contact, html: r => esc(fmtContact(r.contact)) },
+  { k: "msg",   label: "메모",     get: r => r.message, cls: "msg",
+    html: r => r.message
+      ? `<span class="msgtxt" title="${esc(r.message)}">${esc(r.message)}</span>` : "" },
+  { k: "ts",    label: "접수",     get: r => r.ts, cls: "ts",
+    html: r => {
+      const [d, ...t] = String(r.ts || "").split(" ");
+      return d ? `<span class="tstxt" title="${esc(r.ts)}"><span class="tsd">${esc(d)}</span>` +
+                 `<span class="tst">${esc(t.join(" "))}</span></span>` : "";
+    } },
+  { k: "state", label: "상태",     get: r => STATE_ORDER[stateOf(r)] ?? 9, cls: "state",
+    html: r => {
+      const s = stateOf(r);
+      return `<select class="stsel ${s}" data-uid="${esc(r.uid)}">` +
+        Object.entries(STATE_LABEL).map(([k, v]) =>
+          `<option value="${k}" ${s === k ? "selected" : ""}>${v}</option>`).join("") + `</select>`;
+    } },
+  { k: "note",  label: "내 메모 (거래)", get: r => noteOf(r), cls: "note",
+    html: r => {
+      const v = noteOf(r);
+      return v ? `<span class="notetxt" title="${esc(v)}">${esc(v)}</span>`
+               : `<span class="noteadd">+ 메모</span>`;
+    } },
+];
+
+/* 표에 뿌릴 행 만들기 (순위·최고가·차액 계산 + 수정값 반영) */
+let ROWMAP = new Map();
+function buildRows() {
+  const map = group(BIDS);
+  const rows = [];
+  ROWMAP = new Map();
+  map.forEach(list => {
+    list.forEach(b => {
+      b.rs = b.resolved;
+      b.uid = b.resolved.key + "|" + b.name + "|" + b.row;
+      if (b.rawPrice === undefined) b.rawPrice = b.price;   // 원본 보존
+      b.price = priceOf(b);
+      b.edited = b.price !== b.rawPrice;
+    });
+    const max = Math.max(...list.map(b => +b.price || 0));
+    list.forEach(b => {
+      b.isTop = (+b.price || 0) === max && max > 0;
+      b.competing = list.length > 1;
+      b.diff = (+b.price || 0) - (b.rs.ask || 0);
+      ROWMAP.set(b.uid, b);
+      rows.push(b);
+    });
+  });
+  return rows;
+}
+
+function filtered(rows) {
+  const q = document.getElementById("q").value.trim().toLowerCase();
+  const cat = document.getElementById("cat").value;
+  const who = document.getElementById("who").value;
+  const st = document.getElementById("state").value;
+  return rows.filter(r =>
+    (!cat || r.rs.catKey === cat) &&
+    (!who || r.name === who) &&
+    (!st || stateOf(r) === st) &&
+    (!q || (r.rs.name + " " + r.item + " " + r.name + " " + r.contact + " " + r.rs.cat)
+      .toLowerCase().includes(q)));
+}
+
+function fillSelects(rows) {
+  const cs = document.getElementById("cat"), ws = document.getElementById("who");
+  if (cs.dataset.done) return;
+  const cats = [...new Set(rows.map(r => r.rs.catKey))].filter(Boolean);
+  cats.forEach(c => cs.insertAdjacentHTML("beforeend", `<option value="${c}">${esc(CATS[c] || c)}</option>`));
+  [...new Set(rows.map(r => r.name))].filter(Boolean).sort((a, b) => a.localeCompare(b, "ko"))
+    .forEach(n => ws.insertAdjacentHTML("beforeend", `<option value="${esc(n)}">${esc(n)}</option>`));
+  cs.dataset.done = "1";
+}
+
+function renderGrid() {
+  const all = buildRows();
+  fillSelects(all);
+  let rows = filtered(all);
+
+  const c = COLS.find(x => x.k === SORT.col) || COLS[0];
+  rows.sort((a, b) => {
+    const va = c.get(a), vb = c.get(b);
+    let d = typeof va === "number" && typeof vb === "number"
+      ? va - vb : String(va ?? "").localeCompare(String(vb ?? ""), "ko");
+    if (!d && c.k === "cat") d = (a.rs.num || 0) - (b.rs.num || 0);
+    return d * SORT.dir;
+  });
+
+  const grouping = document.getElementById("group").value;
+  const head = `<thead><tr><th class="cbx"><input type="checkbox" id="cbAll"></th>` +
+    COLS.map(x => `<th data-k="${x.k}">${x.label}${SORT.col === x.k ? `<span class="arw">${SORT.dir > 0 ? "▲" : "▼"}</span>` : ""}</th>`).join("") +
+    `</tr></thead>`;
+
+  const tr = r => `<tr data-uid="${esc(r.uid)}" class="st-${stateOf(r)} ${SEL.has(r.uid) ? "sel" : ""}">` +
+    `<td class="cbx"><input type="checkbox" class="cb" ${SEL.has(r.uid) ? "checked" : ""}></td>` +
+    COLS.map(x => `<td class="${x.cls || ""}" data-uid="${esc(r.uid)}" data-k="${x.k}">` +
+      `${x.html ? x.html(r) : esc(x.get(r) ?? "")}</td>`).join("") + `</tr>`;
+
+  let body = "";
+  if (grouping === "none") {
+    body = rows.map(tr).join("");
+  } else {
+    const key = r => grouping === "bidder" ? r.name : r.rs.cat + " " + r.rs.num + " " + r.rs.name;
+    const groups = new Map();
+    rows.forEach(r => { const k = key(r); if (!groups.has(k)) groups.set(k, []); groups.get(k).push(r); });
+    groups.forEach((list, k) => {
+      const sum = list.reduce((s, r) => s + (+r.price || 0), 0);
+      const gnote = grouping === "bidder" ? noteOf(list[0]) : "";
+      body += `<tr class="grouphead"><td colspan="${COLS.length + 1}">${esc(k)} · ${list.length}건` +
+        (gnote ? ` <span class="gnote">📌 ${esc(gnote)}</span>` : "") +
+        `<span class="gsum">합계 ${won(sum) || "₩0"}</span></td></tr>` + list.map(tr).join("");
+    });
+  }
+
+  document.getElementById("grid").innerHTML = rows.length
+    ? `<div class="gridwrap"><table class="grid">${head}<tbody>${body}</tbody></table></div>`
+    : `<div class="empty">조건에 맞는 입찰이 없어요.</div>`;
+
+  document.querySelectorAll("table.grid thead th[data-k]").forEach(th => {
+    th.onclick = () => {
+      const k = th.dataset.k;
+      SORT = { col: k, dir: SORT.col === k ? -SORT.dir : 1 };
+      renderGrid();
+    };
+  });
+  const all2 = document.getElementById("cbAll");
+  if (all2) all2.onclick = () => {
+    rows.forEach(r => all2.checked ? SEL.add(r.uid) : SEL.delete(r.uid));
+    renderGrid(); updateSelBar(all);
+  };
+  applySticky();
+
+  document.querySelectorAll("table.grid td.msg, table.grid td.ts").forEach(td => {
+    td.onclick = () => td.classList.toggle("open");
+  });
+
+  // 내 메모 (입찰자 단위) — 칸 클릭해서 바로 입력
+  document.querySelectorAll("table.grid td.note").forEach(td => {
+    td.onclick = () => {
+      if (td.querySelector("input")) return;
+      const row = ROWMAP.get(td.dataset.uid);
+      if (!row) return;
+      const k = noteKey(row);
+      td.innerHTML = `<input class="nedit" value="${esc(NOTES[k] || "")}" placeholder="만날 시간·장소·거래 방법">`;
+      const inp = td.querySelector("input");
+      inp.focus();
+      let closed = false;
+      const commit = () => {
+        if (closed) return; closed = true;
+        setNote(k, inp.value.trim());
+        renderGrid();
+      };
+      inp.onblur = commit;
+      inp.onkeydown = e => {
+        if (e.key === "Enter") { e.preventDefault(); commit(); }
+        if (e.key === "Escape") { closed = true; renderGrid(); }
+      };
+    };
+  });
+
+  // 상태 바꾸기 → 로컬 저장 후 시트에도 반영(구매페이지 실시간 연동)
+  document.querySelectorAll("select.stsel").forEach(sel => {
+    sel.onchange = () => {
+      const uid = sel.dataset.uid, row = ROWMAP.get(uid);
+      setOV(uid, { state: sel.value });
+      renderGrid(); renderStats();
+      if (row) pushStatus(row.rs.name, sel.value === "done" ? "sold" : "sale");
+    };
+    sel.onclick = e => e.stopPropagation();
+  });
+
+  // 입찰가 수정: 칸 클릭 → 입력창, Enter/포커스아웃 저장, Esc 취소
+  document.querySelectorAll("table.grid td.price").forEach(td => {
+    td.onclick = () => {
+      if (td.querySelector("input")) return;
+      const uid = td.dataset.uid, row = ROWMAP.get(uid);
+      if (!row) return;
+      td.innerHTML = `<input class="pedit" value="${esc(row.price || "")}" inputmode="numeric">`;
+      const inp = td.querySelector("input");
+      inp.focus(); inp.select();
+      let closed = false;
+      const commit = () => {
+        if (closed) return; closed = true;
+        const v = inp.value.replace(/[^\d]/g, "");
+        setOV(uid, { price: v === "" ? null : v });
+        renderGrid(); renderStats();
+      };
+      inp.onblur = commit;
+      inp.onkeydown = e => {
+        if (e.key === "Enter") { e.preventDefault(); commit(); }
+        if (e.key === "Escape") { closed = true; renderGrid(); }
+      };
+    };
+  });
+  document.querySelectorAll("table.grid tbody tr[data-uid]").forEach(row => {
+    row.querySelector(".cb").onclick = e => {
+      e.stopPropagation();
+      const u = row.dataset.uid;
+      SEL.has(u) ? SEL.delete(u) : SEL.add(u);
+      row.classList.toggle("sel");
+      updateSelBar(all);
+    };
+  });
+  updateSelBar(all);
+}
+
+/* 체크박스·카테고리·번호·품목 열을 왼쪽에 고정 (좌우 스크롤해도 품목이 보이게) */
+function applySticky() {
+  const table = document.querySelector("table.grid");
+  if (!table) return;
+  const headRow = table.querySelector("thead tr");
+  if (!headRow) return;
+  const idxs = [0].concat(["item"]
+    .map(k => headRow.querySelector(`th[data-k="${k}"]`))
+    .filter(Boolean).map(th => th.cellIndex));
+
+  const rows = [...table.rows].filter(r => !r.classList.contains("grouphead"));
+  let left = 0;
+  idxs.forEach(i => {
+    const w = headRow.cells[i].getBoundingClientRect().width;
+    rows.forEach(r => {
+      const c = r.cells[i];
+      if (!c) return;
+      c.classList.add("stick");
+      c.style.left = left + "px";
+    });
+    left += w;
+  });
+  // 마지막 고정 열(품목)에 경계선
+  rows.forEach(r => { const c = r.cells[idxs[idxs.length - 1]]; if (c) c.classList.add("stick-last"); });
+  // 그룹 헤더는 가로로 붙어다니게
+  table.querySelectorAll("tr.grouphead td").forEach(td => { td.style.left = "0px"; });
+}
+
+function updateSelBar(all) {
+  const bar = document.getElementById("selbar");
+  const picked = all.filter(r => SEL.has(r.uid));
+  if (!picked.length) { bar.classList.add("hide"); document.body.style.paddingBottom = "60px"; return; }
+  const sum = picked.reduce((s, r) => s + (+r.price || 0), 0);
+  const askSum = picked.reduce((s, r) => s + (r.rs.ask || 0), 0);
+  const people = new Set(picked.map(r => r.name));
+  bar.classList.remove("hide");
+  document.body.style.paddingBottom = "76px";
+  document.getElementById("selinfo").innerHTML =
+    `선택 <b>${picked.length}</b>건 · 입찰자 ${people.size}명 · 입찰 합계 <b>${won(sum) || "₩0"}</b>` +
+    (askSum ? ` <span style="opacity:.7">(희망가 합계 ${won(askSum)})</span>` : "");
+  document.getElementById("selcopy").onclick = () => {
+    const txt = picked.map(r =>
+      `[${r.rs.cat} ${r.rs.num}] ${r.rs.name}\t${r.name}\t${r.price ? Number(r.price).toLocaleString() + "원" : "미기재"}`).join("\n")
+      + `\n합계\t${sum.toLocaleString()}원`;
+    navigator.clipboard.writeText(txt).then(
+      () => { const b = document.getElementById("selcopy"); b.textContent = "복사됨"; setTimeout(() => b.textContent = "선택 내역 복사", 1200); },
+      () => alert("복사 실패"));
+  };
+}
+
+function render() {
+  renderStats();
+  if (VIEW === "grid") { renderGrid(); return; }
+  renderCards();
+}
+
+function renderStats() {
+  const map = group(BIDS);
+  const unmatched = [...map.values()].filter(l => !l[0].resolved.matched).length;
+  const total = BIDS.reduce((s, b) => s + (+b.price || 0), 0);
+  document.getElementById("stats").innerHTML = PREVIEW
+    ? `<div class="stat"><b>${map.size}</b>예약된 품목</div>` +
+      `<div class="stat"><b>${map.size - unmatched}</b>현재 품목과 매칭됨</div>` +
+      (unmatched ? `<div class="stat"><b>${unmatched}</b>미매칭</div>` : "") +
+      `<div class="stat"><b>—</b>입찰자 (비공개)</div>`
+    : (() => {
+        const rows = buildRows();
+        const n = s => rows.filter(r => stateOf(r) === s).length;
+        const doneSum = rows.filter(r => stateOf(r) === "done").reduce((s, r) => s + (+r.price || 0), 0);
+        return `<div class="stat"><b>${map.size}</b>입찰된 품목</div>` +
+          `<div class="stat"><b>${BIDS.length}</b>총 입찰 건수</div>` +
+          `<div class="stat"><b>${new Set(BIDS.map(b => b.name + "|" + b.contact)).size}</b>입찰자 수</div>` +
+          `<div class="stat"><b>${[...map.values()].filter(l => l.length > 1).length}</b>경쟁 품목</div>` +
+          `<div class="stat"><b>${n("done")}</b>거래완료 <small>${won(doneSum) || "₩0"}</small></div>` +
+          `<div class="stat"><b>${won(total) || "₩0"}</b>입찰가 총합</div>`;
+      })();
+}
+
+function renderCards() {
+  const q = document.getElementById("q").value.trim().toLowerCase();
+  const sortBy = document.getElementById("sort").value;
+  const map = group(BIDS);
+
+  let groups = [...map.entries()].map(([key, list]) => ({
+    key, list, rs: list[0].resolved,
+    item: list[0].resolved.name,
+    max: Math.max(...list.map(b => +b.price || 0)),
+    last: Math.max(...list.map(b => Date.parse(b.ts) || b.row)),
+  }));
+
+  if (q) groups = groups.filter(g =>
+    (g.item + " " + g.list[0].item + " " + (g.rs.cat || "")).toLowerCase().includes(q) ||
+    g.list.some(b => (b.name + " " + b.contact).toLowerCase().includes(q)));
+
+  groups.sort((a, b) =>
+    sortBy === "bids"  ? b.list.length - a.list.length :
+    sortBy === "price" ? b.max - a.max :
+    sortBy === "name"  ? (a.rs.cat || "힣").localeCompare(b.rs.cat || "힣", "ko")
+                         || (a.rs.num || 999) - (b.rs.num || 999) :
+                         b.last - a.last);
+
+  const head = g => `
+    <div class="item-head">
+      <div class="item-name">
+        ${g.rs.matched
+          ? `<span class="pnum">${esc(g.rs.cat)} ${g.rs.num}</span>`
+          : `<span class="pnum warn">미매칭</span>`}
+        ${esc(g.item)}
+        ${g.rs.split ? `<span class="pnum dup">같은 이름 여러 개 · 번호별로 나눔</span>` : ""}
+        ${g.rs.matched && g.list[0].item !== g.item
+          ? `<div class="was">시트 표기: ${esc(g.list[0].item)}</div>` : ""}
+      </div>
+      <div class="item-meta">${PREVIEW ? "예약중" : g.list.length + "건" + (g.list.length > 1 ? " · 경쟁" : "")}</div>
+    </div>`;
+
+  if (PREVIEW) {
+    document.getElementById("list").innerHTML = groups.length
+      ? groups.map(g => `<div class="item">${head(g)}</div>`).join("")
+      : `<div class="empty">표시할 품목이 없어요.</div>`;
+    return;
+  }
+
+  document.getElementById("list").innerHTML = groups.length ? groups.map(g => `
+    <div class="item">
+      ${head(g)}
+      ${g.list.map(b => `
+        <div class="bid">
+          <div class="rank r${b.rank <= 3 ? b.rank : ""}">${b.rank}</div>
+          <div>
+            <div class="who">${esc(b.name || "(이름 없음)")}<span class="contact">${esc(fmtContact(b.contact))}</span>${b.dupes ? `<span class="contact">중복 ${b.dupes}건 합침</span>` : ""}</div>
+            <div class="when">${esc(b.ts || "시각 미기록")}</div>
+            ${b.message ? `<div class="msg">${esc(b.message)}</div>` : ""}
+          </div>
+          <div class="price ${b.price ? "" : "none"}">${b.price ? won(b.price) : "금액 미기재"}</div>
+        </div>`).join("")}
+    </div>`).join("") : `<div class="empty">표시할 입찰이 없어요.</div>`;
+}
+
+function renderRaw() {
+  document.getElementById("raw").innerHTML = (DATA.sheets || []).map(sh => `
+    <h4 style="margin:14px 0 6px;font-size:13.5px">${esc(sh.sheet)} (${(sh.rows || []).length}행)</h4>
+    <table>
+      <tr>${(sh.headers || []).map(h => `<th>${esc(h)}</th>`).join("")}</tr>
+      ${(sh.rows || []).map(r => `<tr>${r.map(c => `<td>${esc(c == null ? "" : c)}</td>`).join("")}</tr>`).join("")}
+    </table>`).join("");
+}
+
+async function load(pw) {
+  const res = await fetch(ENDPOINT, {
+    method: "POST",
+    headers: { "Content-Type": "text/plain;charset=utf-8" },
+    body: JSON.stringify({ action: "bids", pw }),
+  });
+  const text = await res.text();
+  let d;
+  try { d = JSON.parse(text); }
+  catch { throw new Error("서버 응답을 읽지 못했어요. Apps Script 배포 상태를 확인해 주세요."); }
+  if (!d.ok) throw new Error(d.error === "unauthorized" ? "비밀번호가 맞지 않아요." : (d.error || "조회 실패"));
+  return d;
+}
+
+async function enter(pw) {
+  const msg = document.getElementById("gate-msg");
+  const btn = document.getElementById("login");
+  msg.textContent = "확인 중…"; msg.className = ""; btn.disabled = true;
+  try {
+    DATA = await load(pw);
+    PW = pw;
+    sessionStorage.setItem("adminPw", pw);
+    const sheet = pickBidSheet(DATA.sheets || []);
+    BIDS = sheet ? dedupe(normalize(sheet)) : [];
+    document.getElementById("gate").classList.add("hide");
+    document.getElementById("app").classList.remove("hide");
+    render(); renderRaw();
+    if (!sheet) document.getElementById("list").innerHTML =
+      `<div class="empty">입찰 시트를 자동으로 찾지 못했어요.<br>아래 "원본 데이터 보기"에서 확인해 주세요.</div>`;
+  } catch (e) {
+    msg.textContent = e.message; msg.className = "err";
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+/* ---------- 미리보기: 공개 엔드포인트의 예약 품목명만 표시 ---------- */
+async function previewMode() {
+  const msg = document.getElementById("gate-msg");
+  const btn = document.getElementById("preview");
+  msg.textContent = "불러오는 중…"; msg.className = ""; btn.disabled = true;
+  try {
+    const d = await (await fetch(ENDPOINT)).json();
+    const names = (d && d.reserved) || [];
+    // 현재 품목으로 매칭한 뒤 중복 제거 (옛 이름·새 이름이 같은 품목이면 한 장으로 합쳐짐)
+    const seen = new Set();
+    BIDS = [];
+    names.forEach((n, i) => {
+      (resolveAll(n) || []).forEach(rs => {
+        if (seen.has(rs.key)) return;
+        seen.add(rs.key);
+        BIDS.push({ ts:"", name:"", contact:"", message:"", item:n, resolved:rs, price:"", row:i+2 });
+      });
+    });
+    PREVIEW = true;
+    document.getElementById("gate").classList.add("hide");
+    document.getElementById("app").classList.remove("hide");
+    const b = document.getElementById("banner");
+    b.className = "banner";
+    b.innerHTML = `<b>미리보기 모드</b> — 공개 데이터로 <b>예약된 품목 ${BIDS.length}개</b>만 표시 중입니다.
+      입찰자 이름·연락처·금액·순위는 Apps Script에 <code>adminBids_</code> 설치 후 비밀번호로 들어와야 보여요.`;
+    document.getElementById("sort").value = "name";
+    render(); document.getElementById("raw").innerHTML = "<p style='font-size:13px;color:var(--sub)'>미리보기 모드에선 원본 데이터를 불러올 수 없어요.</p>";
+  } catch (e) {
+    msg.textContent = "불러오지 못했어요: " + e.message; msg.className = "err";
+  } finally { btn.disabled = false; }
+}
+
+/* ---------- 로컬 스냅샷 모드: data/bids-local.js 가 있으면 그걸로 표시 ---------- */
+function localMode() {
+  const rows = [];
+  BIDS_SEED.forEach(r => {
+    (resolveAll(r.item) || []).forEach(rs =>
+      rows.push({ ...r, resolved: rs, price: String(r.price || "").replace(/[^\d]/g, "") }));
+  });
+  BIDS = dedupe(rows);
+  PREVIEW = false;
+  document.getElementById("gate").classList.add("hide");
+  document.getElementById("app").classList.remove("hide");
+  const b = document.getElementById("banner");
+  b.className = "banner";
+  b.innerHTML = `<b>로컬 스냅샷</b> — <code>data/bids-local.js</code>의 시트 사본을 보고 있어요
+    (배포본에는 포함되지 않습니다). 시트에 새 입찰이 들어오면 이 파일을 갱신해야 최신이 돼요.`;
+  render();
+  // 시트의 판매상태를 가져와 반영 (다른 기기에서 바꾼 것 포함)
+  pullStatus().then(ok => { if (ok) { renderGrid(); renderStats(); } });
+  document.getElementById("reload").onclick = async () => {
+    const b = document.getElementById("reload");
+    b.disabled = true; b.textContent = "불러오는 중…";
+    await pullStatus(); renderGrid(); renderStats();
+    b.disabled = false; b.textContent = "새로고침";
+    syncFlag("판매상태 갱신됨", "ok");
+  };
+  document.getElementById("raw").innerHTML =
+    "<p style='font-size:13px;color:var(--sub)'>로컬 스냅샷 모드에선 시트 원본을 불러오지 않아요.</p>";
+}
+
+document.getElementById("preview").onclick = previewMode;
+document.getElementById("login").onclick = () => enter(document.getElementById("pw").value);
+document.getElementById("pw").onkeydown = e => { if (e.key === "Enter") document.getElementById("login").click(); };
+document.getElementById("q").oninput = render;
+document.getElementById("sort").onchange = render;
+document.getElementById("cat").onchange = render;
+document.getElementById("who").onchange = render;
+document.getElementById("group").onchange = render;
+document.getElementById("state").onchange = render;
+document.getElementById("selclear").onclick = () => { SEL.clear(); render(); };
+
+/* 상태·금액 변경분을 items.js에 반영할 형태로 뽑아내기 */
+document.getElementById("export").onclick = () => {
+  const rows = buildRows();
+  const done = rows.filter(r => stateOf(r) === "done");
+  const hold = rows.filter(r => stateOf(r) === "hold");
+  const edited = rows.filter(r => r.edited);
+  if (!done.length && !hold.length && !edited.length) { alert("변경한 내용이 없어요."); return; }
+
+  const line = r => `  [${r.rs.cat} ${r.rs.num}] ${r.rs.name} — ${r.name}` +
+    (r.price ? ` ${Number(r.price).toLocaleString()}원` : "");
+  const uniq = list => [...new Map(list.map(r => [r.rs.key, r])).values()];
+
+  const txt = [
+    "# 장비판매 상태 변경 (" + new Date().toLocaleString("ko-KR") + ")",
+    "",
+    "## items.js 에서 status:\"sold\" 로 바꿀 품목",
+    ...uniq(done).map(r => `  ${r.rs.name}`),
+    "",
+    "## items.js 에서 status:\"hold\" 로 바꿀 품목",
+    ...uniq(hold).map(r => `  ${r.rs.name}`),
+    "",
+    "## 거래완료 상세",
+    ...done.map(line),
+    "",
+    "## 예약확정 상세",
+    ...hold.map(line),
+    "",
+    "## 입찰가 수정분 (원본 → 수정)",
+    ...edited.map(r => `  [${r.rs.cat} ${r.rs.num}] ${r.rs.name} / ${r.name} : ` +
+      `${r.rawPrice ? Number(r.rawPrice).toLocaleString() : "미기재"} → ${r.price ? Number(r.price).toLocaleString() : "미기재"}`),
+    "",
+    "## 내 메모 (거래 약속)",
+    ...Object.entries(NOTES).map(([k, v]) => `  ${k.split("|")[0]} : ${v}`),
+  ].join("\n");
+
+  navigator.clipboard.writeText(txt).then(
+    () => alert("복사했어요. 이 내용을 붙여주면 items.js에 반영해 배포할 수 있어요.\n\n" + txt.slice(0, 400)),
+    () => prompt("복사가 안 돼서 직접 복사해 주세요", txt));
+};
+document.getElementById("view").onclick = () => {
+  VIEW = VIEW === "grid" ? "cards" : "grid";
+  const grid = VIEW === "grid";
+  document.getElementById("grid").classList.toggle("hide", !grid);
+  document.getElementById("list").classList.toggle("hide", grid);
+  document.getElementById("group").classList.toggle("hide", !grid);
+  document.getElementById("sort").classList.toggle("hide", grid);
+  document.getElementById("view").textContent = grid ? "카드로 보기" : "표로 보기";
+  if (!grid) { SEL.clear(); document.getElementById("selbar").classList.add("hide"); }
+  render();
+};
+document.getElementById("reload").onclick = async () => {
+  const btn = document.getElementById("reload");
+  if (PREVIEW) {
+    btn.disabled = true; btn.textContent = "불러오는 중…";
+    const d = await (await fetch(ENDPOINT)).json().catch(() => null);
+    if (d && d.reserved) {
+      const seen = new Set();
+      BIDS = d.reserved.filter(n => !seen.has(n) && seen.add(n))
+        .map((n, i) => ({ ts:"", name:"", contact:"", message:"", item:n, price:"", row:i+2 }));
+      render();
+    }
+    btn.disabled = false; btn.textContent = "새로고침"; return;
+  }
+  btn.disabled = true; btn.textContent = "불러오는 중…";
+  try {
+    DATA = await load(PW);
+    const sheet = pickBidSheet(DATA.sheets || []);
+    BIDS = sheet ? normalize(sheet) : [];
+    render(); renderRaw();
+  } catch (e) { alert(e.message); }
+  btn.disabled = false; btn.textContent = "새로고침";
+};
+
+// 로컬 스냅샷이 있으면 그걸로 바로, 없으면 세션 비번으로 자동 로그인
+const saved = sessionStorage.getItem("adminPw");
+if (typeof BIDS_SEED !== "undefined") localMode();
+else if (saved) enter(saved);
+</script>
+</body>
+</html>
