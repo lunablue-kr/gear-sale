@@ -49,7 +49,7 @@
   #admin-gate p { font-size: 13px; color: var(--sub); margin-bottom: 14px; }
   #admin-gate input {
     width: 100%; padding: 10px 12px; border: 1px solid var(--line);
-    border-radius: 10px; font-size: 15px;
+    border-radius: 10px; font-size: 16px;   /* 16px 미만이면 iOS가 탭할 때 화면을 확대함 */
   }
   #admin-gate input:focus { outline: 2px solid var(--accent); border-color: transparent; }
   #admin-gate .row { display: flex; gap: 8px; margin-top: 12px; }
@@ -76,9 +76,18 @@
     border-bottom: 1px solid var(--line); padding: 10px 0;
   }
   .toolbar-inner { display: flex; flex-direction: column; gap: 8px; }
+  .searchrow { display: flex; gap: 7px; align-items: stretch; }
+  #viewtoggle {
+    flex: 0 0 auto; padding: 0 12px; border: 1px solid var(--line); background: var(--card);
+    border-radius: 10px; font-size: 13px; font-weight: 600; color: var(--sub);
+    cursor: pointer; white-space: nowrap; display: flex; align-items: center; gap: 5px;
+  }
+  #viewtoggle:hover { color: var(--accent); border-color: var(--accent); }
+  #viewtoggle .ico { font-size: 14px; line-height: 1; }
   #search {
-    width: 100%; padding: 10px 14px; border: 1px solid var(--line);
-    border-radius: 10px; font-size: 15px; background: var(--card);
+    flex: 1; min-width: 0;
+    padding: 10px 14px; border: 1px solid var(--line);
+    border-radius: 10px; font-size: 16px; background: var(--card);
   }
   #search:focus { outline: 2px solid var(--accent); border-color: transparent; }
   .chips { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px; -webkit-overflow-scrolling: touch; }
@@ -135,6 +144,36 @@
   .pick-btn:disabled { cursor: default; color: #aaa; }
   .empty { color: var(--sub); text-align: center; padding: 50px 0; }
 
+  /* ===== 간단히 보기 (한 줄에 여러 품목) =====
+     쇼핑몰 격자처럼 사진·이름·가격만 남기고 설명은 감춘다.       */
+  .grid.compact { grid-template-columns: repeat(auto-fill, minmax(158px, 1fr)); gap: 8px; }
+  .compact .card { padding: 9px 10px 10px; gap: 6px; }
+  .compact .meta, .compact .note { display: none; }
+  .compact .card-thumb { height: 108px; }
+  .compact .card-top { gap: 5px; }
+  .compact .card h3 {
+    font-size: 13px; line-height: 1.35;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  }
+  .compact .pnum { min-width: auto; padding: 0 4px; margin-right: 5px; font-size: 10.5px; }
+  .compact .badge { font-size: 10px; padding: 2px 6px; }
+  .compact .card-foot { flex-direction: column-reverse; align-items: stretch; gap: 5px; }
+  .compact .ask { font-size: 13px; text-align: center; }
+  .compact .ask.tbd { font-size: 11.5px; }
+  .compact .pick-btn { align-self: stretch; text-align: center; padding: 6px 4px; font-size: 12.5px; }
+  .compact .thumb-count { font-size: 10px; padding: 1px 6px; right: 5px; bottom: 5px; }
+  /* 간단히 보기에서도 설명을 볼 수 있게: 카드를 누르면 그 칸만 펼쳐진다 */
+  .compact .card h3 { cursor: pointer; }
+  .compact .card h3::after { content: " ⌄"; color: var(--sub); font-weight: 400; }
+  .compact .card.expanded { grid-column: 1 / -1; }
+  .compact .card.expanded h3 { -webkit-line-clamp: unset; font-size: 14px; }
+  .compact .card.expanded h3::after { content: " ⌃"; }
+  .compact .card.expanded .meta { display: flex; }
+  .compact .card.expanded .note { display: block; }
+  .compact .card.expanded .card-thumb { height: 160px; }
+  .compact .card.expanded .card-foot { flex-direction: row; align-items: center; }
+  .compact .card.expanded .pick-btn { align-self: flex-start; }
+
   /* ===== 하단 바 ===== */
   #bidbar {
     position: fixed; left: 0; right: 0; bottom: 0; z-index: 40;
@@ -171,7 +210,7 @@
   .bid-item .bname small { display: block; font-size: 11.5px; font-weight: 500; color: var(--accent); margin-top: 2px; }
   .bid-item input {
     width: 130px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px;
-    font-size: 14px; text-align: right;
+    font-size: 16px; text-align: right;
   }
   .bid-item .won { font-size: 13px; color: var(--sub); }
   .bid-item input.miss { border-color: var(--danger); background: #fbece9; }
@@ -179,7 +218,7 @@
   .field { margin-top: 14px; }
   .field label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 5px; }
   .field input, .field textarea {
-    width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: 9px; font-size: 15px;
+    width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: 9px; font-size: 16px;
     font-family: inherit;
   }
   .field textarea { resize: vertical; min-height: 70px; }
@@ -198,6 +237,11 @@
   @media (max-width: 520px) {
     header h1 { font-size: 22px; }
     .grid { grid-template-columns: 1fr; }
+    .grid.compact { grid-template-columns: 1fr 1fr; }   /* 모바일 간단히 = 2줄 */
+    .compact .card-thumb { height: 96px; }
+  }
+  @media (max-width: 340px) {
+    .grid.compact { grid-template-columns: 1fr; }
   }
 </style>
 </head>
@@ -223,7 +267,10 @@
 
 <div class="toolbar">
   <div class="wrap toolbar-inner">
-    <input id="search" type="search" placeholder="모델명·브랜드 검색 (예: profoto, 소프트박스, 배경지)">
+    <div class="searchrow">
+      <input id="search" type="search" placeholder="모델명·브랜드 검색 (예: profoto, 소프트박스, 배경지)">
+      <button id="viewtoggle" type="button" title="보기 방식 바꾸기"></button>
+    </div>
     <div class="chips" id="chips"></div>
   </div>
 </div>
@@ -299,6 +346,22 @@ let activeCat = "all";
 let query = "";
 const picked = new Set();
 
+// 보기 방식: 간단히(격자) / 자세히. 선택은 이 기기에 기억된다.
+// 모바일에서는 한 줄에 하나씩 나와 스크롤이 길어지므로 처음엔 간단히 보기로 연다.
+let compactView = (() => {
+  const saved = localStorage.getItem("viewMode");
+  if (saved) return saved === "compact";
+  return window.matchMedia("(max-width: 520px)").matches;
+})();
+
+function applyViewToggle() {
+  const b = document.getElementById("viewtoggle");
+  b.innerHTML = compactView
+    ? `<span class="ico">☰</span>자세히`
+    : `<span class="ico">▦</span>간단히`;
+  b.title = compactView ? "설명까지 자세히 보기" : "한 줄에 여러 개 보기";
+}
+
 // ---------- 렌더 ----------
 function renderChips() {
   const el = document.getElementById("chips");
@@ -368,7 +431,7 @@ function renderList() {
     total += items.length;
     html += `<h2 class="section-title">${CATS[c]} <span class="count">${items.length}개</span></h2>
              ${CATNOTE[c] ? `<p class="cat-note">${CATNOTE[c]}</p>` : ""}
-             <div class="grid">${items.map(cardHTML).join("")}</div>`;
+             <div class="grid${compactView ? " compact" : ""}">${items.map(cardHTML).join("")}</div>`;
   }
   el.innerHTML = html || `<p class="empty">검색 결과가 없어요.</p>`;
   el.querySelectorAll(".pick-btn:not([disabled])").forEach(b =>
@@ -530,6 +593,22 @@ _lb.addEventListener("click", e => {
   }
 });
 
+// 간단히 보기에서 품목명을 누르면 그 카드만 펼쳐 설명(하자 고지 포함)을 보여준다
+document.addEventListener("click", e => {
+  if (!compactView) return;
+  const h = e.target.closest(".card h3");
+  if (!h) return;
+  h.closest(".card").classList.toggle("expanded");
+});
+
+document.getElementById("viewtoggle").onclick = () => {
+  compactView = !compactView;
+  localStorage.setItem("viewMode", compactView ? "compact" : "detail");
+  applyViewToggle();
+  renderList();
+};
+
+applyViewToggle();
 renderChips();
 renderList();
 
