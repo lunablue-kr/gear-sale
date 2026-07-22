@@ -30,6 +30,36 @@
   /* ===== 헤더 ===== */
   header { background: var(--card); border-bottom: 1px solid var(--line); padding: 36px 0 28px; }
   header h1 { font-size: 26px; font-weight: 800; letter-spacing: -0.5px; }
+  header .wrap { position: relative; }
+  #admin-link {
+    position: absolute; top: -14px; right: 16px;
+    border: none; background: none; padding: 4px 6px; cursor: pointer;
+    font-size: 12px; color: #cbc9c4; font-weight: 400; letter-spacing: 0;
+  }
+  #admin-link:hover { color: var(--accent); }
+  #admin-gate {
+    position: fixed; inset: 0; z-index: 200; display: none;
+    background: rgba(0,0,0,.45); align-items: center; justify-content: center; padding: 20px;
+  }
+  #admin-gate.show { display: flex; }
+  #admin-gate .box {
+    background: var(--card); border-radius: var(--radius); padding: 22px; width: 320px; max-width: 100%;
+  }
+  #admin-gate h3 { font-size: 16px; margin-bottom: 4px; }
+  #admin-gate p { font-size: 13px; color: var(--sub); margin-bottom: 14px; }
+  #admin-gate input {
+    width: 100%; padding: 10px 12px; border: 1px solid var(--line);
+    border-radius: 10px; font-size: 15px;
+  }
+  #admin-gate input:focus { outline: 2px solid var(--accent); border-color: transparent; }
+  #admin-gate .row { display: flex; gap: 8px; margin-top: 12px; }
+  #admin-gate button {
+    flex: 1; padding: 10px; border-radius: 10px; font-size: 14.5px;
+    border: 1px solid var(--ink); background: var(--ink); color: #fff; cursor: pointer; font-weight: 600;
+  }
+  #admin-gate button.cancel { background: var(--card); color: var(--ink); border-color: var(--line); font-weight: 500; }
+  #admin-gate .msg { font-size: 13px; margin-top: 10px; min-height: 18px; }
+  #admin-gate .msg.err { color: var(--danger); }
   header .tagline { color: var(--sub); margin-top: 6px; font-size: 15px; }
   .notice {
     margin-top: 18px; background: var(--accent-soft); border: 1px solid #cfe0d6;
@@ -175,6 +205,7 @@
 
 <header>
   <div class="wrap">
+    <button id="admin-link" title="관리자">관리자</button>
     <h1>스튜디오 루나블루 장비 판매</h1>
     <p class="tagline">스튜디오 전 장비를 정리합니다. (2026년 9월 초)</p>
     <div class="notice">
@@ -238,6 +269,19 @@
 </div>
 
 <div id="lightbox"><img alt=""><span class="lb-count"></span></div>
+
+<div id="admin-gate">
+  <div class="box">
+    <h3>관리자</h3>
+    <p>판매자 전용 화면입니다. 비밀번호를 입력해 주세요.</p>
+    <input type="password" id="admin-pw" placeholder="비밀번호" autocomplete="current-password">
+    <div class="msg" id="admin-msg"></div>
+    <div class="row">
+      <button class="cancel" id="admin-cancel">취소</button>
+      <button id="admin-ok">들어가기</button>
+    </div>
+  </div>
+</div>
 
 <script src="data/items.js"></script>
 <script>
@@ -488,6 +532,46 @@ _lb.addEventListener("click", e => {
 
 renderChips();
 renderList();
+
+/* ---------- 관리자 진입 (비밀번호는 서버(Apps Script)에서 확인) ---------- */
+{
+  const gate = document.getElementById("admin-gate");
+  const pwEl = document.getElementById("admin-pw");
+  const msgEl = document.getElementById("admin-msg");
+  const okBtn = document.getElementById("admin-ok");
+
+  const open = () => { gate.classList.add("show"); msgEl.textContent = ""; pwEl.value = ""; pwEl.focus(); };
+  const close = () => gate.classList.remove("show");
+
+  document.getElementById("admin-link").onclick = open;
+  document.getElementById("admin-cancel").onclick = close;
+  gate.addEventListener("click", e => { if (e.target === gate) close(); });
+  document.addEventListener("keydown", e => { if (e.key === "Escape") close(); });
+
+  async function submit() {
+    const pw = pwEl.value;
+    if (!pw) return;
+    okBtn.disabled = true; okBtn.textContent = "확인 중…";
+    msgEl.textContent = ""; msgEl.className = "msg";
+    try {
+      // 서버에 실제로 물어봐서 맞을 때만 통과 (페이지 안에는 비밀번호가 없음)
+      const res = await fetch(SHEET_ENDPOINT, {
+        method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({ action: "getOverrides", pw }),
+      });
+      const d = JSON.parse(await res.text());
+      if (!d.ok) throw new Error(d.error === "unauthorized" ? "비밀번호가 맞지 않아요." : d.error);
+      sessionStorage.setItem("adminPw", pw);   // 같은 사이트라 admin.html이 이어서 사용
+      location.href = "admin.html";
+    } catch (e) {
+      msgEl.textContent = e.message || "확인에 실패했어요.";
+      msgEl.className = "msg err";
+      okBtn.disabled = false; okBtn.textContent = "들어가기";
+    }
+  }
+  okBtn.onclick = submit;
+  pwEl.onkeydown = e => { if (e.key === "Enter") submit(); };
+}
 
 // 시트에서 현황 조회해 반영 (실패해도 무시)
 //  · reserved : 입찰 들어온 품목 → 예약중
