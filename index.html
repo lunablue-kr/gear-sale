@@ -347,7 +347,8 @@ let query = "";
 const picked = new Set();
 
 // 보기 방식: 간단히(격자) / 자세히. 선택은 이 기기에 기억된다.
-// 모바일에서는 한 줄에 하나씩 나와 스크롤이 길어지므로 처음엔 간단히 보기로 연다.
+// 모바일은 한 줄에 하나씩이라 스크롤이 매우 길어지므로 처음엔 간단히 보기로 연다.
+// (간단히 보기에서도 품목명을 누르면 설명·하자 고지를 펼쳐 볼 수 있다)
 let compactView = (() => {
   const saved = localStorage.getItem("viewMode");
   if (saved) return saved === "compact";
