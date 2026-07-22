@@ -219,7 +219,7 @@
         <option value="name">품목 이름순</option>
       </select>
       <button class="ghost" id="view">카드로 보기</button>
-      <button class="ghost" id="export">변경 내보내기</button>
+      <button class="ghost" id="export">백업 텍스트 복사</button>
       <button class="ghost" id="reload">새로고침</button>
     </div>
   </div>
@@ -486,22 +486,56 @@ function syncFlag(msg, cls) {
   if (cls === "ok") setTimeout(() => { el.textContent = ""; el.className = "syncmsg"; }, 2500);
 }
 
+async function callSheet(payload) {
+  const res = await fetch(ENDPOINT, {
+    method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
+    body: JSON.stringify(payload),
+  });
+  const d = JSON.parse(await res.text());
+  if (!d.ok) throw new Error(d.error === "unauthorized" ? "비밀번호가 맞지 않아요" : d.error);
+  return d;
+}
+
 async function pushStatus(itemName, status) {
   const pw = adminPw();
   if (!pw) { syncFlag("구매페이지 미반영 (비밀번호 없음)", "err"); return; }
   syncFlag("구매페이지에 반영 중…");
   try {
-    const res = await fetch(ENDPOINT, {
-      method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify({ action: "setStatus", pw, items: [{ name: itemName, status }] }),
-    });
-    const d = JSON.parse(await res.text());
-    if (!d.ok) throw new Error(d.error === "unauthorized" ? "비밀번호가 맞지 않아요" : d.error);
+    await callSheet({ action: "setStatus", pw, items: [{ name: itemName, status }] });
     syncFlag(`구매페이지 반영됨 · ${itemName} → ${status === "sold" ? "판매완료" : "판매중"}`, "ok");
   } catch (e) {
-    sessionStorage.removeItem("adminPw");
+    if (/비밀번호/.test(e.message)) sessionStorage.removeItem("adminPw");
     syncFlag("구매페이지 반영 실패: " + e.message + " (로컬에는 저장됨)", "err");
   }
+}
+
+/* 금액수정·거래메모를 시트에 저장 (기기·브라우저 바뀌어도 유지) */
+async function pushOverride(kind, key, value, label) {
+  const pw = adminPw();
+  if (!pw) { syncFlag("시트 미저장 (비밀번호 없음) — 이 브라우저에만 남아요", "err"); return; }
+  syncFlag("저장 중…");
+  try {
+    await callSheet({ action: "setOverride", pw, kind, key, value });
+    syncFlag(`저장됨 · ${label}`, "ok");
+  } catch (e) {
+    if (/비밀번호/.test(e.message)) sessionStorage.removeItem("adminPw");
+    syncFlag("시트 저장 실패: " + e.message + " (로컬에는 저장됨)", "err");
+  }
+}
+
+/* 시트에 저장된 금액수정·거래메모 가져와 합치기 (시트 값이 우선) */
+async function pullOverrides() {
+  const pw = sessionStorage.getItem("adminPw");
+  if (!pw) return false;
+  try {
+    const d = await callSheet({ action: "getOverrides", pw });
+    Object.entries(d.price || {}).forEach(([uid, v]) => {
+      OV[uid] = Object.assign({}, OV[uid], { price: v });
+    });
+    NOTES = Object.assign({}, NOTES, d.note || {});
+    saveOV(); saveNotes();
+    return true;
+  } catch { return false; }
 }
 
 function setOV(uid, patch) {
@@ -683,8 +717,10 @@ function renderGrid() {
       let closed = false;
       const commit = () => {
         if (closed) return; closed = true;
-        setNote(k, inp.value.trim());
+        const v = inp.value.trim();
+        setNote(k, v);
         renderGrid();
+        pushOverride("note", k, v, `${row.name} 메모`);
       };
       inp.onblur = commit;
       inp.onkeydown = e => {
@@ -720,6 +756,7 @@ function renderGrid() {
         const v = inp.value.replace(/[^\d]/g, "");
         setOV(uid, { price: v === "" ? null : v });
         renderGrid(); renderStats();
+        pushOverride("price", uid, v, `${row.rs.name} / ${row.name} 금액`);
       };
       inp.onblur = commit;
       inp.onkeydown = e => {
@@ -955,6 +992,17 @@ async function previewMode() {
   } finally { btn.disabled = false; }
 }
 
+/* 시트에서 판매상태 + 금액수정 + 거래메모를 한 번에 당겨온다 */
+async function refreshFromSheet() {
+  const gotStatus = await pullStatus();
+  const gotOv = await pullOverrides();
+  BIDS.forEach(b => { if (b.rawPrice !== undefined) b.price = b.rawPrice; });  // 덮어쓴 값 초기화 후 재적용
+  renderGrid(); renderStats();
+  if (gotStatus && gotOv) syncFlag("시트에서 최신 내용 불러옴", "ok");
+  else if (gotStatus) syncFlag("판매상태만 갱신됨 (금액·메모는 비밀번호 필요)", "");
+  else syncFlag("시트 조회 실패 — 로컬 저장분으로 표시 중", "err");
+}
+
 /* ---------- 로컬 스냅샷 모드: data/bids-local.js 가 있으면 그걸로 표시 ---------- */
 function localMode() {
   const rows = [];
@@ -971,14 +1019,13 @@ function localMode() {
   b.innerHTML = `<b>로컬 스냅샷</b> — <code>data/bids-local.js</code>의 시트 사본을 보고 있어요
     (배포본에는 포함되지 않습니다). 시트에 새 입찰이 들어오면 이 파일을 갱신해야 최신이 돼요.`;
   render();
-  // 시트의 판매상태를 가져와 반영 (다른 기기에서 바꾼 것 포함)
-  pullStatus().then(ok => { if (ok) { renderGrid(); renderStats(); } });
+  // 시트에 저장된 판매상태·금액수정·거래메모를 가져와 반영 (다른 기기 포함)
+  refreshFromSheet();
   document.getElementById("reload").onclick = async () => {
     const b = document.getElementById("reload");
     b.disabled = true; b.textContent = "불러오는 중…";
-    await pullStatus(); renderGrid(); renderStats();
+    await refreshFromSheet();
     b.disabled = false; b.textContent = "새로고침";
-    syncFlag("판매상태 갱신됨", "ok");
   };
   document.getElementById("raw").innerHTML =
     "<p style='font-size:13px;color:var(--sub)'>로컬 스냅샷 모드에선 시트 원본을 불러오지 않아요.</p>";
@@ -1031,7 +1078,7 @@ document.getElementById("export").onclick = () => {
   ].join("\n");
 
   navigator.clipboard.writeText(txt).then(
-    () => alert("복사했어요. 이 내용을 붙여주면 items.js에 반영해 배포할 수 있어요.\n\n" + txt.slice(0, 400)),
+    () => alert("백업 텍스트를 복사했어요.\n(상태·금액·메모는 이미 시트에 저장돼 있어요. 이건 기록용 사본이에요.)\n\n" + txt.slice(0, 400)),
     () => prompt("복사가 안 돼서 직접 복사해 주세요", txt));
 };
 document.getElementById("view").onclick = () => {

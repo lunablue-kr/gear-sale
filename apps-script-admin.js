@@ -9,6 +9,9 @@
    3) 판매상태 공개 조회  : GET  ?action=status                → 비밀번호 불필요
         · 품목명과 상태(sold/sale)만 나감. 입찰자 이름·연락처는 절대 안 나감
         · 구매 페이지가 이걸 읽어서 판매완료를 실시간 반영함
+   4) 금액수정·거래메모 저장/조회 : POST {action:'setOverride'|'getOverrides', pw}
+        · 비밀번호 필요. 공개 조회로는 절대 안 나감
+        · 브라우저를 바꾸거나 캐시를 지워도 내용이 유지됨
 
    설치 방법
    ---------------------------------------------------------
@@ -25,8 +28,10 @@
 
         function doPost(e) {
           var _b = {}; try { _b = JSON.parse(e.postData.contents); } catch (_) {}
-          if (_b.action === 'bids')      return adminBids_(_b);
-          if (_b.action === 'setStatus') return adminSetStatus_(_b);
+          if (_b.action === 'bids')         return adminBids_(_b);
+          if (_b.action === 'setStatus')    return adminSetStatus_(_b);
+          if (_b.action === 'setOverride')  return adminSetOverride_(_b);
+          if (_b.action === 'getOverrides') return adminGetOverrides_(_b);
           ...기존 코드 그대로...
         }
 
@@ -40,6 +45,7 @@
    ============================================================ */
 
 var STATUS_SHEET = '판매상태';
+var OVERRIDE_SHEET = '관리메모';
 
 function jsonOut_(o) {
   return ContentService.createTextOutput(JSON.stringify(o))
@@ -118,6 +124,76 @@ function adminSetStatus_(body) {
   } finally {
     lock.releaseLock();
   }
+}
+
+/* 관리메모 시트 (없으면 만든다) — 종류 | 키 | 값 | 갱신시각
+   종류 'price' : 키 = 입찰행 식별자, 값 = 수정한 금액
+   종류 'note'  : 키 = "이름|연락처", 값 = 거래 메모            */
+function overrideSheet_() {
+  var ss = SpreadsheetApp.getActive();
+  var sh = ss.getSheetByName(OVERRIDE_SHEET);
+  if (!sh) {
+    sh = ss.insertSheet(OVERRIDE_SHEET);
+    sh.appendRow(['종류', '키', '값', '갱신시각']);
+  }
+  return sh;
+}
+
+/* ---------- 4-1) 금액수정·거래메모 저장 (비밀번호 필요) ----------
+   body.kind = 'price' | 'note',  body.key,  body.value ('' 이면 삭제)   */
+function adminSetOverride_(body) {
+  var err = checkPw_(body);
+  if (err) return jsonOut_({ ok: false, error: err });
+
+  var kind = String(body.kind || '');
+  var key = String(body.key || '');
+  if (kind !== 'price' && kind !== 'note') return jsonOut_({ ok: false, error: '알 수 없는 종류입니다.' });
+  if (!key) return jsonOut_({ ok: false, error: '키가 없습니다.' });
+
+  var lock = LockService.getScriptLock();
+  try { lock.waitLock(10000); } catch (e) { return jsonOut_({ ok: false, error: '다른 저장이 진행 중입니다.' }); }
+
+  try {
+    var sh = overrideSheet_();
+    var values = sh.getDataRange().getValues();
+    var target = 0;
+    for (var i = 1; i < values.length; i++) {
+      if (String(values[i][0]) === kind && String(values[i][1]) === key) { target = i + 1; break; }
+    }
+    var value = String(body.value == null ? '' : body.value);
+    var now = Utilities.formatDate(new Date(), 'Asia/Seoul', 'yyyy-MM-dd HH:mm:ss');
+
+    if (!value) {                                   // 빈 값이면 행 삭제
+      if (target) sh.deleteRow(target);
+    } else if (target) {
+      sh.getRange(target, 1, 1, 4).setValues([[kind, key, value, now]]);
+    } else {
+      sh.appendRow([kind, key, value, now]);
+    }
+    SpreadsheetApp.flush();
+    return jsonOut_({ ok: true, at: now });
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+/* ---------- 4-2) 금액수정·거래메모 조회 (비밀번호 필요) ---------- */
+function adminGetOverrides_(body) {
+  var err = checkPw_(body);
+  if (err) return jsonOut_({ ok: false, error: err });
+
+  var price = {}, note = {};
+  var sh = SpreadsheetApp.getActive().getSheetByName(OVERRIDE_SHEET);
+  if (sh) {
+    var values = sh.getDataRange().getValues();
+    for (var i = 1; i < values.length; i++) {
+      var kind = String(values[i][0]), key = String(values[i][1]), val = String(values[i][2]);
+      if (!key) continue;
+      if (kind === 'price') price[key] = val;
+      else if (kind === 'note') note[key] = val;
+    }
+  }
+  return jsonOut_({ ok: true, price: price, note: note });
 }
 
 /* ---------- 3) 판매상태 공개 조회 (비밀번호 불필요) ----------
