@@ -406,19 +406,33 @@ function findCol(headers, key) {
       이름이 '입찰'인 시트를 최우선으로 쓰고, 없을 때만 헤더로 추정한다. */
 const SUMMARY_SHEETS = ["품목별", "카탈로그", "판매상태", "관리메모"];
 
-function pickBidSheet(sheets) {
-  const exact = sheets.find(sh => String(sh.sheet).trim() === "입찰" && (sh.rows || []).length);
-  if (exact) return exact;
-
-  let best = null, bestScore = 0;
+/* 후보 시트를 우선순위대로 나열한다 ('입찰' 먼저, 요약 시트는 제외) */
+function bidSheetCandidates(sheets) {
+  const out = [];
   sheets.forEach(sh => {
+    if (String(sh.sheet).trim() === "입찰" && (sh.rows || []).length) out.push(sh);
+  });
+  sheets.forEach(sh => {
+    if (out.includes(sh)) return;
     if (SUMMARY_SHEETS.includes(String(sh.sheet).trim())) return;   // 요약 시트 제외
     const h = sh.headers || [];
     let score = 0;
     ["name", "item", "price", "contact"].forEach(k => { if (findCol(h, k) >= 0) score++; });
-    if (score > bestScore && (sh.rows || []).length) { bestScore = score; best = sh; }
+    if (score >= 2 && (sh.rows || []).length) out.push(sh);
   });
-  return bestScore >= 2 ? best : null;
+  return out;
+}
+
+/* 후보를 차례로 시도해 실제로 입찰이 나오는 시트를 쓴다 */
+let PICKED_SHEET = null, TRIED = [];
+function loadBidsFrom(sheets) {
+  TRIED = []; PICKED_SHEET = null;
+  for (const sh of bidSheetCandidates(sheets)) {
+    const rows = dedupe(normalize(sh));
+    TRIED.push({ name: sh.sheet, rows: (sh.rows || []).length, bids: rows.length });
+    if (rows.length) { PICKED_SHEET = sh; return rows; }
+  }
+  return [];
 }
 
 /* ---------- 행 → 입찰 목록 정규화 ---------- */
@@ -699,6 +713,35 @@ function fillSelects(rows) {
   cs.dataset.done = "1";
 }
 
+/* 표가 비었을 때: 필터 때문인지, 시트를 못 읽은 것인지 화면에 밝힌다.
+   (예전에는 숨겨진 영역에 안내를 그려서 원인이 전혀 안 보였다)            */
+function emptyGridHTML() {
+  const filtered = document.getElementById("q").value.trim() ||
+    document.getElementById("cat").value || document.getElementById("who").value ||
+    document.getElementById("state").value;
+
+  if (BIDS.length && filtered)
+    return `<div class="empty">조건에 맞는 입찰이 없어요.<br>
+      <span style="font-size:13px">검색어·필터를 지우면 전체 ${BIDS.length}건이 보여요.</span></div>`;
+
+  if (BIDS.length) return `<div class="empty">조건에 맞는 입찰이 없어요.</div>`;
+
+  if (PREVIEW) return `<div class="empty">표시할 품목이 없어요.</div>`;
+
+  const info = TRIED.length
+    ? TRIED.map(t => `· <b>${esc(t.name)}</b> — ${t.rows}행 중 입찰로 인식된 것 ${t.bids}건`).join("<br>")
+    : "읽을 수 있는 후보 시트가 없었어요.";
+  const all = (DATA && DATA.sheets || []).map(s => `${esc(s.sheet)}(${(s.rows||[]).length}행)`).join(" · ") || "-";
+
+  return `<div class="empty" style="text-align:left;max-width:560px;margin:0 auto;padding:30px 4px">
+    <b style="display:block;font-size:15px;color:var(--ink);margin-bottom:8px">입찰을 하나도 읽지 못했어요.</b>
+    <div style="font-size:13px;line-height:1.7">
+      시도한 시트<br>${info}
+      <div style="margin-top:10px;color:var(--sub)">시트 전체: ${all}</div>
+      <div style="margin-top:10px;color:var(--sub)">이 내용을 알려주시면 원인을 바로 잡을 수 있어요.</div>
+    </div></div>`;
+}
+
 function renderGrid() {
   const all = buildRows();
   fillSelects(all);
@@ -745,7 +788,7 @@ function renderGrid() {
 
   document.getElementById("grid").innerHTML = rows.length
     ? `<div class="gridwrap"><table class="grid">${head}<tbody>${body}</tbody></table></div>`
-    : `<div class="empty">조건에 맞는 입찰이 없어요.</div>`;
+    : emptyGridHTML();
 
   const newWrap = document.querySelector(".gridwrap");
   if (keep && newWrap) { newWrap.scrollLeft = keep.x; newWrap.scrollTop = keep.y; }
@@ -1015,13 +1058,10 @@ async function enter(pw) {
     DATA = await load(pw);
     PW = pw;
     sessionStorage.setItem("adminPw", pw);
-    const sheet = pickBidSheet(DATA.sheets || []);
-    BIDS = sheet ? dedupe(normalize(sheet)) : [];
+    BIDS = loadBidsFrom(DATA.sheets || []);
     document.getElementById("gate").classList.add("hide");
     document.getElementById("app").classList.remove("hide");
     render(); renderRaw();
-    if (!sheet) document.getElementById("list").innerHTML =
-      `<div class="empty">입찰 시트를 자동으로 찾지 못했어요.<br>아래 "원본 데이터 보기"에서 확인해 주세요.</div>`;
   } catch (e) {
     msg.textContent = e.message; msg.className = "err";
   } finally {
@@ -1182,8 +1222,7 @@ document.getElementById("reload").onclick = async () => {
   btn.disabled = true; btn.textContent = "불러오는 중…";
   try {
     DATA = await load(PW);
-    const sheet = pickBidSheet(DATA.sheets || []);
-    BIDS = sheet ? normalize(sheet) : [];
+    BIDS = loadBidsFrom(DATA.sheets || []);
     render(); renderRaw();
   } catch (e) { alert(e.message); }
   btn.disabled = false; btn.textContent = "새로고침";
