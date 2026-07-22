@@ -525,10 +525,14 @@ function normalize(sheet) {
     const parts = itemRaw ? itemRaw.split(/\r?\n/).map(s => s.trim()).filter(Boolean) : [""];
     const priceRaw = get(c.price);
     parts.forEach(p => {
-      // "[번호] 품목명 — 12000원" 형태면 품목/금액 분리
       let item = p, price = priceRaw;
-      const m = p.match(/^(.*?)\s*[—-]\s*([\d,]+)\s*원?$/);
-      if (m) { item = m[1]; price = m[2]; }
+      /* "[번호] 품목명 — 12000원"처럼 한 칸에 금액이 같이 적힌 옛 형식만 분리한다.
+         금액 열이 따로 있으면 건드리지 않는다 —
+         'Jemball Diffuser JBL-80'이 '…JBL' + 80원으로 쪼개지던 문제. */
+      if (!priceRaw) {
+        const m = p.match(/^(.*?)\s+[—–]\s*([\d,]+)\s*원?$/);
+        if (m) { item = m[1]; price = m[2]; }
+      }
       item = item.replace(/^\[\d+\]\s*/, "").trim();
       const list = resolveAll(item);
       if (!list) return;                    // 헤더 등 데이터 아닌 값은 제외
@@ -1053,7 +1057,16 @@ function render() {
 function renderStats() {
   const map = group(BIDS);
   const unmatched = [...map.values()].filter(l => !l[0].resolved.matched).length;
-  const total = BIDS.reduce((s, b) => s + (+b.price || 0), 0);
+  /* 금액 합계는 시트의 입찰 1건을 1번만 센다.
+     이름이 같은 품목(원단 Gray 실크 10·13번 등)은 화면에선 번호별로 나뉘지만
+     실제로 낸 돈은 한 번이므로, 나뉜 것을 다 더하면 합계가 부풀려진다. */
+  const counted = new Set();
+  const total = BIDS.reduce((s, b) => {
+    const key = b.row + "|" + b.name + "|" + b.contact;
+    if (counted.has(key)) return s;
+    counted.add(key);
+    return s + (+b.price || 0);
+  }, 0);
   document.getElementById("stats").innerHTML = PREVIEW
     ? `<div class="stat"><b>${map.size}</b>예약된 품목</div>` +
       `<div class="stat"><b>${map.size - unmatched}</b>현재 품목과 매칭됨</div>` +
