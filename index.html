@@ -659,6 +659,25 @@ renderList();
   pwEl.onkeydown = e => { if (e.key === "Enter") submit(); };
 }
 
+/* 시트에 남아있는 옛 품목명 → 현재 품목명.
+   이름을 바꾼 뒤에 들어온 예약이 매칭되지 않아 '판매중'으로 보이던 문제를 막는다.
+   (관리자 페이지의 별칭 표와 같은 내용) */
+const NAME_ALIAS = {
+  "Jemball Diffuser JBL-80": "Aurora Jemball Diffuser JBL-80",
+  "낮은 수조 (100×80×10cm)": "아크릴 수조 (100×80×10cm)",
+};
+const NAME_JUNK = new Set(["품목", "품목명", ""]);   // 헤더가 섞여 들어온 값
+
+function toCurrentNames(list) {
+  const out = new Set();
+  (list || []).forEach(raw => {
+    const n = String(raw || "").trim();
+    if (NAME_JUNK.has(n)) return;
+    out.add(NAME_ALIAS[n] || n);
+  });
+  return out;
+}
+
 // 시트에서 현황 조회해 반영 (실패해도 무시)
 //  · reserved : 입찰 들어온 품목 → 예약중
 //  · sold/sale: 관리자가 정한 판매상태 (판매완료가 예약중보다 우선)
@@ -670,11 +689,11 @@ function syncFromSheet() {
   return Promise.all(jobs).then(([bidRes, stRes]) => {
     let changed = false;
     if (bidRes && bidRes.reserved) {
-      const set = new Set(bidRes.reserved);
+      const set = toCurrentNames(bidRes.reserved);
       ITEMS.forEach(it => { if (it.status === "sale" && set.has(it.name)) { it.status = "hold"; changed = true; } });
     }
     if (stRes && stRes.ok) {
-      const sold = new Set(stRes.sold || []), sale = new Set(stRes.sale || []);
+      const sold = toCurrentNames(stRes.sold), sale = toCurrentNames(stRes.sale);
       ITEMS.forEach(it => {
         const want = sold.has(it.name) ? "sold" : sale.has(it.name) ? "sale" : null;
         if (want && it.status !== want) { it.status = want; changed = true; }

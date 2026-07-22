@@ -321,6 +321,10 @@ const ALIAS = {
 // 데이터가 아닌 값 (헤더가 섞여 들어온 것 등)
 const JUNK = new Set(["품목", "품목명", "item", ""]);
 
+// 시트에 오타로 남은 입찰자 이름 교정 (시트 원본은 건드리지 않고 표시만 통일)
+const BIDDER_ALIAS = { "주용균 실장님": "주보균 실장님" };
+const fixBidder = n => BIDDER_ALIAS[String(n || "").trim()] || String(n || "").trim();
+
 const norm = s => String(s).toLowerCase()
   .replace(/[×x]\s*\d+/g, "")          // ×2, x3 같은 수량 표기 제거
   .replace(/["'`]/g, "")
@@ -444,9 +448,9 @@ function normalize(sheet) {
   };
   sheet.rows.forEach((row, ri) => {
     const get = i => (i >= 0 && row[i] != null ? String(row[i]).trim() : "");
-    const name = get(c.name), itemRaw = get(c.item);
+    const name = fixBidder(get(c.name)), itemRaw = get(c.item);
     // 입찰자 이름이 없는 행은 실제 입찰이 아니다 (요약 시트의 빈 행 등) → 제외
-    if (!name || !itemRaw) return;
+    if (!name || !itemRaw || JUNK.has(name)) return;
     // 한 셀에 여러 품목이 줄바꿈으로 들어있는 경우 분리
     const parts = itemRaw ? itemRaw.split(/\r?\n/).map(s => s.trim()).filter(Boolean) : [""];
     const priceRaw = get(c.price);
