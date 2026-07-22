@@ -48,6 +48,11 @@
   .toolbar-inner { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
   .toolbar-inner input { flex: 1 1 200px; }
   .toolbar-inner select { flex: 0 0 auto; width: auto; }
+  .searchrow { display: flex; gap: 7px; flex: 1 1 240px; }
+  .searchrow input { flex: 1; min-width: 0; }
+  #filters { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  #filtoggle { display: none; flex: 0 0 auto; }
+  #filtoggle.on { background: var(--ink); color: #fff; border-color: var(--ink); }
 
   .stats { display: flex; gap: 10px; flex-wrap: wrap; margin: 16px 0; }
   .stat { background: var(--card); border: 1px solid var(--line); border-radius: 10px;
@@ -175,6 +180,49 @@
     white-space: nowrap; max-width: 280px; overflow: hidden; text-overflow: ellipsis; }
   th { background: var(--accent-soft); position: sticky; top: 0; }
   .hide { display: none !important; }
+
+  /* ===== 모바일: 표가 최대한 보이게 ===== */
+  @media (max-width: 640px) {
+    body { padding-bottom: 0; }
+    header { padding: 12px 0; }
+    header h1 { font-size: 17px; }
+    header .sub { display: none; }
+    .wrap { padding: 0 10px; }
+
+    #filtoggle { display: block; }
+    #filters { display: none; width: 100%; }
+    #filters.open { display: flex; }
+    #filters select, #filters button { flex: 1 1 calc(50% - 4px); width: auto; font-size: 13px; }
+
+    /* 통계: 한 줄로 가로 스크롤 */
+    .stats { flex-wrap: nowrap; overflow-x: auto; gap: 6px; margin: 8px 0;
+      -webkit-overflow-scrolling: touch; }
+    .stat { flex: 0 0 auto; padding: 5px 9px; font-size: 11.5px; white-space: nowrap; }
+    .stat b { display: inline; font-size: 13px; margin-right: 3px; }
+
+    .banner, .syncmsg { font-size: 12px; }
+    details.raw { display: none; }
+
+    /* 표 영역 최대 확보 */
+    .gridwrap { max-height: calc(100vh - 150px); border-radius: 10px; }
+    table.grid { font-size: 12.5px; }
+    table.grid th, table.grid td { padding: 6px 7px; }
+
+    /* 고정된 품목 열은 좁게 — 누르면 그 칸만 전체 이름이 보인다 */
+    table.grid td.item { min-width: 0; }
+    table.grid .stick.item { max-width: 96px; }
+    table.grid td.item.stick > * , table.grid td.item.stick {
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    table.grid td.item.stick.open { max-width: 200px; white-space: normal; }
+    table.grid td.item.stick::after {
+      content: "…"; color: var(--sub); font-weight: 400;
+    }
+    table.grid td.item.stick.open::after { content: ""; }
+    select.stsel { font-size: 11.5px; padding: 1px 3px; }
+    input.nedit { width: 150px; }
+    table.grid td.note .notetxt, table.grid td.msg .msgtxt { max-width: 130px; }
+  }
 </style>
 </head>
 <body>
@@ -198,7 +246,11 @@
 
   <div class="toolbar">
     <div class="wrap toolbar-inner">
-      <input type="text" id="q" placeholder="품목 · 이름 · 연락처 검색">
+      <div class="searchrow">
+        <input type="text" id="q" placeholder="품목 · 이름 · 연락처 검색">
+        <button class="ghost" id="filtoggle" type="button">필터</button>
+      </div>
+      <div id="filters">
       <select id="cat"><option value="">전체 카테고리</option></select>
       <select id="who"><option value="">전체 입찰자</option></select>
       <select id="state">
@@ -221,6 +273,7 @@
       <button class="ghost" id="view">카드로 보기</button>
       <button class="ghost" id="export">백업 텍스트 복사</button>
       <button class="ghost" id="reload">새로고침</button>
+      </div>
     </div>
   </div>
 
@@ -347,9 +400,19 @@ function findCol(headers, key) {
 }
 
 /* ---------- 시트들 중 입찰 시트 고르기 ---------- */
+/* 입찰 원본 시트를 고른다.
+   ⚠️ '품목별'·'카탈로그'는 입찰이 없는 품목까지 전부 나열하는 요약 시트라
+      절대 원본으로 쓰면 안 된다(입찰이 없는데 있는 것처럼 보임).
+      이름이 '입찰'인 시트를 최우선으로 쓰고, 없을 때만 헤더로 추정한다. */
+const SUMMARY_SHEETS = ["품목별", "카탈로그", "판매상태", "관리메모"];
+
 function pickBidSheet(sheets) {
+  const exact = sheets.find(sh => String(sh.sheet).trim() === "입찰" && (sh.rows || []).length);
+  if (exact) return exact;
+
   let best = null, bestScore = 0;
   sheets.forEach(sh => {
+    if (SUMMARY_SHEETS.includes(String(sh.sheet).trim())) return;   // 요약 시트 제외
     const h = sh.headers || [];
     let score = 0;
     ["name", "item", "price", "contact"].forEach(k => { if (findCol(h, k) >= 0) score++; });
@@ -368,7 +431,8 @@ function normalize(sheet) {
   sheet.rows.forEach((row, ri) => {
     const get = i => (i >= 0 && row[i] != null ? String(row[i]).trim() : "");
     const name = get(c.name), itemRaw = get(c.item);
-    if (!name && !itemRaw) return;
+    // 입찰자 이름이 없는 행은 실제 입찰이 아니다 (요약 시트의 빈 행 등) → 제외
+    if (!name || !itemRaw) return;
     // 한 셀에 여러 품목이 줄바꿈으로 들어있는 경우 분리
     const parts = itemRaw ? itemRaw.split(/\r?\n/).map(s => s.trim()).filter(Boolean) : [""];
     const priceRaw = get(c.price);
@@ -701,6 +765,11 @@ function renderGrid() {
   applySticky();
 
   document.querySelectorAll("table.grid td.msg, table.grid td.ts").forEach(td => {
+    td.onclick = () => td.classList.toggle("open");
+  });
+
+  // 모바일에서 좁게 줄인 품목 칸 — 누르면 전체 이름 표시
+  document.querySelectorAll("table.grid td.item").forEach(td => {
     td.onclick = () => td.classList.toggle("open");
   });
 
@@ -1040,6 +1109,11 @@ document.getElementById("cat").onchange = render;
 document.getElementById("who").onchange = render;
 document.getElementById("group").onchange = render;
 document.getElementById("state").onchange = render;
+document.getElementById("filtoggle").onclick = () => {
+  const f = document.getElementById("filters");
+  const on = f.classList.toggle("open");
+  document.getElementById("filtoggle").classList.toggle("on", on);
+};
 document.getElementById("selclear").onclick = () => { SEL.clear(); render(); };
 
 /* 상태·금액 변경분을 items.js에 반영할 형태로 뽑아내기 */
