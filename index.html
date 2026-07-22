@@ -620,17 +620,20 @@ renderList();
   const msgEl = document.getElementById("admin-msg");
   const okBtn = document.getElementById("admin-ok");
 
-  const open = () => { gate.classList.add("show"); msgEl.textContent = ""; pwEl.value = ""; pwEl.focus(); };
-  const close = () => gate.classList.remove("show");
+  const openGate = () => { gate.classList.add("show"); msgEl.textContent = ""; pwEl.value = ""; pwEl.focus(); };
+  const closeGate = () => gate.classList.remove("show");
 
-  document.getElementById("admin-link").onclick = open;
-  document.getElementById("admin-cancel").onclick = close;
-  gate.addEventListener("click", e => { if (e.target === gate) close(); });
-  document.addEventListener("keydown", e => { if (e.key === "Escape") close(); });
+  document.getElementById("admin-link").onclick = openGate;
+  document.getElementById("admin-cancel").onclick = closeGate;
+  gate.addEventListener("click", e => { if (e.target === gate) closeGate(); });
+  document.addEventListener("keydown", e => { if (e.key === "Escape") closeGate(); });
 
   async function submit() {
     const pw = pwEl.value;
     if (!pw) return;
+    // 팝업 차단을 피하려면 누른 그 순간에 창을 먼저 열어야 한다.
+    // (확인이 끝난 뒤에 열면 브라우저가 막는다)
+    const win = window.open("", "_blank");
     okBtn.disabled = true; okBtn.textContent = "확인 중…";
     msgEl.textContent = ""; msgEl.className = "msg";
     try {
@@ -647,9 +650,21 @@ renderList();
           d.error === "locked" ? `시도 횟수를 초과해 잠겼어요. ${d.mins}분 후 다시 시도해 주세요.` :
           d.error);
       }
-      sessionStorage.setItem("adminPw", pw);   // 같은 사이트라 관리자 페이지가 이어서 사용
-      location.href = d.panel;
+      sessionStorage.setItem("adminPw", pw);
+      if (win) {
+        // 새 창은 열릴 때 이 창의 저장소를 복사해 가므로, 확인 뒤에 직접 넣어준다.
+        // (그래야 관리자 페이지에서 비밀번호를 다시 묻지 않는다)
+        try { win.sessionStorage.setItem("adminPw", pw); } catch {}
+        win.location = d.panel;
+        closeGate();
+        msgEl.textContent = "새 창에서 열었어요.";
+        msgEl.className = "msg";
+      } else {
+        location.href = d.panel;             // 팝업이 막혔으면 이 창에서 이동
+      }
+      okBtn.disabled = false; okBtn.textContent = "들어가기";
     } catch (e) {
+      if (win) win.close();                  // 실패하면 열어둔 빈 창은 닫는다
       msgEl.textContent = e.message || "확인에 실패했어요.";
       msgEl.className = "msg err";
       okBtn.disabled = false; okBtn.textContent = "들어가기";
