@@ -428,7 +428,7 @@ function bidSheetCandidates(sheets) {
 }
 
 /* 후보를 차례로 시도해 실제로 입찰이 나오는 시트를 쓴다 */
-let PICKED_SHEET = null, TRIED = [];
+let PICKED_SHEET = null, TRIED = [], LAST_COLMAP = null, COLMAP_NOTE = "";
 function loadBidsFrom(sheets) {
   TRIED = []; PICKED_SHEET = null;
   for (const sh of bidSheetCandidates(sheets)) {
@@ -446,6 +446,24 @@ function normalize(sheet) {
     ts: findCol(h, "ts"), name: findCol(h, "name"), contact: findCol(h, "contact"),
     item: findCol(h, "item"), price: findCol(h, "price"), message: findCol(h, "message"),
   };
+
+  /* 헤더 글자로 열을 못 찾는 경우가 있다(헤더가 없거나 다른 말로 적혀 있음).
+     '입찰' 시트는 열 순서가 정해져 있으므로 위치로 대체한다.
+     접수시각 | 이름 | 연락처 | 품목 | 희망가 | 메시지                    */
+  if (c.name < 0 || c.item < 0) {
+    const isBidSheet = String(sheet.sheet).trim() === "입찰" ||
+      (sheet.rows || []).some(r => (r || []).length >= 4);
+    if (isBidSheet) {
+      if (c.ts < 0) c.ts = 0;
+      if (c.name < 0) c.name = 1;
+      if (c.contact < 0) c.contact = 2;
+      if (c.item < 0) c.item = 3;
+      if (c.price < 0) c.price = 4;
+      if (c.message < 0) c.message = 5;
+      COLMAP_NOTE = `헤더를 못 읽어 열 위치로 대체함 (헤더: ${JSON.stringify(h)})`;
+    }
+  }
+  LAST_COLMAP = c;
   sheet.rows.forEach((row, ri) => {
     const get = i => (i >= 0 && row[i] != null ? String(row[i]).trim() : "");
     const name = fixBidder(get(c.name)), itemRaw = get(c.item);
@@ -737,11 +755,22 @@ function emptyGridHTML() {
     : "읽을 수 있는 후보 시트가 없었어요.";
   const all = (DATA && DATA.sheets || []).map(s => `${esc(s.sheet)}(${(s.rows||[]).length}행)`).join(" · ") || "-";
 
-  return `<div class="empty" style="text-align:left;max-width:560px;margin:0 auto;padding:30px 4px">
+  // 원인 파악에 꼭 필요한 것: 실제 헤더와, 어느 열을 무엇으로 인식했는지
+  const bid = (DATA && DATA.sheets || []).find(s => String(s.sheet).trim() === "입찰");
+  const heads = bid ? esc(JSON.stringify(bid.headers)) : "-";
+  const row1 = bid && (bid.rows || [])[0] ? esc(JSON.stringify(bid.rows[0])) : "-";
+  const colmap = LAST_COLMAP ? esc(JSON.stringify(LAST_COLMAP)) : "-";
+
+  return `<div class="empty" style="text-align:left;max-width:620px;margin:0 auto;padding:26px 4px">
     <b style="display:block;font-size:15px;color:var(--ink);margin-bottom:8px">입찰을 하나도 읽지 못했어요.</b>
     <div style="font-size:13px;line-height:1.7">
       시도한 시트<br>${info}
       <div style="margin-top:10px;color:var(--sub)">시트 전체: ${all}</div>
+      <div style="margin-top:12px;padding:10px;background:#f3f3f1;border-radius:8px;
+                  font-family:ui-monospace,monospace;font-size:11.5px;word-break:break-all">
+        헤더: ${heads}<br><br>첫 행: ${row1}<br><br>열 인식: ${colmap}
+        ${COLMAP_NOTE ? `<br><br>${esc(COLMAP_NOTE)}` : ""}
+      </div>
       <div style="margin-top:10px;color:var(--sub)">이 내용을 알려주시면 원인을 바로 잡을 수 있어요.</div>
     </div></div>`;
 }
@@ -1234,8 +1263,26 @@ document.getElementById("reload").onclick = async () => {
 
 // 로컬 스냅샷이 있으면 그걸로 바로, 없으면 세션 비번으로 자동 로그인
 const saved = sessionStorage.getItem("adminPw");
-if (typeof BIDS_SEED !== "undefined") localMode();
-else if (saved) enter(saved);
+if (typeof BIDS_SEED !== "undefined") {
+  localMode();
+} else if (saved) {
+  // 판매 페이지에서 이미 비밀번호를 확인했으므로 입력창을 다시 보여주지 않는다.
+  // 불러오는 동안에는 안내만 보이고, 실패했을 때만 입력창이 나타난다.
+  const gate = document.getElementById("gate");
+  gate.querySelector("input").classList.add("hide");
+  gate.querySelector("#login").classList.add("hide");
+  gate.querySelector("#preview").classList.add("hide");
+  gate.querySelector("p").textContent = "불러오는 중…";
+  enter(saved).then(() => {
+    if (!document.getElementById("gate").classList.contains("hide")) {
+      // 실패해서 게이트가 남아 있으면 입력창을 다시 보여준다
+      gate.querySelector("input").classList.remove("hide");
+      gate.querySelector("#login").classList.remove("hide");
+      gate.querySelector("#preview").classList.remove("hide");
+      gate.querySelector("p").textContent = "관리자 비밀번호를 입력하세요.";
+    }
+  });
+}
 </script>
 </body>
 </html>
