@@ -35,6 +35,7 @@ function doPost(e){
   var _b = {}; try { _b = JSON.parse(e.postData.contents); } catch (_) {}
   if(_b.action === 'gate')         return adminGate_(_b);
   if(_b.action === 'bids')         return adminBids_(_b);
+  if(_b.action === 'editBid')      return adminEditBid_(_b);
   if(_b.action === 'setStatus')    return adminSetStatus_(_b);
   if(_b.action === 'setOverride')  return adminSetOverride_(_b);
   if(_b.action === 'getOverrides') return adminGetOverrides_(_b);
@@ -219,6 +220,56 @@ function overrideSheet_() {
 }
 
 /* 관리자 진입: 비밀번호 확인 후 관리자 페이지 주소를 알려준다 */
+/* ---------- 입찰 직접 편집 (관리자 페이지에서만 씀) ----------
+   시트를 직접 열지 않고도 입찰을 고칠 수 있게 한다.
+   body.op   : 'add' | 'update' | 'delete'
+   body.row  : 시트 행 번호 (update/delete에 필요, 2부터 시작)
+   body.bid  : { ts, name, contact, item, price, message }              */
+function adminEditBid_(body) {
+  var g = adminGuard_(body);
+  if (g) { g.ok = false; return jsonOut_(g); }
+
+  var lock = LockService.getScriptLock();
+  try { lock.waitLock(10000); } catch (e) { return jsonOut_({ ok: false, error: '다른 작업이 진행 중입니다.' }); }
+
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sh = ss.getSheetByName('입찰');
+    if (!sh) return jsonOut_({ ok: false, error: '입찰 시트가 없습니다.' });
+
+    var op = String(body.op || '');
+    var b = body.bid || {};
+    var row = Number(body.row || 0);
+
+    if (op === 'delete') {
+      if (row < 2 || row > sh.getLastRow()) return jsonOut_({ ok: false, error: '행 번호가 올바르지 않습니다.' });
+      sh.deleteRow(row);
+    } else {
+      var values = [[
+        b.ts || new Date(),
+        String(b.name || ''), String(b.contact || ''),
+        String(b.item || ''), String(b.price == null ? '' : b.price),
+        String(b.message || '')
+      ]];
+      if (op === 'add') {
+        sh.appendRow(values[0]);
+        row = sh.getLastRow();
+      } else if (op === 'update') {
+        if (row < 2 || row > sh.getLastRow()) return jsonOut_({ ok: false, error: '행 번호가 올바르지 않습니다.' });
+        sh.getRange(row, 1, 1, 6).setValues(values);
+      } else {
+        return jsonOut_({ ok: false, error: '알 수 없는 작업입니다.' });
+      }
+    }
+
+    rebuildSummary();
+    SpreadsheetApp.flush();
+    return jsonOut_({ ok: true, row: row });
+  } finally {
+    lock.releaseLock();
+  }
+}
+
 function adminGate_(body) {
   var g = adminGuard_(body);
   if (g) { g.ok = false; return jsonOut_(g); }

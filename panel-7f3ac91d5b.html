@@ -181,6 +181,32 @@
   th { background: var(--accent-soft); position: sticky; top: 0; }
   .hide { display: none !important; }
 
+  /* ===== 입찰 추가·수정 창 ===== */
+  #bidmodal { position: fixed; inset: 0; z-index: 300; display: none;
+    background: rgba(0,0,0,.45); align-items: center; justify-content: center; padding: 18px; }
+  #bidmodal.show { display: flex; }
+  #bidmodal .box { background: var(--card); border-radius: var(--radius); padding: 20px;
+    width: 460px; max-width: 100%; max-height: 90vh; overflow-y: auto; }
+  #bidmodal h3 { font-size: 17px; margin-bottom: 3px; }
+  #bidmodal p { font-size: 12.5px; color: var(--sub); margin-bottom: 14px; }
+  #bidmodal label { display: block; font-size: 12px; font-weight: 600; margin: 10px 0 4px; }
+  #bidmodal input { width: 100%; padding: 9px 11px; border: 1px solid var(--line);
+    border-radius: 9px; font-size: 16px; }
+  #bidmodal input:focus { outline: 2px solid var(--accent); border-color: transparent; }
+  #bidmodal .two { display: flex; gap: 9px; }
+  #bidmodal .two > div { flex: 1; min-width: 0; }
+  #bidmodal .row { display: flex; gap: 8px; margin-top: 16px; }
+  #bidmodal .row button { flex: 1; padding: 10px; border-radius: 10px; font-size: 14.5px;
+    border: 1px solid var(--ink); background: var(--ink); color: #fff; cursor: pointer; font-weight: 600; }
+  #bidmodal .row button.ghost { background: var(--card); color: var(--ink);
+    border-color: var(--line); font-weight: 500; }
+  #bidmodal .msg { font-size: 12.5px; margin-top: 10px; min-height: 16px; }
+  #bidmodal .msg.err { color: var(--danger); }
+  td.act { white-space: nowrap; }
+  td.act button { border: none; background: none; cursor: pointer; font-size: 13px;
+    padding: 2px 4px; color: var(--sub); }
+  td.act button:hover { color: var(--danger); }
+
   /* ===== 모바일: 표가 최대한 보이게 ===== */
   @media (max-width: 640px) {
     body { padding-bottom: 0; }
@@ -270,6 +296,7 @@
         <option value="price">최고 금액순</option>
         <option value="name">품목 이름순</option>
       </select>
+      <button class="ghost" id="addbid">+ 입찰 추가</button>
       <button class="ghost" id="view">카드로 보기</button>
       <button class="ghost" id="export">백업 텍스트 복사</button>
       <button class="ghost" id="reload">새로고침</button>
@@ -287,6 +314,31 @@
       <summary>원본 데이터 보기 (시트 그대로)</summary>
       <div class="rawtable" id="raw"></div>
     </details>
+  </div>
+
+  <div id="bidmodal">
+    <div class="box">
+      <h3 id="bm-title">입찰 추가</h3>
+      <p>구글시트를 열지 않고 여기서 바로 고칠 수 있어요.</p>
+      <label>품목</label>
+      <input list="bm-items" id="bm-item" placeholder="품목명 (목록에서 고르거나 직접 입력)">
+      <datalist id="bm-items"></datalist>
+      <div class="two">
+        <div><label>입찰자</label><input id="bm-name" placeholder="이름"></div>
+        <div><label>연락처</label><input id="bm-contact" placeholder="01012345678"></div>
+      </div>
+      <div class="two">
+        <div><label>금액</label><input id="bm-price" inputmode="numeric" placeholder="50000"></div>
+        <div><label>접수 시각</label><input id="bm-ts" placeholder="2026-07-14 12:58:52"></div>
+      </div>
+      <label>메모</label>
+      <input id="bm-msg" placeholder="선택">
+      <div class="msg" id="bm-msg-out"></div>
+      <div class="row">
+        <button class="ghost" id="bm-cancel">취소</button>
+        <button id="bm-save">저장</button>
+      </div>
+    </div>
   </div>
 
   <div id="selbar" class="hide">
@@ -678,6 +730,10 @@ const COLS = [
         Object.entries(STATE_LABEL).map(([k, v]) =>
           `<option value="${k}" ${s === k ? "selected" : ""}>${v}</option>`).join("") + `</select>`;
     } },
+  { k: "act",   label: "", get: () => "", cls: "act",
+    html: r => PREVIEW ? "" :
+      `<button class="bedit" data-uid="${esc(r.uid)}" title="이 입찰 고치기">✎</button>` +
+      `<button class="bdel" data-uid="${esc(r.uid)}" title="이 입찰 삭제">🗑</button>` },
   { k: "note",  label: "내 메모 (거래)", get: r => noteOf(r), cls: "note",
     html: r => {
       const v = noteOf(r);
@@ -847,6 +903,22 @@ function renderGrid() {
   // 모바일에서 좁게 줄인 품목 칸 — 누르면 전체 이름 표시
   document.querySelectorAll("table.grid td.item").forEach(td => {
     td.onclick = () => td.classList.toggle("open");
+  });
+
+  // 입찰 고치기 / 삭제
+  document.querySelectorAll("button.bedit").forEach(b => {
+    b.onclick = e => {
+      e.stopPropagation();
+      const r = ROWMAP.get(b.dataset.uid);
+      if (r) openBidModal(r.row);
+    };
+  });
+  document.querySelectorAll("button.bdel").forEach(b => {
+    b.onclick = e => {
+      e.stopPropagation();
+      const r = ROWMAP.get(b.dataset.uid);
+      if (r) deleteBid(r.row, `${r.rs.name} · ${r.name} · ${r.price ? Number(r.price).toLocaleString() + "원" : "금액 미기재"}`);
+    };
   });
 
   // 내 메모 (입찰자 단위) — 칸 클릭해서 바로 입력
@@ -1181,6 +1253,94 @@ document.getElementById("sort").onchange = render;
 document.getElementById("cat").onchange = render;
 document.getElementById("who").onchange = render;
 document.getElementById("group").onchange = render;
+/* ============================================================
+   입찰 추가·수정·삭제 — 구글시트를 열지 않고 여기서 처리
+   ============================================================ */
+let EDIT_ROW = 0;   // 0이면 새로 추가, 아니면 그 시트 행을 수정
+
+function openBidModal(row) {
+  EDIT_ROW = row || 0;
+  const m = document.getElementById("bidmodal");
+  const src = EDIT_ROW ? [...ROWMAP.values()].find(b => b.row === EDIT_ROW) : null;
+
+  document.getElementById("bm-title").textContent = EDIT_ROW ? "입찰 수정" : "입찰 추가";
+  document.getElementById("bm-item").value    = src ? src.item : "";
+  document.getElementById("bm-name").value    = src ? src.name : "";
+  document.getElementById("bm-contact").value = src ? src.contact : "";
+  document.getElementById("bm-price").value   = src ? (src.rawPrice ?? src.price ?? "") : "";
+  document.getElementById("bm-ts").value      = src ? src.ts : "";
+  document.getElementById("bm-msg").value     = src ? src.message : "";
+  document.getElementById("bm-msg-out").textContent = "";
+
+  // 품목 자동완성 목록
+  document.getElementById("bm-items").innerHTML =
+    ITEMS.map(it => `<option value="${esc(it.name)}">`).join("");
+
+  m.classList.add("show");
+  document.getElementById("bm-item").focus();
+}
+const closeBidModal = () => document.getElementById("bidmodal").classList.remove("show");
+
+async function saveBid() {
+  const out = document.getElementById("bm-msg-out");
+  const btn = document.getElementById("bm-save");
+  const bid = {
+    item: document.getElementById("bm-item").value.trim(),
+    name: document.getElementById("bm-name").value.trim(),
+    contact: document.getElementById("bm-contact").value.trim(),
+    price: document.getElementById("bm-price").value.replace(/[^\d]/g, ""),
+    ts: document.getElementById("bm-ts").value.trim(),
+    message: document.getElementById("bm-msg").value.trim(),
+  };
+  if (!bid.item || !bid.name) {
+    out.textContent = "품목과 입찰자 이름은 필요해요."; out.className = "msg err"; return;
+  }
+  const pw = adminPw();
+  if (!pw) { out.textContent = "비밀번호가 필요해요."; out.className = "msg err"; return; }
+
+  btn.disabled = true; btn.textContent = "저장 중…";
+  try {
+    await callSheet({ action: "editBid", pw, op: EDIT_ROW ? "update" : "add", row: EDIT_ROW, bid });
+    closeBidModal();
+    syncFlag(EDIT_ROW ? "입찰을 고쳤어요" : "입찰을 추가했어요", "ok");
+    await reloadBids();
+  } catch (e) {
+    out.textContent = "저장 실패: " + e.message; out.className = "msg err";
+  } finally {
+    btn.disabled = false; btn.textContent = "저장";
+  }
+}
+
+async function deleteBid(row, label) {
+  if (!confirm(`이 입찰을 삭제할까요?\n\n${label}\n\n되돌릴 수 없어요.`)) return;
+  const pw = adminPw();
+  if (!pw) { syncFlag("비밀번호가 필요해요", "err"); return; }
+  syncFlag("삭제 중…");
+  try {
+    await callSheet({ action: "editBid", pw, op: "delete", row });
+    syncFlag("입찰을 삭제했어요", "ok");
+    await reloadBids();
+  } catch (e) { syncFlag("삭제 실패: " + e.message, "err"); }
+}
+
+/* 시트에서 입찰을 다시 읽어 화면 갱신 */
+async function reloadBids() {
+  const pw = sessionStorage.getItem("adminPw");
+  if (!pw) return;
+  try {
+    DATA = await load(pw);
+    BIDS = loadBidsFrom(DATA.sheets || []);
+    render(); renderRaw();
+  } catch (e) { syncFlag("다시 읽지 못했어요: " + e.message, "err"); }
+}
+
+document.getElementById("addbid").onclick = () => openBidModal(0);
+document.getElementById("bm-cancel").onclick = closeBidModal;
+document.getElementById("bm-save").onclick = saveBid;
+document.getElementById("bidmodal").addEventListener("click", e => {
+  if (e.target.id === "bidmodal") closeBidModal();
+});
+
 document.getElementById("state").onchange = render;
 document.getElementById("filtoggle").onclick = () => {
   const f = document.getElementById("filters");
