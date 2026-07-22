@@ -641,9 +641,16 @@ function renderGrid() {
     });
   }
 
+  // 다시 그리면 스크롤이 처음으로 돌아가므로 위치를 기억했다 복원한다
+  const oldWrap = document.querySelector(".gridwrap");
+  const keep = oldWrap ? { x: oldWrap.scrollLeft, y: oldWrap.scrollTop } : null;
+
   document.getElementById("grid").innerHTML = rows.length
     ? `<div class="gridwrap"><table class="grid">${head}<tbody>${body}</tbody></table></div>`
     : `<div class="empty">조건에 맞는 입찰이 없어요.</div>`;
+
+  const newWrap = document.querySelector(".gridwrap");
+  if (keep && newWrap) { newWrap.scrollLeft = keep.x; newWrap.scrollTop = keep.y; }
 
   document.querySelectorAll("table.grid thead th[data-k]").forEach(th => {
     th.onclick = () => {
