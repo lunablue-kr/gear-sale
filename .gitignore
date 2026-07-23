@@ -2,3 +2,6 @@ pictures/
 
 # 입찰자 개인정보(이름·연락처) 포함 — 절대 배포 금지
 data/bids-local.js
+
+# 서버(Apps Script) 코드 백업 — 관리자 주소가 들어있어 공개 배포 금지
+apps-script-admin.js
