@@ -153,6 +153,9 @@
   table.grid .stick-last { box-shadow: 1px 0 0 var(--line); }
   table.grid tr.grouphead td { position: sticky; left: 0; }
   .tag.edited { background: #e8eefb; color: #35508f; }
+  .tag.settle { background: var(--accent); color: #fff; margin-left: 0; margin-right: 5px; }
+  tr.settle-row td { background: #f4f9f6; }
+  tr.settle-row td.money { font-weight: 800; color: var(--accent); }
   .diff { font-size: 11.5px; }
   .diff.up { color: var(--accent); }
   .diff.dn { color: var(--danger); }
@@ -396,6 +399,15 @@ ITEMS.forEach(it => {
 function resolveAll(raw) {
   const name = String(raw || "").trim();
   if (JUNK.has(name)) return null;
+
+  /* 정산 행 — 통 결제라 품목별 금액을 모를 때 총액만 남기는 줄.
+     판매 목록에 없는 이름이라 '미매칭'으로 보이면 오류처럼 읽히므로 따로 표시한다. */
+  if (name.startsWith("💰")) {
+    return [{ key: "settle|" + name, name: name.replace(/^💰\s*/, ""), cat: "정산",
+              num: "", ask: 0, askUnit: "", status: "sold",
+              matched: true, split: false, settle: true }];
+  }
+
   const target = ALIAS[name] || name;
 
   let hit = BY_EXACT.get(target) || BY_NORM.get(norm(target));
@@ -702,7 +714,8 @@ function setOV(uid, patch) {
 
 const COLS = [
   { k: "item",  label: "품목",     get: r => r.rs.name, cls: "item",
-    html: r => `${esc(r.rs.name)}${r.rs.split ? `<span class="tag split">번호분리</span>` : ""}` },
+    html: r => (r.rs.settle ? `<span class="tag settle">정산</span>` : "") +
+               `${esc(r.rs.name)}${r.rs.split ? `<span class="tag split">번호분리</span>` : ""}` },
   { k: "cat",   label: "카테고리", get: r => r.rs.cat },
   { k: "num",   label: "번호",     get: r => r.rs.num, cls: "num" },
   { k: "ask",   label: "희망가",   get: r => r.rs.ask, cls: "money",
@@ -854,7 +867,7 @@ function renderGrid() {
     COLS.map(x => `<th data-k="${x.k}">${x.label}${SORT.col === x.k ? `<span class="arw">${SORT.dir > 0 ? "▲" : "▼"}</span>` : ""}</th>`).join("") +
     `</tr></thead>`;
 
-  const tr = r => `<tr data-uid="${esc(r.uid)}" class="st-${stateOf(r)} ${SEL.has(r.uid) ? "sel" : ""}">` +
+  const tr = r => `<tr data-uid="${esc(r.uid)}" class="st-${stateOf(r)} ${r.rs.settle ? "settle-row" : ""} ${SEL.has(r.uid) ? "sel" : ""}">` +
     `<td class="cbx"><input type="checkbox" class="cb" ${SEL.has(r.uid) ? "checked" : ""}></td>` +
     COLS.map(x => `<td class="${x.cls || ""}" data-uid="${esc(r.uid)}" data-k="${x.k}">` +
       `${x.html ? x.html(r) : esc(x.get(r) ?? "")}</td>`).join("") + `</tr>`;
