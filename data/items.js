@@ -11,6 +11,7 @@ const CATS = {
   fabric: "원단",
   propA:  "소품 · 유리/아크릴",
   propB:  "소품 · 기타",
+  office: "사무용품 · 집기",
   etc:    "기타",
 };
 
@@ -89,6 +90,15 @@ const ITEMS = [
   { cat:"pc", name:"제우스랩 Z16P 16\" 포터블 모니터", brand:"Zeuslap", qty:1, year:"2022.11 구입", note:"", ask:60000, status:"sale" },
   { cat:"pc", name:"Wacom Intuos Pro PTH-860 (대형)", brand:"Wacom", qty:1, year:"2021.02 / 2023.04 구입", note:"펜 포함 · 박스 있음", ask:200000, status:"sale" },
 
+  // ---------- 사무용품 · 집기 ----------
+  { cat:"office", name:"캐비넷 ×2", brand:"", qty:2, year:"", note:"사진·크기 준비 중", status:"sale" },
+  { cat:"office", name:"의자 ×3", brand:"", qty:3, year:"", note:"사진·크기 준비 중", status:"sale" },
+  { cat:"office", name:"행거", brand:"", qty:1, year:"", note:"사진·크기 준비 중", status:"sale" },
+  { cat:"office", name:"트롤리 5단", brand:"", qty:1, year:"", note:"사진·크기 준비 중", status:"sale" },
+  { cat:"office", name:"모니터 받침 ×2", brand:"", qty:2, year:"", note:"2개 일괄", ask:3000, askUnit:"일괄", status:"sale" },
+  { cat:"office", name:"Epson 프린터", brand:"Epson", qty:1, year:"", note:"모델명·상태 확인 중", status:"sale" },
+  { cat:"office", name:"사진집", brand:"", qty:1, year:"", note:"수량·목록 정리 중", status:"sale" },
+
   // ---------- 기타 ----------
   { cat:"etc", name:"아크릴 봉 ×5", brand:"", qty:5, year:"", note:"사각 3 · 원형 2, 제품 촬영 받침용", status:"hold" },
   { cat:"etc", name:"코드릴 ×5 일괄", brand:"seise", qty:1, year:"", note:"seise HJR-4·HJR-2A · LUG 등 5개 일괄", ask:60000, askUnit:"일괄", imgs:["assets/loc_et2_1.jpg", "assets/loc_et2_2.jpg", "assets/loc_et2_3.jpg"], status:"sale" },
@@ -102,6 +112,9 @@ const ITEMS = [
   { cat:"etc", name:"HDMI 케이블 ×2", brand:"", qty:2, year:"", note:"어댑터 포함", imgs:["assets/loc_et10_1.jpg", "assets/loc_et10_2.jpg"], status:"sale" },
   { cat:"etc", name:"유리 수조 세트 (수조+호스릴+흡입기)", brand:"", qty:1, year:"", note:"소재 유리 · 35×60×40cm 수조 + 호스릴 15m + 흡입기 · 까짐·기스 일부 · 박스 있음", ask:40000, askUnit:"일괄", imgs:["assets/loc_et11_1.jpg", "assets/loc_et11_2.jpg", "assets/loc_et11_3.jpg", "assets/loc_et11_4.jpg"], status:"sale" },
   { cat:"etc", name:"아크릴 수조 (100×80×10cm)", brand:"", qty:1, year:"", note:"소재 아크릴 · 까짐·기스 있음 · 뽁뽁이 포장", ask:30000, imgs:["assets/loc_et12_1.jpg", "assets/loc_et12_2.jpg", "assets/loc_et12_3.jpg", "assets/loc_et12_4.jpg"], status:"sold" },
+
+  { cat:"etc", name:"유리 판", brand:"", qty:1, year:"", note:"사진·크기 준비 중", status:"sale" },
+  { cat:"etc", name:"카메라 가방", brand:"", qty:1, year:"", note:"수량·모델 확인 중", status:"sale" },
 
   // ---------- 배경지 (배실장님) ----------
   { cat:"bg", name:"배경지 #01 슈퍼 화이트 (하프)", brand:"SAVAGE", qty:1, year:"", note:"SUPER WHITE · 1_12",swatch:"#f2f1ee",  status:"sale" },
@@ -207,5 +220,6 @@ const ITEMS = [
   { cat:"propB", name:"화이트 도기 그릇", brand:"", qty:1, year:"", note:"14 x 3 · 수량 1", img:"assets/propB47.jpg", status:"sale" },
   { cat:"propB", name:"화이트 소스 그릇", brand:"", qty:1, year:"", note:"7.5 x 1.5 · 수량 2", img:"assets/propB48.jpg", status:"sale" },
   { cat:"propB", name:"화이트 소스 그릇", brand:"", qty:1, year:"", note:"7.5 x 1.5 · 수량 2", img:"assets/propB49.jpg", status:"sale" },
+  { cat:"propB", name:"화이트 포맥스 박스 (그레이)", brand:"", qty:4, year:"", note:"3~4개 · 사진 준비 중", status:"sale" },
 ];
 ITEMS.forEach((it, i) => it.id = i);
