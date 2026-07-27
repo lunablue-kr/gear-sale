@@ -4,5 +4,5 @@ P.pc = [
   { cat:"pc", name:"iMac 27\" Retina 5K (2017)", brand:"Apple", qty:1, year:"2018.05 구입", note:"애플 정품 키보드·마우스 포함 · 풀박스 · 64GB 메모리 · 512GB 저장공간", ask:450000, status:"sale" },
   { cat:"pc", name:"Apple Studio Display ×2", brand:"Apple", qty:2, year:"2024.04 / 2025.05 구입", note:"기본 모델 · 썬더볼트 케이블 포함 풀박스 · 분리 판매 가능 · 8월 말 이후 거래 가능", ask:1400000, askUnit:"개", status:"sale" },
   { cat:"pc", name:"제우스랩 Z16P 16\" 포터블 모니터", brand:"Zeuslap", qty:1, year:"2022.11 구입", note:"", ask:60000, status:"sale" },
-  { cat:"pc", name:"Wacom Intuos Pro PTH-860 (대형)", brand:"Wacom", qty:1, year:"2021.02 / 2023.04 구입", note:"펜 포함 · 박스 있음", ask:200000, status:"sale" }
+  { cat:"pc", name:"Wacom Intuos Pro PTH-860 (대형)", brand:"Wacom", qty:1, year:"2021.02 / 2023.04 구입", note:"펜 포함 · 박스 있음", ask:250000, status:"sale" }
 ];
