@@ -1,0 +1,28 @@
+// propA — 이 카테고리만 고치면 됨
+P.propA = [
+  { cat:"propA", name:"화이트 포맥스 단상자", brand:"", qty:1, year:"", note:"40 x 7 x 25 · 수량 3", img:"assets/propA1.jpg", status:"sale" },
+  { cat:"propA", name:"화이트 원기둥", brand:"", qty:1, year:"", note:"지름 9                             높이 10 · 수량 1", img:"assets/propA2.jpg", status:"sale" },
+  { cat:"propA", name:"화이트 큐브", brand:"", qty:1, year:"", note:"7 x 7 x 7                        10 x 10 x 10                 10 x 8 x 15 · 수량 각 1", img:"assets/propA3.jpg", status:"sale" },
+  { cat:"propA", name:"화이트 큐브", brand:"", qty:1, year:"", note:"10 x 10 x 15 · 수량 1", img:"assets/propA4.jpg", status:"sale" },
+  { cat:"propA", name:"유리 화병", brand:"", qty:1, year:"", note:"바닥 지름 7.5                  높이 18 · 수량 1", img:"assets/propA5.jpg", status:"sale" },
+  { cat:"propA", name:"유리 칵테일잔", brand:"", qty:1, year:"", note:"입구 지름 10.5                 높이 8.5 · 수량 1", img:"assets/propA6.jpg", status:"sale" },
+  { cat:"propA", name:"원기둥 유리 화병", brand:"", qty:1, year:"", note:"지름 6.5                          높이 15 · 수량 1", img:"assets/propA7.jpg", status:"sale" },
+  { cat:"propA", name:"프리즘", brand:"", qty:1, year:"", note:"3cm 정삼각형                  x 10cm · 수량 12", img:"assets/propA8.jpg", status:"sold" },
+  { cat:"propA", name:"아크릴 원형", brand:"", qty:1, year:"", note:"지름 8                             높이 1.5 · 수량 2", img:"assets/propA9.jpg", status:"sold" },
+  { cat:"propA", name:"아크릴 큐브", brand:"", qty:1, year:"", note:"4 x 4 x 4                         5 x 5 x 5 · 수량 각 6", img:"assets/propA10.jpg", status:"sold" },
+  { cat:"propA", name:"줄무늬 아크릴 보드", brand:"", qty:1, year:"", note:"15 x 20 x 0.5              14.5 x 14.5 x 0.5 · 수량 각 1", img:"assets/propA11.jpg", status:"sold" },
+  { cat:"propA", name:"유리 구슬", brand:"", qty:1, year:"", note:"지름 3 / 4 / 5 / 6 · 수량 2 / 1 / 1 / 1", img:"assets/propA12.jpg", status:"sold" },
+  { cat:"propA", name:"유리 시약병", brand:"", qty:1, year:"", note:"바닥 지름 6.5                  높이 14 · 수량 3", img:"assets/propA13.jpg", status:"sale" },
+  { cat:"propA", name:"유리 시험관", brand:"", qty:1, year:"", note:"지름 2.5                          높이 15 · 수량 4", img:"assets/propA14.jpg", status:"sale" },
+  { cat:"propA", name:"유리 시험관", brand:"", qty:1, year:"", note:"지름 2                              높이 20                                     /                                     지름 2                              높이 15 · 수량 1", img:"assets/propA15.jpg", status:"sale" },
+  { cat:"propA", name:"샬레", brand:"", qty:1, year:"", note:"지름 6 / 6.5 / 9 / 9.5 · 수량 4 / 4 / 5 / 6", img:"assets/propA16.jpg", status:"sale" },
+  { cat:"propA", name:"비커 250ml", brand:"", qty:1, year:"", note:"지름 10                           높이 6.5 · 수량 1", img:"assets/propA17.jpg", status:"sale" },
+  { cat:"propA", name:"비커 1000ml", brand:"", qty:1, year:"", note:"지름 10                           높이 15 · 수량 1", img:"assets/propA18.jpg", status:"sale" },
+  { cat:"propA", name:"삼각 플라스크 100ml", brand:"", qty:1, year:"", note:"바닥 지름 6                     높이 11 · 수량 1", img:"assets/propA19.jpg", status:"sale" },
+  { cat:"propA", name:"삼각 플라스크 500ml", brand:"", qty:1, year:"", note:"바닥 지름 18                     높이 10 · 수량 1", img:"assets/propA20.jpg", status:"sale" },
+  { cat:"propA", name:"삼각 플라스크 1000ml", brand:"", qty:1, year:"", note:"바닥 지름 13                     높이 22 · 수량 1", img:"assets/propA21.jpg", status:"sale" },
+  { cat:"propA", name:"홀로그램 유리 그릇", brand:"", qty:1, year:"", note:"입구 지름 10                   높이 8 · 수량 1", img:"assets/propA22.jpg", status:"sold" },
+  { cat:"propA", name:"세로줄 유리 그릇", brand:"", qty:1, year:"", note:"입구 지름 8.5                   높이 4 · 수량 4", img:"assets/propA23.jpg", status:"sale" },
+  { cat:"propA", name:"반구 아크릴", brand:"", qty:1, year:"", note:"6 x 3 · 수량 1", img:"assets/propA24.jpg", status:"sold" },
+  { cat:"propA", name:"반구 아크릴", brand:"", qty:1, year:"", note:"8 x 4.5 · 수량 1", img:"assets/propA25.jpg", status:"sold" }
+];
