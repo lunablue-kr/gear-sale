@@ -231,6 +231,8 @@
   #form-msg { margin-top: 12px; font-size: 14px; text-align: center; display: none; }
   #form-msg.ok { display: block; color: var(--accent); }
   #form-msg.err { display: block; color: var(--danger); }
+  #form-msg .kakao { display: block; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--line); font-size: 13px; color: var(--sub); }
+  #form-msg .kakao a { display: inline-block; margin-top: 3px; color: var(--accent); font-weight: 700; }
 
   footer { margin-top: 50px; padding: 24px 0 40px; color: var(--sub); font-size: 12.5px; border-top: 1px solid var(--line); }
 
@@ -555,7 +557,9 @@ async function submitBid() {
       method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
       body: JSON.stringify({ name, contact, message: document.getElementById("f-msg").value.trim(), items: bidsForSheet }),
     }).catch(() => {});
-    msgEl.textContent = "입찰이 접수되었어요. 검토 후 연락드릴게요!";
+    msgEl.innerHTML = '입찰이 접수되었어요. 검토 후 연락드릴게요!'
+      + '<span class="kakao">오픈카톡으로 연락 주시면 더 빠르게 확인할 수 있어요<br>'
+      + '<a href="https://open.kakao.com/me/lunablue" target="_blank" rel="noopener">open.kakao.com/me/lunablue</a></span>';
     msgEl.className = "ok";
     btn.textContent = "접수 완료";
     // 입찰된 품목 즉시 예약중 표시(입찰은 계속 가능)
