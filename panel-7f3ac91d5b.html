@@ -677,11 +677,13 @@ function adminPw() {
   return pw;
 }
 
+let SYNC_T = 0;
 function syncFlag(msg, cls) {
   const el = document.getElementById("syncmsg");
   if (!el) return;
+  clearTimeout(SYNC_T);
   el.textContent = msg; el.className = "syncmsg " + (cls || "");
-  if (cls === "ok") setTimeout(() => { el.textContent = ""; el.className = "syncmsg"; }, 2500);
+  if (cls === "ok") SYNC_T = setTimeout(() => { el.textContent = ""; el.className = "syncmsg"; }, 2500);
 }
 
 async function callSheet(payload) {
@@ -689,7 +691,10 @@ async function callSheet(payload) {
     method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
     body: JSON.stringify(payload),
   });
-  const d = JSON.parse(await res.text());
+  const txt = await res.text();
+  let d;
+  try { d = JSON.parse(txt); }
+  catch { throw new Error(res.ok ? "서버 응답을 읽지 못했어요 (Apps Script 재배포 중일 수 있어요)" : "서버 오류 " + res.status); }
   if (!d.ok) throw new Error(d.error === "unauthorized" ? "비밀번호가 맞지 않아요" : d.error);
   return d;
 }
@@ -750,7 +755,10 @@ async function pullOverrides() {
     NOTES = Object.assign({}, NOTES, d.note || {});
     saveOV(); saveNotes();
     return true;
-  } catch { return false; }
+  } catch (e) {
+    if (/비밀번호/.test(e.message)) { sessionStorage.removeItem("adminPw"); PW = ""; }
+    return false;
+  }
 }
 
 function setOV(uid, patch) {
@@ -852,7 +860,8 @@ function filtered(rows) {
 
 function fillSelects(rows) {
   const cs = document.getElementById("cat"), ws = document.getElementById("who");
-  if (cs.dataset.done) return;
+  if (cs.dataset.done && !window.__refillSelects) return;
+  window.__refillSelects = false;
   const cats = [...new Set(rows.map(r => r.rs.catKey))].filter(Boolean);
   cats.forEach(c => cs.insertAdjacentHTML("beforeend", `<option value="${c}">${esc(CATS[c] || c)}</option>`));
   [...new Set(rows.map(r => r.name))].filter(Boolean).sort((a, b) => a.localeCompare(b, "ko"))
@@ -915,7 +924,6 @@ function renderGrid() {
   });
 
   const grouping = document.getElementById("group").value;
-  if (SORT.col === "act") SORT = { col: "item", dir: 1 };   // 예전에 잘못 걸린 정렬 복구
   const head = `<thead><tr><th class="cbx"><input type="checkbox" id="cbAll"></th>` +
     COLS.map(x => `<th ${x.k === "act" ? "" : `data-k="${x.k}"`}>${x.label}${SORT.col === x.k ? `<span class="arw">${SORT.dir > 0 ? "▲" : "▼"}</span>` : ""}</th>`).join("") +
     `</tr></thead>`;
@@ -964,7 +972,6 @@ function renderGrid() {
     window.__notepopBound = true;
     document.addEventListener("click", e => { if (!e.target.closest("td.note, td.msg, #notepop")) closeNotePop(); });
     document.addEventListener("keydown", e => { if (e.key === "Escape") closeNotePop(); });
-    document.querySelector(".gridwrap")?.addEventListener("scroll", closeNotePop);
     window.addEventListener("scroll", closeNotePop, true);
   }
   const all2 = document.getElementById("cbAll");
@@ -1039,8 +1046,9 @@ function renderGrid() {
     sel.onchange = async () => {
       const uid = sel.dataset.uid, row = ROWMAP.get(uid);
       if (sel.value === "drop") {          // 취소는 확인을 거쳐야 하므로 따로 처리
+        if (!row) return;
         sel.value = stateOf(row);          // 확인창을 접으면 원래 상태로 되돌림
-        if (row) await cancelBid(row);
+        await cancelBid(row);
         return;
       }
       setOV(uid, { state: sel.value });
@@ -1150,6 +1158,7 @@ function renderStats() {
      실제로 낸 돈은 한 번이므로, 나뉜 것을 다 더하면 합계가 부풀려진다. */
   const counted = new Set();
   const total = BIDS.reduce((s, b) => {
+    if (isDropped(b)) return s;                       // 취소한 입찰은 빼고 센다
     const key = b.row + "|" + b.name + "|" + b.contact;
     if (counted.has(key)) return s;
     counted.add(key);
@@ -1162,10 +1171,21 @@ function renderStats() {
       `<div class="stat"><b>—</b>입찰자 (비공개)</div>`
     : (() => {
         const rows = buildRows();
-        const n = s => rows.filter(r => stateOf(r) === s).length;
-        const doneSum = rows.filter(r => stateOf(r) === "done").reduce((s, r) => s + (+r.price || 0), 0);
+        /* 같은 입찰이 동명이품 수만큼 여러 행으로 나뉘므로, 센 것을 또 세지 않는다 */
+        const uniq = (list) => {
+          const seen = new Set(), out = [];
+          list.forEach(r => {
+            const k = r.row + "|" + r.name + "|" + r.contact;
+            if (seen.has(k)) return;
+            seen.add(k); out.push(r);
+          });
+          return out;
+        };
+        const n = s => uniq(rows.filter(r => stateOf(r) === s)).length;
+        const doneSum = uniq(rows.filter(r => stateOf(r) === "done")).reduce((s, r) => s + (+r.price || 0), 0);
+        const bidCount = uniq(rows).length;
         return `<div class="stat"><b>${map.size}</b>입찰된 품목</div>` +
-          `<div class="stat"><b>${BIDS.length}</b>총 입찰 건수</div>` +
+          `<div class="stat"><b>${bidCount}</b>총 입찰 건수</div>` +
           `<div class="stat"><b>${new Set(BIDS.map(b => b.name + "|" + b.contact)).size}</b>입찰자 수</div>` +
           `<div class="stat"><b>${[...map.values()].filter(l => l.length > 1).length}</b>경쟁 품목</div>` +
           `<div class="stat"><b>${n("done")}</b>거래완료 <small>${won(doneSum) || "₩0"}</small></div>` +
@@ -1313,7 +1333,7 @@ async function refreshFromSheet() {
   const gotStatus = await pullStatus();
   const gotOv = await pullOverrides();
   BIDS.forEach(b => { if (b.rawPrice !== undefined) b.price = b.rawPrice; });  // 덮어쓴 값 초기화 후 재적용
-  renderGrid(); renderStats();
+  render();                       // 카드 보기에서도 반영되도록 (renderGrid 만 부르면 표만 갱신됨)
   if (gotStatus && gotOv) syncFlag("시트에서 최신 내용 불러옴", "ok");
   else if (gotStatus) syncFlag("판매상태만 갱신됨 (금액·메모는 비밀번호 필요)", "");
   else syncFlag("시트 조회 실패 — 로컬 저장분으로 표시 중", "err");
@@ -1431,17 +1451,6 @@ async function cancelBid(r) {
   return true;
 }
 
-async function deleteBid(row, label) {
-  if (!confirm(`이 입찰을 삭제할까요?\n\n${label}\n\n되돌릴 수 없어요.`)) return;
-  const pw = adminPw();
-  if (!pw) { syncFlag("비밀번호가 필요해요", "err"); return; }
-  syncFlag("삭제 중…");
-  try {
-    await callSheet({ action: "editBid", pw, op: "delete", row });
-    syncFlag("입찰을 삭제했어요", "ok");
-    await reloadBids();
-  } catch (e) { syncFlag("삭제 실패: " + e.message, "err"); }
-}
 
 /* 시트에서 입찰을 다시 읽어 화면 갱신 */
 async function reloadBids() {
@@ -1450,6 +1459,7 @@ async function reloadBids() {
   try {
     DATA = await load(pw);
     BIDS = loadBidsFrom(DATA.sheets || []);
+    window.__refillSelects = true;   // 새 입찰자·카테고리가 필터에 나오도록
     render(); renderRaw();
   } catch (e) { syncFlag("다시 읽지 못했어요: " + e.message, "err"); }
 }
@@ -1523,14 +1533,23 @@ document.getElementById("reload").onclick = async () => {
   const btn = document.getElementById("reload");
   if (PREVIEW) {
     btn.disabled = true; btn.textContent = "불러오는 중…";
-    const d = await (await fetch(ENDPOINT)).json().catch(() => null);
-    if (d && d.reserved) {
-      const seen = new Set();
-      BIDS = d.reserved.filter(n => !seen.has(n) && seen.add(n))
-        .map((n, i) => ({ ts:"", name:"", contact:"", message:"", item:n, price:"", row:i+2 }));
-      render();
-    }
-    btn.disabled = false; btn.textContent = "새로고침"; return;
+    try {
+      const d = await (await fetch(ENDPOINT)).json();
+      if (d && d.reserved) {
+        const seen = new Set();
+        BIDS = [];
+        d.reserved.forEach((n, i) => {          // resolved 를 채워야 render 가 돌아간다
+          (resolveAll(n) || []).forEach(rs => {
+            if (seen.has(rs.key)) return;
+            seen.add(rs.key);
+            BIDS.push({ ts:"", name:"", contact:"", message:"", item:n, resolved:rs, price:"", row:i+2 });
+          });
+        });
+        render();
+      }
+    } catch (e) { syncFlag("불러오지 못했어요: " + e.message, "err"); }
+    finally { btn.disabled = false; btn.textContent = "새로고침"; }
+    return;
   }
   btn.disabled = true; btn.textContent = "불러오는 중…";
   try {
