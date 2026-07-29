@@ -129,9 +129,11 @@
   select.stsel.hold { background: #fdf3e0; color: #8a6510; border-color: #e8d5a8; }
   select.stsel.done { background: var(--accent-soft); color: var(--accent); border-color: #cfe0d6; }
   select.stsel.drop { background: #f3f3f1; color: var(--sub); }
-  tr.st-done td:not(.state) { opacity: .5; }
-  tr.st-done td.item { text-decoration: line-through; text-decoration-color: #bbb; }
-  tr.st-drop td:not(.state) { opacity: .35; text-decoration: line-through; text-decoration-color: #ccc; }
+  tr.st-done td:not(.state) { color: #b2b2ad; }
+  tr.st-done td:not(.state) span, tr.st-done td:not(.state) button { opacity: .5; }
+  tr.st-done td.item { text-decoration: line-through; text-decoration-color: #ccc; }
+  tr.st-drop td:not(.state) { color: #c2c2bd; text-decoration: line-through; text-decoration-color: #d4d4cf; }
+  tr.st-drop td:not(.state) span, tr.st-drop td:not(.state) button { opacity: .4; }
   tr.st-hold td.item { color: #8a6510; }
   input.pedit { width: 96px; padding: 3px 6px; font-size: 13px; text-align: right;
     border: 1px solid var(--accent); border-radius: 6px; }
@@ -580,6 +582,10 @@ function normalize(sheet) {
   return out;
 }
 
+/* 취소한 입찰 — 목록엔 남기되 순위에서는 뺀다 */
+const uidOf = b => b.uid || (b.resolved.key + "|" + b.name + "|" + b.row);
+const isDropped = b => (OV[uidOf(b)] || {}).state === "drop";
+
 /* ---------- 품목별 그룹 + 순위 ---------- */
 function group(bids) {
   const map = new Map();
@@ -595,7 +601,8 @@ function group(bids) {
       if (!isNaN(ta) && !isNaN(tb) && ta !== tb) return ta - tb;
       return a.row - b.row;
     });
-    list.forEach((b, i) => b.rank = i + 1);
+    let n = 0;
+    list.forEach(b => { b.rank = isDropped(b) ? 0 : ++n; });   // 취소 건은 순위 없음
   });
   return map;
 }
@@ -768,7 +775,7 @@ const COLS = [
         : "") +
       (r.isTop && r.competing ? `<span class="tag top">최고가</span>` : "") },
   { k: "rank",  label: "순위",     get: r => r.rank, cls: "num",
-    html: r => `${r.rank}${r.rank === 1 ? `<span class="tag r1">최선착</span>` : ""}` },
+    html: r => r.rank ? `${r.rank}${r.rank === 1 ? `<span class="tag r1">최선착</span>` : ""}` : "—" },
   { k: "who",   label: "입찰자",   get: r => r.name },
   { k: "contact", label: "연락처", get: r => r.contact, html: r => esc(fmtContact(r.contact)) },
   { k: "msg",   label: "메모",     get: r => r.message, cls: "msg",
@@ -1031,9 +1038,8 @@ function renderGrid() {
   document.querySelectorAll("select.stsel").forEach(sel => {
     sel.onchange = async () => {
       const uid = sel.dataset.uid, row = ROWMAP.get(uid);
-      if (sel.value === "drop") {          // 취소는 상태가 아니라 동작 — 입찰을 지우고 순위를 당긴다
-        const before = stateOf(row);
-        sel.value = before;                // 취소를 접으면 원래 상태로 되돌림
+      if (sel.value === "drop") {          // 취소는 확인을 거쳐야 하므로 따로 처리
+        sel.value = stateOf(row);          // 확인창을 접으면 원래 상태로 되돌림
         if (row) await cancelBid(row);
         return;
       }
@@ -1409,24 +1415,19 @@ async function saveBid() {
 /* 취소 = 입찰 삭제 + 순위 당김 + (마지막 입찰이면) 구매페이지 판매중 복원 */
 async function cancelBid(r) {
   const others = [...ROWMAP.values()]
-    .filter(o => o.rs.name === r.rs.name && o.uid !== r.uid)
+    .filter(o => o.rs.name === r.rs.name && o.uid !== r.uid && !isDropped(o))
     .sort((a, b) => (a.rank || 99) - (b.rank || 99));
   const label = `${r.rs.name} · ${r.name}` + (r.price ? ` · ${Number(r.price).toLocaleString()}원` : "");
   const tail = others.length
     ? `\n\n같은 품목에 입찰 ${others.length}건이 남아 있어요.\n${others[0].name} 님이 1순위가 됩니다.`
     : `\n\n남은 입찰이 없어 구매 페이지에서 다시 판매중으로 바뀝니다.`;
-  if (!confirm(`이 입찰을 취소할까요?\n\n${label}${tail}\n\n되돌릴 수 없어요.`)) return false;
-  const pw = adminPw();
-  if (!pw) { syncFlag("비밀번호가 필요해요", "err"); return false; }
-  syncFlag("취소 처리 중…");
-  try {
-    await callSheet({ action: "editBid", pw, op: "delete", row: r.row });
-    if (!others.length) await callSheet({ action: "setStatus", pw, items: [{ name: r.rs.name, status: "sale" }] });
-    delete OV[r.uid]; saveOV();
-    syncFlag(others.length ? `취소됨 · ${others[0].name} 님이 1순위` : `취소됨 · ${r.rs.name} 다시 판매중`, "ok");
-    await reloadBids();
-    return true;
-  } catch (e) { syncFlag("취소 실패: " + e.message, "err"); return false; }
+  if (!confirm(`이 입찰을 취소할까요?\n\n${label}${tail}\n\n목록에는 취소 기록으로 남습니다.`)) return false;
+  setOV(r.uid, { state: "drop" });
+  renderGrid(); renderStats();
+  pushOverride("state", r.uid, "drop", `${r.name} 취소`);
+  if (!others.length) pushStatus(r.rs.name, "sale");     // 마지막 입찰이면 구매페이지 되살리기
+  syncFlag(others.length ? `취소됨 · ${others[0].name} 님이 1순위` : `취소됨 · ${r.rs.name} 다시 판매중`, "ok");
+  return true;
 }
 
 async function deleteBid(row, label) {
