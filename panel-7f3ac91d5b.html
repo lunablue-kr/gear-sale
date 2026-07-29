@@ -262,6 +262,10 @@
     }
     table.grid td.item.stick.open::after { content: ""; }
     select.stsel { font-size: 11.5px; padding: 1px 3px; }
+
+    /* 좁은 화면에서는 표가 화면의 3.6배라 오른쪽 열을 찾기 어려웠다.
+       품목명에 이미 들어있는 정보(카테고리·번호)와 덜 쓰는 열을 접는다. */
+    table.grid th.hide-m, table.grid td.hide-m { display: none; }
     input.nedit { width: 150px; }
     table.grid td.note .notetxt, table.grid td.msg .msgtxt { max-width: 130px; }
   }
@@ -802,8 +806,8 @@ const COLS = [
   { k: "item",  label: "품목",     get: r => r.rs.name, cls: "item",
     html: r => (r.rs.settle ? `<span class="tag settle">정산</span>` : "") +
                `${esc(r.rs.name)}${r.rs.split ? `<span class="tag split">번호분리</span>` : ""}` },
-  { k: "cat",   label: "카테고리", get: r => r.rs.cat },
-  { k: "num",   label: "번호",     get: r => r.rs.num, cls: "num" },
+  { k: "cat",   label: "카테고리", get: r => r.rs.cat, cls: "hide-m" },
+  { k: "num",   label: "번호",     get: r => r.rs.num, cls: "num hide-m" },
   { k: "ask",   label: "희망가",   get: r => r.rs.ask, cls: "money",
     html: r => r.rs.ask ? won(r.rs.ask) + (r.rs.askUnit ? `<small>/${esc(r.rs.askUnit)}</small>` : "") : "—" },
   { k: "price", label: "입찰가 (차액)", get: r => +r.price || 0, cls: "money price",
@@ -820,7 +824,7 @@ const COLS = [
   { k: "msg",   label: "메모",     get: r => r.message, cls: "msg",
     html: r => r.message
       ? `<span class="msgtxt" title="${esc(r.message)}">${esc(r.message)}</span>` : "" },
-  { k: "ts",    label: "접수",     get: r => r.ts, cls: "ts",
+  { k: "ts",    label: "접수",     get: r => r.ts, cls: "ts hide-m",
     html: r => {
       const [d, ...t] = String(r.ts || "").split(" ");
       return d ? `<span class="tstxt" title="${esc(r.ts)}"><span class="tsd">${esc(d)}</span>` +
@@ -956,7 +960,7 @@ function renderGrid() {
 
   const grouping = document.getElementById("group").value;
   const head = `<thead><tr><th class="cbx"><input type="checkbox" id="cbAll"></th>` +
-    COLS.map(x => `<th ${x.k === "act" ? "" : `data-k="${x.k}"`}>${x.label}${SORT.col === x.k ? `<span class="arw">${SORT.dir > 0 ? "▲" : "▼"}</span>` : ""}</th>`).join("") +
+    COLS.map(x => `<th class="${(x.cls || "").includes("hide-m") ? "hide-m" : ""}" ${x.k === "act" ? "" : `data-k="${x.k}"`}>${x.label}${SORT.col === x.k ? `<span class="arw">${SORT.dir > 0 ? "▲" : "▼"}</span>` : ""}</th>`).join("") +
     `</tr></thead>`;
 
   const tr = r => `<tr data-uid="${esc(r.uid)}" class="st-${stateOf(r)} ${r.rs.settle ? "settle-row" : ""} ${SEL.has(r.uid) ? "sel" : ""}">` +
