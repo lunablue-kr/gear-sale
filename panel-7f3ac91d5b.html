@@ -140,14 +140,15 @@
 
   /* 내 메모 */
   table.grid td.note { cursor: pointer; font-size: 12px; color: #35508f; }
-  table.grid td.note .notetxt { display: block; max-width: 230px;
+  table.grid td.note .notetxt { display: inline-block; max-width: 200px; vertical-align: middle;
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   table.grid td.note { position: relative; }
-  table.grid td.note .notepop { display: none; position: absolute; left: 6px; top: calc(100% - 6px);
-    z-index: 30; width: 300px; max-width: 76vw; padding: 9px 11px; background: var(--card);
-    border: 1px solid var(--accent); border-radius: 9px; box-shadow: 0 6px 20px rgba(0,0,0,.16);
-    white-space: pre-wrap; word-break: break-word; line-height: 1.5; color: var(--ink); font-size: 12.5px; }
-  table.grid td.note.open .notepop { display: block; }
+  table.grid td.note.open { z-index: 40; }
+  #notepop { display: none; position: fixed; z-index: 300; width: 300px; max-width: 78vw;
+    padding: 10px 12px; background: var(--card); border: 1px solid var(--accent); border-radius: 9px;
+    box-shadow: 0 8px 24px rgba(0,0,0,.18); white-space: pre-wrap; word-break: break-word;
+    line-height: 1.5; color: var(--ink); font-size: 12.5px; }
+  #notepop.show { display: block; }
   table.grid td.note.open .notetxt { color: var(--accent); font-weight: 600; }
   table.grid td.note .noteedit { border: none; background: none; cursor: pointer;
     color: #b9b9b4; font-size: 12px; padding: 0 2px; margin-left: 3px; vertical-align: 1px; }
@@ -701,6 +702,23 @@ async function pushStatus(itemName, status) {
 }
 
 /* 금액수정·거래메모를 시트에 저장 (기기·브라우저 바뀌어도 유지) */
+/* 메모 카드 — 표가 overflow:auto 라 셀 안에 두면 잘려서, 화면에 고정으로 띄운다 */
+function closeNotePop() {
+  document.getElementById("notepop")?.classList.remove("show");
+  document.querySelectorAll("td.note.open").forEach(o => o.classList.remove("open"));
+}
+function openNotePop(td, text) {
+  let pop = document.getElementById("notepop");
+  if (!pop) { pop = document.createElement("div"); pop.id = "notepop"; document.body.appendChild(pop); }
+  pop.textContent = text;
+  pop.classList.add("show");
+  td.classList.add("open");
+  const c = td.getBoundingClientRect(), h = pop.offsetHeight, w = pop.offsetWidth;
+  const below = c.bottom + h + 10 <= innerHeight;              // 아래가 좁으면 위로 띄운다
+  pop.style.top  = (below ? c.bottom - 3 : c.top - h + 3) + "px";
+  pop.style.left = Math.max(8, Math.min(c.left + 4, innerWidth - w - 8)) + "px";
+}
+
 async function pushOverride(kind, key, value, label) {
   const pw = adminPw();
   if (!pw) { syncFlag("시트 미저장 (비밀번호 없음) — 이 브라우저에만 남아요", "err"); return; }
@@ -770,7 +788,7 @@ const COLS = [
         Object.entries(STATE_LABEL).map(([k, v]) =>
           `<option value="${k}" ${s === k ? "selected" : ""}>${v}</option>`).join("") + `</select>`;
     } },
-  { k: "act",   label: "", get: () => "", cls: "act",
+  { k: "act",   label: "수정", get: () => "", cls: "act",
     html: r => PREVIEW ? "" :
       `<button class="bedit" data-uid="${esc(r.uid)}" title="이 입찰 고치기">✎</button>` +
       `<button class="bdel" data-uid="${esc(r.uid)}" title="이 입찰 삭제">🗑</button>` },
@@ -778,10 +796,15 @@ const COLS = [
     html: r => {
       const v = noteOf(r);
       return v ? `<span class="notetxt">${esc(v)}</span><button class="noteedit" title="고치기">✎</button>`
-               + `<span class="notepop">${esc(v)}</span>`
                : `<span class="noteadd">+ 메모</span>`;
     } },
 ];
+
+// 열 순서 (뒤쪽): 메모 > 내 메모 > 상태 > 접수 > 수정
+{
+  const ORDER = ["item","cat","num","ask","price","rank","who","contact","msg","note","state","ts","act"];
+  COLS.sort((a, b) => ORDER.indexOf(a.k) - ORDER.indexOf(b.k));
+}
 
 /* 표에 뿌릴 행 만들기 (순위·최고가·차액 계산 + 수정값 반영) */
 let ROWMAP = new Map();
@@ -931,15 +954,13 @@ function renderGrid() {
       renderGrid();
     };
   });
-  // 메모 카드는 바깥을 누르면 닫힘
+  // 메모 카드는 바깥을 누르거나 표를 스크롤하면 닫힘
   if (!window.__notepopBound) {
     window.__notepopBound = true;
-    document.addEventListener("click", e => {
-      if (!e.target.closest("td.note")) document.querySelectorAll("td.note.open").forEach(o => o.classList.remove("open"));
-    });
-    document.addEventListener("keydown", e => {
-      if (e.key === "Escape") document.querySelectorAll("td.note.open").forEach(o => o.classList.remove("open"));
-    });
+    document.addEventListener("click", e => { if (!e.target.closest("td.note, #notepop")) closeNotePop(); });
+    document.addEventListener("keydown", e => { if (e.key === "Escape") closeNotePop(); });
+    document.querySelector(".gridwrap")?.addEventListener("scroll", closeNotePop);
+    window.addEventListener("scroll", closeNotePop, true);
   }
   const all2 = document.getElementById("cbAll");
   if (all2) all2.onclick = () => {
@@ -980,11 +1001,10 @@ function renderGrid() {
       // 메모 글자를 누르면 펼침/접기, ✎ 를 눌러야 편집 (구매자 메모와 같은 방식)
       if (e.target.classList.contains("notetxt")) {
         const was = td.classList.contains("open");
-        document.querySelectorAll("td.note.open").forEach(o => o.classList.remove("open"));
-        if (!was) td.classList.add("open");
+        closeNotePop();
+        if (!was) openNotePop(td, e.target.textContent);
         return;
       }
-      if (e.target.classList.contains("notepop")) return;   // 카드 안 글자 선택은 그대로
       const row = ROWMAP.get(td.dataset.uid);
       if (!row) return;
       const k = noteKey(row);
