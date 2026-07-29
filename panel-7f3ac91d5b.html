@@ -297,7 +297,7 @@
         <option value="">전체 상태</option>
         <option value="bid">입찰 (진행중)</option>
         <option value="done">거래완료</option>
-        <option value="drop">취소</option>
+        <option value="drop">취소 (입찰 삭제)</option>
       </select>
       <select id="group">
         <option value="none">그룹 없음</option>
@@ -611,7 +611,7 @@ let VIEW = "grid", SORT = { col: "cat", dir: 1 }, SEL = new Set();
 /* ============================================================
    상태 · 입찰가 수정 (브라우저 localStorage에 저장 → 내보내기로 반영)
    ============================================================ */
-const STATE_LABEL = { bid: "입찰", done: "거래완료", drop: "취소" };
+const STATE_LABEL = { bid: "입찰", done: "거래완료", drop: "취소 (입찰 삭제)" };
 const STATE_ORDER = { bid: 0, done: 1, drop: 2 };
 const OV_KEY = "gearAdminOverrides", NOTE_KEY = "gearAdminNotes";
 let OV = {}, NOTES = {};
@@ -789,8 +789,7 @@ const COLS = [
     } },
   { k: "act",   label: "수정", get: () => "", cls: "act",
     html: r => PREVIEW ? "" :
-      `<button class="bedit" data-uid="${esc(r.uid)}" title="이 입찰 고치기">✎</button>` +
-      `<button class="bdel" data-uid="${esc(r.uid)}" title="이 입찰 삭제">🗑</button>` },
+      `<button class="bedit" data-uid="${esc(r.uid)}" title="이 입찰 고치기">✎</button>` },
   { k: "note",  label: "내 메모 (거래)", get: r => noteOf(r), cls: "note",
     html: r => {
       const v = noteOf(r);
@@ -994,13 +993,6 @@ function renderGrid() {
       if (r) openBidModal(r.row);
     };
   });
-  document.querySelectorAll("button.bdel").forEach(b => {
-    b.onclick = e => {
-      e.stopPropagation();
-      const r = ROWMAP.get(b.dataset.uid);
-      if (r) deleteBid(r.row, `${r.rs.name} · ${r.name} · ${r.price ? Number(r.price).toLocaleString() + "원" : "금액 미기재"}`);
-    };
-  });
 
   // 내 메모 (입찰자 단위) — 칸 클릭해서 바로 입력
   document.querySelectorAll("table.grid td.note").forEach(td => {
@@ -1037,8 +1029,14 @@ function renderGrid() {
 
   // 상태 바꾸기 → 로컬 저장 후 시트에도 반영(구매페이지 실시간 연동)
   document.querySelectorAll("select.stsel").forEach(sel => {
-    sel.onchange = () => {
+    sel.onchange = async () => {
       const uid = sel.dataset.uid, row = ROWMAP.get(uid);
+      if (sel.value === "drop") {          // 취소는 상태가 아니라 동작 — 입찰을 지우고 순위를 당긴다
+        const before = stateOf(row);
+        sel.value = before;                // 취소를 접으면 원래 상태로 되돌림
+        if (row) await cancelBid(row);
+        return;
+      }
       setOV(uid, { state: sel.value });
       renderGrid(); renderStats();
       if (row) pushStatus(row.rs.name, sel.value === "done" ? "sold" : "sale");
@@ -1406,6 +1404,29 @@ async function saveBid() {
   } finally {
     btn.disabled = false; btn.textContent = "저장";
   }
+}
+
+/* 취소 = 입찰 삭제 + 순위 당김 + (마지막 입찰이면) 구매페이지 판매중 복원 */
+async function cancelBid(r) {
+  const others = [...ROWMAP.values()]
+    .filter(o => o.rs.name === r.rs.name && o.uid !== r.uid)
+    .sort((a, b) => (a.rank || 99) - (b.rank || 99));
+  const label = `${r.rs.name} · ${r.name}` + (r.price ? ` · ${Number(r.price).toLocaleString()}원` : "");
+  const tail = others.length
+    ? `\n\n같은 품목에 입찰 ${others.length}건이 남아 있어요.\n${others[0].name} 님이 1순위가 됩니다.`
+    : `\n\n남은 입찰이 없어 구매 페이지에서 다시 판매중으로 바뀝니다.`;
+  if (!confirm(`이 입찰을 취소할까요?\n\n${label}${tail}\n\n되돌릴 수 없어요.`)) return false;
+  const pw = adminPw();
+  if (!pw) { syncFlag("비밀번호가 필요해요", "err"); return false; }
+  syncFlag("취소 처리 중…");
+  try {
+    await callSheet({ action: "editBid", pw, op: "delete", row: r.row });
+    if (!others.length) await callSheet({ action: "setStatus", pw, items: [{ name: r.rs.name, status: "sale" }] });
+    delete OV[r.uid]; saveOV();
+    syncFlag(others.length ? `취소됨 · ${others[0].name} 님이 1순위` : `취소됨 · ${r.rs.name} 다시 판매중`, "ok");
+    await reloadBids();
+    return true;
+  } catch (e) { syncFlag("취소 실패: " + e.message, "err"); return false; }
 }
 
 async function deleteBid(row, label) {
