@@ -135,13 +135,17 @@
   tr.st-hold td.item { color: #8a6510; }
   input.pedit { width: 96px; padding: 3px 6px; font-size: 13px; text-align: right;
     border: 1px solid var(--accent); border-radius: 6px; }
-  input.nedit { width: 230px; padding: 3px 7px; font-size: 12.5px;
+  input.nedit { width: 300px; padding: 3px 7px; font-size: 12.5px;
     border: 1px solid var(--accent); border-radius: 6px; }
 
   /* 내 메모 */
   table.grid td.note { cursor: pointer; font-size: 12px; color: #35508f; }
   table.grid td.note .notetxt { display: block; max-width: 230px;
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  table.grid td.note.open .notetxt { white-space: normal; max-width: 340px; }
+  table.grid td.note .noteedit { border: none; background: none; cursor: pointer;
+    color: #b9b9b4; font-size: 12px; padding: 0 2px; margin-left: 3px; vertical-align: 1px; }
+  table.grid td.note:hover .noteedit { color: var(--accent); }
   .noteadd { color: #b9b9b4; font-size: 11.5px; }
   table.grid td.note:hover .noteadd { color: var(--accent); }
 
@@ -251,6 +255,7 @@
     select.stsel { font-size: 11.5px; padding: 1px 3px; }
     input.nedit { width: 150px; }
     table.grid td.note .notetxt, table.grid td.msg .msgtxt { max-width: 130px; }
+    table.grid td.note.open .notetxt, table.grid td.msg.open .msgtxt { max-width: 210px; }
   }
 </style>
 </head>
@@ -766,7 +771,7 @@ const COLS = [
   { k: "note",  label: "내 메모 (거래)", get: r => noteOf(r), cls: "note",
     html: r => {
       const v = noteOf(r);
-      return v ? `<span class="notetxt" title="${esc(v)}">${esc(v)}</span>`
+      return v ? `<span class="notetxt">${esc(v)}</span><button class="noteedit" title="고치기">✎</button>`
                : `<span class="noteadd">+ 메모</span>`;
     } },
 ];
@@ -952,8 +957,10 @@ function renderGrid() {
 
   // 내 메모 (입찰자 단위) — 칸 클릭해서 바로 입력
   document.querySelectorAll("table.grid td.note").forEach(td => {
-    td.onclick = () => {
+    td.onclick = e => {
       if (td.querySelector("input")) return;
+      // 메모 글자를 누르면 펼침/접기, ✎ 를 눌러야 편집 (구매자 메모와 같은 방식)
+      if (e.target.classList.contains("notetxt")) { td.classList.toggle("open"); return; }
       const row = ROWMAP.get(td.dataset.uid);
       if (!row) return;
       const k = noteKey(row);
