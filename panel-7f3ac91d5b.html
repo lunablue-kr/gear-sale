@@ -1268,6 +1268,7 @@ async function enter(pw) {
     document.getElementById("gate").classList.add("hide");
     document.getElementById("app").classList.remove("hide");
     render(); renderRaw();
+    refreshFromSheet();      // 다른 기기에서 적은 메모·금액수정도 가져온다
   } catch (e) {
     msg.textContent = e.message; msg.className = "err";
   } finally {
