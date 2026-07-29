@@ -534,7 +534,7 @@ async function submitBid() {
   });
   const bidsForSheet = rows.map(row => {
     const it = ITEMS[+row.dataset.id];
-    return { name: it.name, price: row.querySelector(".bid-price").value.replace(/[^\d]/g, "") };
+    return { sku: it.sku, name: it.name, price: row.querySelector(".bid-price").value.replace(/[^\d]/g, "") };
   });
   const btn = document.getElementById("submit-bid");
   if (btn.disabled) return;                 // 중복 전송 방지 (더블클릭 차단)
@@ -563,7 +563,7 @@ async function submitBid() {
     msgEl.className = "ok";
     btn.textContent = "접수 완료";
     // 입찰된 품목 즉시 예약중 표시(입찰은 계속 가능)
-    bidsForSheet.forEach(b => { const it = ITEMS.find(i => i.name === b.name); if (it && it.status === "sale") it.status = "hold"; });
+    bidsForSheet.forEach(b => { const it = ITEMS.find(i => i.sku === b.sku); if (it && it.status === "sale") it.status = "hold"; });
     renderList();
   } catch {
     msgEl.textContent = "전송에 실패했어요. 잠시 후 다시 시도해 주세요.";

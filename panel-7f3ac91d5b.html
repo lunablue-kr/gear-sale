@@ -435,7 +435,10 @@ function resolveAll(raw) {
 
   const target = ALIAS[name] || name;
 
-  let hit = BY_EXACT.get(target) || BY_NORM.get(norm(target));
+  let hit = null;
+  const skuHit = ITEMS.find(x => x.sku && x.sku === String(name).trim());   // 시트에 sku 가 실려온 경우
+  if (skuHit) hit = [skuHit];
+  if (!hit) hit = BY_EXACT.get(target) || BY_NORM.get(norm(target));
   if (!hit) {
     // 한쪽이 다른 쪽을 포함 (브랜드 접두어가 붙거나 빠진 경우)
     const k = norm(target);
@@ -446,7 +449,8 @@ function resolveAll(raw) {
     return [{ key: "?" + name, name, cat: "", num: null, matched: false, split: false }];
 
   return hit.map(it => ({
-    key: it.cat + "#" + it.num, name: it.name, cat: CATS[it.cat], catKey: it.cat, num: it.num,
+    key: it.sku || (it.cat + "#" + it.num), sku: it.sku, name: it.name,
+    cat: CATS[it.cat], catKey: it.cat, num: it.num,
     ask: it.ask || 0, askUnit: it.askUnit || "", status: it.status,
     matched: true, split: hit.length > 1,
   }));
@@ -623,6 +627,7 @@ const STATE_ORDER = { bid: 0, done: 1, drop: 2 };
 const OV_KEY = "gearAdminOverrides", NOTE_KEY = "gearAdminNotes";
 let OV = {}, NOTES = {};
 try { OV = JSON.parse(localStorage.getItem(OV_KEY) || "{}"); } catch { OV = {}; }
+let OV_MIGRATED = false;   // ITEMS 준비 후 migrateOV 로 한 번 옮긴다
 try { NOTES = JSON.parse(localStorage.getItem(NOTE_KEY) || "{}"); } catch { NOTES = {}; }
 const saveOV = () => localStorage.setItem(OV_KEY, JSON.stringify(OV));
 const saveNotes = () => localStorage.setItem(NOTE_KEY, JSON.stringify(NOTES));
@@ -749,8 +754,14 @@ async function pullOverrides() {
   if (!pw) return false;
   try {
     const d = await callSheet({ action: "getOverrides", pw });
+    if (!OV_MIGRATED) { OV = migrateOV(OV); saveOV(); OV_MIGRATED = true; }
     Object.entries(d.price || {}).forEach(([uid, v]) => {
-      OV[uid] = Object.assign({}, OV[uid], { price: v });
+      const k = migrateUid(uid);
+      OV[k] = Object.assign({}, OV[k], { price: v });
+    });
+    Object.entries(d.state || {}).forEach(([uid, v]) => {      // 취소 상태도 기기 간에 공유
+      const k = migrateUid(uid);
+      OV[k] = Object.assign({}, OV[k], { state: v });
     });
     NOTES = Object.assign({}, NOTES, d.note || {});
     saveOV(); saveNotes();
@@ -759,6 +770,22 @@ async function pullOverrides() {
     if (/비밀번호/.test(e.message)) { sessionStorage.removeItem("adminPw"); PW = ""; }
     return false;
   }
+}
+
+/* 예전 uid 는 앞머리가 cat#num 이었다. 품목을 넣고 빼면 이 번호가 밀려
+   저장해둔 금액수정·취소가 엉뚱한 입찰에 붙었으므로, 안 밀리는 sku 로 옮긴다. */
+const KEYMAP = {};
+ITEMS.forEach(it => { if (it.sku) KEYMAP[it.cat + "#" + it.num] = it.sku; });
+function migrateUid(k) {
+  const i = String(k).indexOf("|");
+  if (i < 0) return k;
+  const head = k.slice(0, i);
+  return (KEYMAP[head] || head) + k.slice(i);
+}
+function migrateOV(obj) {
+  const out = {};
+  Object.entries(obj || {}).forEach(([k, v]) => { out[migrateUid(k)] = v; });
+  return out;
 }
 
 function setOV(uid, patch) {
