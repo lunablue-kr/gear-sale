@@ -116,7 +116,6 @@
   .tag { display: inline-block; font-size: 11px; border-radius: 4px; padding: 0 5px; margin-left: 4px; }
   .tag.top { background: #e5f3ea; color: var(--accent); }
   .tag.r1 { background: #fdf1d8; color: #8a6510; }
-  .tag.hold { background: #fdf3e0; color: #8a6510; }
   .tag.split { background: #fdf3e0; color: #8a6510; }
   /* 접수 시각: 날짜만, 클릭하면 시각까지 */
   table.grid td.ts { cursor: pointer; }
@@ -126,7 +125,6 @@
   /* 상태별 행 구분 */
   select.stsel { font-size: 12px; padding: 2px 5px; border-radius: 6px;
     border: 1px solid var(--line); background: var(--card); width: auto; }
-  select.stsel.hold { background: #fdf3e0; color: #8a6510; border-color: #e8d5a8; }
   select.stsel.done { background: var(--accent-soft); color: var(--accent); border-color: #cfe0d6; }
   select.stsel.drop { background: #f3f3f1; color: var(--sub); }
   tr.st-done td:not(.state) { color: #b2b2ad; }
@@ -134,7 +132,6 @@
   tr.st-done td.item { text-decoration: line-through; text-decoration-color: #ccc; }
   tr.st-drop td:not(.state) { color: #c2c2bd; text-decoration: line-through; text-decoration-color: #d4d4cf; }
   tr.st-drop td:not(.state) span, tr.st-drop td:not(.state) button { opacity: .4; }
-  tr.st-hold td.item { color: #8a6510; }
   input.pedit { width: 96px; padding: 3px 6px; font-size: 13px; text-align: right;
     border: 1px solid var(--accent); border-radius: 6px; }
   input.nedit { width: 300px; padding: 3px 7px; font-size: 12.5px;
@@ -763,6 +760,16 @@ async function pullOverrides() {
   try {
     const d = await callSheet({ action: "getOverrides", pw });
     if (!OV_MIGRATED) { OV = migrateOV(OV); saveOV(); OV_MIGRATED = true; }
+    /* 시트에서 지워진 항목은 로컬에서도 지운다 (병합만 하면 지운 값이 되살아남) */
+    const keepPrice = new Set(Object.keys(d.price || {}).map(migrateUid));
+    const keepState = new Set(Object.keys(d.state || {}).map(migrateUid));
+    Object.keys(OV).forEach(k => {
+      if (OV[k].price != null && !keepPrice.has(k)) delete OV[k].price;
+      if (OV[k].state && !keepState.has(k)) delete OV[k].state;
+      if (OV[k].price == null && !OV[k].state) delete OV[k];
+    });
+    const keepNote = new Set(Object.keys(d.note || {}));
+    Object.keys(NOTES).forEach(k => { if (!keepNote.has(k)) delete NOTES[k]; });
     Object.entries(d.price || {}).forEach(([uid, v]) => {
       const k = migrateUid(uid);
       OV[k] = Object.assign({}, OV[k], { price: v });
@@ -907,11 +914,11 @@ function fillSelects(rows) {
 /* 표가 비었을 때: 필터 때문인지, 시트를 못 읽은 것인지 화면에 밝힌다.
    (예전에는 숨겨진 영역에 안내를 그려서 원인이 전혀 안 보였다)            */
 function emptyGridHTML() {
-  const filtered = document.getElementById("q").value.trim() ||
+  const isFiltered = document.getElementById("q").value.trim() ||
     document.getElementById("cat").value || document.getElementById("who").value ||
     document.getElementById("state").value;
 
-  if (BIDS.length && filtered)
+  if (BIDS.length && isFiltered)
     return `<div class="empty">조건에 맞는 입찰이 없어요.<br>
       <span style="font-size:13px">검색어·필터를 지우면 전체 ${BIDS.length}건이 보여요.</span></div>`;
 
@@ -945,6 +952,7 @@ function emptyGridHTML() {
 }
 
 function renderGrid() {
+  closeNotePop();          // 표를 새로 그리면 떠 있던 메모 카드는 닫는다
   const all = buildRows();
   fillSelects(all);
   let rows = filtered(all);
@@ -1371,6 +1379,7 @@ async function previewMode() {
     b.innerHTML = `<b>미리보기 모드</b> — 공개 데이터로 <b>예약된 품목 ${BIDS.length}개</b>만 표시 중입니다.
       입찰자 이름·연락처·금액·순위는 Apps Script에 <code>adminBids_</code> 설치 후 비밀번호로 들어와야 보여요.`;
     document.getElementById("sort").value = "name";
+    ["addbid", "export"].forEach(id => document.getElementById(id)?.classList.add("hide"));
     render(); document.getElementById("raw").innerHTML = "<p style='font-size:13px;color:var(--sub)'>미리보기 모드에선 원본 데이터를 불러올 수 없어요.</p>";
   } catch (e) {
     msg.textContent = "불러오지 못했어요: " + e.message; msg.className = "err";
@@ -1498,7 +1507,8 @@ async function cancelBid(r) {
   setOV(r.uid, { state: "drop" });
   renderGrid(); renderStats();
   pushOverride("state", r.uid, "drop", `${r.name} 취소`);
-  if (!others.length) pushStatus(r.rs.name, "sale");     // 마지막 입찰이면 구매페이지 되살리기
+  if (!others.length) pushStatus(r.rs.name, "sale",
+    { sku: r.rs.sku, skip: r.rs.settle || r.rs.matched === false });   // 마지막 입찰이면 구매페이지 되살리기
   syncFlag(others.length ? `취소됨 · ${others[0].name} 님이 1순위` : `취소됨 · ${r.rs.name} 다시 판매중`, "ok");
   return true;
 }
@@ -1535,9 +1545,9 @@ document.getElementById("selclear").onclick = () => { SEL.clear(); render(); };
 document.getElementById("export").onclick = () => {
   const rows = buildRows();
   const done = rows.filter(r => stateOf(r) === "done");
-  const hold = rows.filter(r => stateOf(r) === "hold");
+  const dropped = rows.filter(r => stateOf(r) === "drop");
   const edited = rows.filter(r => r.edited);
-  if (!done.length && !hold.length && !edited.length) { alert("변경한 내용이 없어요."); return; }
+  if (!done.length && !dropped.length && !edited.length) { alert("변경한 내용이 없어요."); return; }
 
   const line = r => `  [${r.rs.cat} ${r.rs.num}] ${r.rs.name} — ${r.name}` +
     (r.price ? ` ${Number(r.price).toLocaleString()}원` : "");
@@ -1549,14 +1559,12 @@ document.getElementById("export").onclick = () => {
     "## items.js 에서 status:\"sold\" 로 바꿀 품목",
     ...uniq(done).map(r => `  ${r.rs.name}`),
     "",
-    "## items.js 에서 status:\"hold\" 로 바꿀 품목",
-    ...uniq(hold).map(r => `  ${r.rs.name}`),
-    "",
+
     "## 거래완료 상세",
     ...done.map(line),
     "",
-    "## 예약확정 상세",
-    ...hold.map(line),
+    "## 취소된 입찰",
+    ...dropped.map(line),
     "",
     "## 입찰가 수정분 (원본 → 수정)",
     ...edited.map(r => `  [${r.rs.cat} ${r.rs.num}] ${r.rs.name} / ${r.name} : ` +
