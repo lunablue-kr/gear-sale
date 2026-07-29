@@ -704,13 +704,17 @@ async function callSheet(payload) {
   return d;
 }
 
-async function pushStatus(itemName, status) {
+async function pushStatus(itemName, status, opt) {
   const pw = adminPw();
   if (!pw) { syncFlag("구매페이지 미반영 (비밀번호 없음)", "err"); return; }
   syncFlag("구매페이지에 반영 중…");
   try {
-    await callSheet({ action: "setStatus", pw, items: [{ name: itemName, status }] });
-    syncFlag(`구매페이지 반영됨 · ${itemName} → ${status === "sold" ? "판매완료" : "판매중"}`, "ok");
+    const it = { name: itemName, status };
+    if (opt && opt.sku) it.sku = opt.sku;
+    if (opt && opt.remain != null) it.remain = opt.remain;   // 수량 일부만 팔린 경우
+    await callSheet({ action: "setStatus", pw, items: [it] });
+    const tail = opt && opt.remain != null && opt.remain > 0 ? ` (${opt.remain}개 남음)` : "";
+    syncFlag(`구매페이지 반영됨 · ${itemName} → ${status === "sold" ? "판매완료" : "판매중"}${tail}`, "ok");
   } catch (e) {
     if (/비밀번호/.test(e.message)) sessionStorage.removeItem("adminPw");
     syncFlag("구매페이지 반영 실패: " + e.message + " (로컬에는 저장됨)", "err");
@@ -1078,9 +1082,23 @@ function renderGrid() {
         await cancelBid(row);
         return;
       }
-      setOV(uid, { state: sel.value });
+      if (!row) return;
+      const it = ITEMS.find(x => x.sku === row.rs.sku) || {};
+      const total = it.qty || 1;
+      let remain = null;
+      if (sel.value === "done" && total > 1) {
+        const cur = it.remain != null ? it.remain : total;
+        const ans = prompt(`${row.rs.name}\n\n지금 ${cur}개 남아 있어요. 몇 개 파셨나요?\n(전부면 ${cur} 입력)`, String(cur));
+        if (ans === null) { sel.value = stateOf(row); return; }     // 취소하면 상태를 되돌린다
+        const sold = Math.max(0, Math.min(cur, parseInt(ans, 10) || 0));
+        remain = cur - sold;
+        it.remain = remain;
+      }
+      setOV(uid, { state: remain != null && remain > 0 ? "bid" : sel.value });
       renderGrid(); renderStats();
-      if (row) pushStatus(row.rs.name, sel.value === "done" ? "sold" : "sale");
+      pushStatus(row.rs.name,
+        sel.value === "done" && (remain == null || remain === 0) ? "sold" : "sale",
+        { sku: row.rs.sku, remain });
     };
     sel.onclick = e => e.stopPropagation();
   });
@@ -1449,7 +1467,10 @@ async function saveBid() {
 
   btn.disabled = true; btn.textContent = "저장 중…";
   try {
-    await callSheet({ action: "editBid", pw, op: EDIT_ROW ? "update" : "add", row: EDIT_ROW, bid });
+    // 그 사이 시트 행이 밀렸을 수 있으므로, 고치려는 대상이 맞는지 서버가 확인하게 한다
+    const before = EDIT_ROW ? [...ROWMAP.values()].find(b => b.row === EDIT_ROW) : null;
+    const expect = before ? { name: before.name, item: before.rs.name } : null;
+    await callSheet({ action: "editBid", pw, op: EDIT_ROW ? "update" : "add", row: EDIT_ROW, bid, expect });
     closeBidModal();
     syncFlag(EDIT_ROW ? "입찰을 고쳤어요" : "입찰을 추가했어요", "ok");
     await reloadBids();
