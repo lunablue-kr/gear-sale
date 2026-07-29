@@ -108,7 +108,7 @@
   table.grid td.msg { color: var(--sub); font-size: 12px; cursor: pointer; }
   table.grid td.msg .msgtxt { display: block; max-width: 240px;
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  table.grid td.msg.open .msgtxt { white-space: normal; max-width: 340px; }
+  table.grid td.msg.open .msgtxt { color: var(--accent); font-weight: 600; }
   table.grid td.msg:hover { color: var(--ink); }
   tr.grouphead td { background: #f0efec; font-weight: 700; font-size: 13px; }
   tr.grouphead .gsum { float: right; font-weight: 700; color: var(--accent); }
@@ -262,7 +262,6 @@
     select.stsel { font-size: 11.5px; padding: 1px 3px; }
     input.nedit { width: 150px; }
     table.grid td.note .notetxt, table.grid td.msg .msgtxt { max-width: 130px; }
-    table.grid td.msg.open .msgtxt { max-width: 210px; }
   }
 </style>
 </head>
@@ -705,7 +704,7 @@ async function pushStatus(itemName, status) {
 /* 메모 카드 — 표가 overflow:auto 라 셀 안에 두면 잘려서, 화면에 고정으로 띄운다 */
 function closeNotePop() {
   document.getElementById("notepop")?.classList.remove("show");
-  document.querySelectorAll("td.note.open").forEach(o => o.classList.remove("open"));
+  document.querySelectorAll("td.note.open, td.msg.open").forEach(o => o.classList.remove("open"));
 }
 function openNotePop(td, text) {
   let pop = document.getElementById("notepop");
@@ -957,7 +956,7 @@ function renderGrid() {
   // 메모 카드는 바깥을 누르거나 표를 스크롤하면 닫힘
   if (!window.__notepopBound) {
     window.__notepopBound = true;
-    document.addEventListener("click", e => { if (!e.target.closest("td.note, #notepop")) closeNotePop(); });
+    document.addEventListener("click", e => { if (!e.target.closest("td.note, td.msg, #notepop")) closeNotePop(); });
     document.addEventListener("keydown", e => { if (e.key === "Escape") closeNotePop(); });
     document.querySelector(".gridwrap")?.addEventListener("scroll", closeNotePop);
     window.addEventListener("scroll", closeNotePop, true);
@@ -969,8 +968,17 @@ function renderGrid() {
   };
   applySticky();
 
-  document.querySelectorAll("table.grid td.msg, table.grid td.ts").forEach(td => {
+  document.querySelectorAll("table.grid td.ts").forEach(td => {
     td.onclick = () => td.classList.toggle("open");
+  });
+  document.querySelectorAll("table.grid td.msg").forEach(td => {
+    td.onclick = () => {
+      const txt = td.querySelector(".msgtxt");
+      if (!txt || !txt.textContent.trim()) return;
+      const was = td.classList.contains("open");
+      closeNotePop();
+      if (!was) openNotePop(td, txt.textContent);
+    };
   });
 
   // 모바일에서 좁게 줄인 품목 칸 — 누르면 전체 이름 표시
