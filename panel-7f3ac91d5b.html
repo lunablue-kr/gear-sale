@@ -142,7 +142,13 @@
   table.grid td.note { cursor: pointer; font-size: 12px; color: #35508f; }
   table.grid td.note .notetxt { display: block; max-width: 230px;
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  table.grid td.note.open .notetxt { white-space: normal; max-width: 340px; }
+  table.grid td.note { position: relative; }
+  table.grid td.note .notepop { display: none; position: absolute; left: 6px; top: calc(100% - 6px);
+    z-index: 30; width: 300px; max-width: 76vw; padding: 9px 11px; background: var(--card);
+    border: 1px solid var(--accent); border-radius: 9px; box-shadow: 0 6px 20px rgba(0,0,0,.16);
+    white-space: pre-wrap; word-break: break-word; line-height: 1.5; color: var(--ink); font-size: 12.5px; }
+  table.grid td.note.open .notepop { display: block; }
+  table.grid td.note.open .notetxt { color: var(--accent); font-weight: 600; }
   table.grid td.note .noteedit { border: none; background: none; cursor: pointer;
     color: #b9b9b4; font-size: 12px; padding: 0 2px; margin-left: 3px; vertical-align: 1px; }
   table.grid td.note:hover .noteedit { color: var(--accent); }
@@ -255,7 +261,7 @@
     select.stsel { font-size: 11.5px; padding: 1px 3px; }
     input.nedit { width: 150px; }
     table.grid td.note .notetxt, table.grid td.msg .msgtxt { max-width: 130px; }
-    table.grid td.note.open .notetxt, table.grid td.msg.open .msgtxt { max-width: 210px; }
+    table.grid td.msg.open .msgtxt { max-width: 210px; }
   }
 </style>
 </head>
@@ -772,6 +778,7 @@ const COLS = [
     html: r => {
       const v = noteOf(r);
       return v ? `<span class="notetxt">${esc(v)}</span><button class="noteedit" title="고치기">✎</button>`
+               + `<span class="notepop">${esc(v)}</span>`
                : `<span class="noteadd">+ 메모</span>`;
     } },
 ];
@@ -880,8 +887,9 @@ function renderGrid() {
   });
 
   const grouping = document.getElementById("group").value;
+  if (SORT.col === "act") SORT = { col: "item", dir: 1 };   // 예전에 잘못 걸린 정렬 복구
   const head = `<thead><tr><th class="cbx"><input type="checkbox" id="cbAll"></th>` +
-    COLS.map(x => `<th data-k="${x.k}">${x.label}${SORT.col === x.k ? `<span class="arw">${SORT.dir > 0 ? "▲" : "▼"}</span>` : ""}</th>`).join("") +
+    COLS.map(x => `<th ${x.k === "act" ? "" : `data-k="${x.k}"`}>${x.label}${SORT.col === x.k ? `<span class="arw">${SORT.dir > 0 ? "▲" : "▼"}</span>` : ""}</th>`).join("") +
     `</tr></thead>`;
 
   const tr = r => `<tr data-uid="${esc(r.uid)}" class="st-${stateOf(r)} ${r.rs.settle ? "settle-row" : ""} ${SEL.has(r.uid) ? "sel" : ""}">` +
@@ -923,6 +931,16 @@ function renderGrid() {
       renderGrid();
     };
   });
+  // 메모 카드는 바깥을 누르면 닫힘
+  if (!window.__notepopBound) {
+    window.__notepopBound = true;
+    document.addEventListener("click", e => {
+      if (!e.target.closest("td.note")) document.querySelectorAll("td.note.open").forEach(o => o.classList.remove("open"));
+    });
+    document.addEventListener("keydown", e => {
+      if (e.key === "Escape") document.querySelectorAll("td.note.open").forEach(o => o.classList.remove("open"));
+    });
+  }
   const all2 = document.getElementById("cbAll");
   if (all2) all2.onclick = () => {
     rows.forEach(r => all2.checked ? SEL.add(r.uid) : SEL.delete(r.uid));
@@ -960,7 +978,13 @@ function renderGrid() {
     td.onclick = e => {
       if (td.querySelector("input")) return;
       // 메모 글자를 누르면 펼침/접기, ✎ 를 눌러야 편집 (구매자 메모와 같은 방식)
-      if (e.target.classList.contains("notetxt")) { td.classList.toggle("open"); return; }
+      if (e.target.classList.contains("notetxt")) {
+        const was = td.classList.contains("open");
+        document.querySelectorAll("td.note.open").forEach(o => o.classList.remove("open"));
+        if (!was) td.classList.add("open");
+        return;
+      }
+      if (e.target.classList.contains("notepop")) return;   // 카드 안 글자 선택은 그대로
       const row = ROWMAP.get(td.dataset.uid);
       if (!row) return;
       const k = noteKey(row);
