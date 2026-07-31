@@ -831,7 +831,7 @@ const COLS = [
   { k: "msg",   label: "메모",     get: r => r.message, cls: "msg",
     html: r => r.message
       ? `<span class="msgtxt" title="${esc(r.message)}">${esc(r.message)}</span>` : "" },
-  { k: "ts",    label: "접수",     get: r => r.ts, cls: "ts hide-m",
+  { k: "ts",    label: "접수",     get: r => r.ts, cls: "ts",
     html: r => {
       const [d, ...t] = String(r.ts || "").split(" ");
       return d ? `<span class="tstxt" title="${esc(r.ts)}"><span class="tsd">${esc(d)}</span>` +
