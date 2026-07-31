@@ -108,7 +108,20 @@
     transition: border-color .15s, box-shadow .15s;
   }
   .card.picked { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); }
-  .card.sold { opacity: 0.4; background: #f2f1ee; }
+  /* 판매완료 접기 */
+  .soldtoggle {
+    display: block; width: 100%; margin: 10px 0 0;
+    padding: 9px 14px; border: 1px dashed var(--line); background: none;
+    border-radius: 10px; font-size: 13px; color: var(--sub); cursor: pointer;
+    font-family: inherit; text-align: center;
+  }
+  .soldtoggle:hover { border-color: var(--accent); color: var(--accent); }
+  .soldtoggle .caret { display: inline-block; margin-left: 4px; transition: transform .15s; }
+  .soldtoggle.open .caret { transform: rotate(180deg); }
+  .soldtoggle.open { border-style: solid; margin-bottom: 10px; }
+  .allsold { font-size: 13.5px; color: var(--sub); padding: 14px 0 2px; }
+
+  .card.sold { opacity: 0.55; background: #f2f1ee; }
   .card.sold:hover { opacity: 0.75; }
   .card.sold .card-thumb { filter: grayscale(1); }
   .card.sold h3 { text-decoration: line-through; text-decoration-color: #bbb; }
@@ -434,24 +447,46 @@ const CATNOTE = {
   propB: "목록에 아직 반영되지 않은 소품이 더 있습니다. 현장에서 확인 후 추가 구매도 가능합니다.",
 };
 
+const SHOW_SOLD = new Set();   // 펼쳐 놓은 카테고리
+
 function renderList() {
   const el = document.getElementById("list");
   const cats = activeCat === "all" ? Object.keys(CATS) : [activeCat];
   let html = "";
   let total = 0;
   for (const c of cats) {
-    // 판매완료는 카테고리 맨 아래로 내려 눈에 덜 띄게
-    const items = ITEMS.filter(i => i.cat === c && matches(i))
-      .sort((a, b) => (a.status === "sold" ? 1 : 0) - (b.status === "sold" ? 1 : 0));
-    if (!items.length) continue;
-    total += items.length;
-    html += `<h2 class="section-title">${CATS[c]} <span class="count">${items.length}개</span></h2>
-             ${CATNOTE[c] ? `<p class="cat-note">${CATNOTE[c]}</p>` : ""}
-             <div class="grid${compactView ? " compact" : ""}">${items.map(cardHTML).join("")}</div>`;
+    const all = ITEMS.filter(i => i.cat === c && matches(i));
+    const live = all.filter(i => i.status !== "sold");
+    const sold = all.filter(i => i.status === "sold");
+    if (!all.length) continue;
+    total += live.length;
+    const open = SHOW_SOLD.has(c);
+    html += `<h2 class="section-title">${CATS[c]} <span class="count">${live.length}개</span></h2>
+             ${CATNOTE[c] ? `<p class="cat-note">${CATNOTE[c]}</p>` : ""}`;
+    if (live.length)
+      html += `<div class="grid${compactView ? " compact" : ""}">${live.map(cardHTML).join("")}</div>`;
+    else
+      html += `<p class="allsold">이 분류는 모두 판매되었어요.</p>`;
+    // 판매완료는 접어두고, 눌러야 펼쳐진다
+    if (sold.length) {
+      html += `<button class="soldtoggle${open ? " open" : ""}" data-cat="${c}">
+                 판매완료 ${sold.length}개 <span class="caret">▾</span></button>`;
+      if (open)
+        html += `<div class="grid soldgrid${compactView ? " compact" : ""}">${sold.map(cardHTML).join("")}</div>`;
+    }
   }
   el.innerHTML = html || `<p class="empty">검색 결과가 없어요.</p>`;
   el.querySelectorAll(".pick-btn:not([disabled])").forEach(b =>
     b.addEventListener("click", () => togglePick(+b.dataset.id)));
+  el.querySelectorAll(".soldtoggle").forEach(b =>
+    b.addEventListener("click", () => {
+      const c = b.dataset.cat;
+      SHOW_SOLD.has(c) ? SHOW_SOLD.delete(c) : SHOW_SOLD.add(c);
+      const y = b.getBoundingClientRect().top;        // 누른 자리가 튀지 않게
+      renderList();
+      const nb = document.querySelector(`.soldtoggle[data-cat="${c}"]`);
+      if (nb) scrollBy(0, nb.getBoundingClientRect().top - y);
+    }));
 }
 
 function togglePick(id) {
