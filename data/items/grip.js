@@ -23,6 +23,6 @@ P.grip = [
   { cat:"grip", sku:"grip-21", name:"Xiletu XJ-15 태블릿 홀더", brand:"Xiletu", qty:1, year:"", note:"아이패드 12.9인치 체결 가능", ask:15000, imgs:["assets/loc_gr22_1.jpg"], status:"sale" },
   { cat:"grip", sku:"grip-22", name:"Manfrotto 155RC 더블 볼 틸트헤드", brand:"Manfrotto", qty:1, year:"", note:"플레이트 포함", ask:30000, imgs:["assets/loc_gr23_1.jpg", "assets/loc_gr23_2.jpg"], status:"sale" },
   { cat:"grip", sku:"grip-23", name:"KUPO KS-097 베이비 볼헤드 어댑터", brand:"KUPO", qty:1, year:"", note:"3/8 핀", ask:20000, imgs:["assets/loc_gr24_1.jpg", "assets/loc_gr24_2.jpg"], status:"sale" },
-  { cat:"grip", sku:"grip-24", name:"J 훅 (내로우 U 훅) ×3", brand:"", qty:3, year:"", note:"", ask:5000, askUnit:"개", status:"sale" },
-  { cat:"grip", sku:"grip-25", name:"KUPO KS-312B 플레이트", brand:"KUPO", qty:1, year:"", note:"", ask:100000, status:"sale" }
+  { cat:"grip", sku:"grip-24", name:"J 훅 (내로우 U 훅) ×3", brand:"", qty:3, year:"", note:"", ask:5000, askUnit:"개", imgs:["assets/loc_gr24_1.jpg", "assets/loc_gr24_2.jpg", "assets/loc_gr24_3.jpg"], status:"sale" },
+  { cat:"grip", sku:"grip-25", name:"KUPO KS-312B 플레이트", brand:"KUPO", qty:1, year:"", note:"", ask:100000, imgs:["assets/loc_gr25_1.jpg", "assets/loc_gr25_2.jpg", "assets/loc_gr25_3.jpg"], status:"sale" }
 ];
