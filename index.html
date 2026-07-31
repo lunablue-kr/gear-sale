@@ -395,8 +395,14 @@ function applyViewToggle() {
 function renderChips() {
   const el = document.getElementById("chips");
   const cats = [["all", "전체"], ...Object.entries(CATS)];
+  // 보고 있던 분류가 다 팔려 칩이 사라지면 전체로 되돌린다
+  if (activeCat !== "all" && !ITEMS.some(i => i.cat === activeCat && i.status !== "sold"))
+    activeCat = "all";
   el.innerHTML = cats.map(([k, label]) => {
-    const n = k === "all" ? ITEMS.length : ITEMS.filter(i => i.cat === k).length;
+    // 목록과 같은 기준으로 — 살 수 있는 것만 센다
+    const live = ITEMS.filter(i => i.status !== "sold" && (k === "all" || i.cat === k));
+    const n = live.length;
+    if (!n) return "";                     // 다 팔린 분류는 칩도 감춘다
     return `<button class="chip ${activeCat === k ? "on" : ""}" data-cat="${k}">${label} ${n}</button>`;
   }).join("");
   el.querySelectorAll(".chip").forEach(b =>
