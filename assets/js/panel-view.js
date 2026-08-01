@@ -295,11 +295,15 @@ function renderGrid() {
         remain = cur - sold;
         it.remain = remain;
       }
-      const wasDropped = stateOf(row) === "drop";
-      setOV(uid, { state: remain != null && remain > 0 ? "bid" : sel.value });
+      const next = remain != null && remain > 0 ? "bid" : sel.value;
+      setOV(uid, { state: next });
       renderGrid(); renderStats();
-      // 취소를 되돌리는 경우, 시트에 남은 취소 기록도 지워야 새로고침 후 되살아나지 않는다
-      if (wasDropped) pushOverride("state", uid, "", `${row.name} 취소 해제`);
+      /* 상태는 입찰 한 건 단위로 시트에 남겨야 한다.
+         예전에는 '취소'만 저장해서, 거래완료로 바꿔도 새로고침하면 사라지고
+         품목명 단위 폴백으로 떨어져 같은 품목의 다른 입찰까지 거래완료로 보였다.
+         'bid' 는 기본값이므로 빈 값으로 저장해 행을 지운다. */
+      pushOverride("state", uid, next === "bid" ? "" : next,
+        `${row.name} ${STATE_LABEL[next] || next}`);
       pushStatus(row.rs.name,
         sel.value === "done" && (remain == null || remain === 0) ? "sold" : "sale",
         { sku: row.rs.sku, remain, skip: row.rs.settle || row.rs.matched === false });

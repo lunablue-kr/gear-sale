@@ -26,11 +26,20 @@ function setNote(k, v) {
 
 let SHEET_SOLD = new Set();                    // 시트에 저장된 판매완료 품목
 
+/* 이 품목에 '거래완료'로 명시된 입찰이 따로 있으면, 품목명 단위 폴백을 쓰지 않는다.
+   폴백은 "누가 샀는지 모를 때"의 최후 수단인데, 낙찰자가 정해진 뒤에도 적용되면
+   같은 품목의 탈락자까지 거래완료로 보이고 매출 합계가 부풀려진다. */
+const hasNamedWinner = name => Object.keys(OV).some(k => {
+  if (OV[k].state !== "done") return false;
+  const b = ROWMAP && ROWMAP.get(k);
+  return b && b.rs.name === name;
+});
+
 const stateOf = r => {
   const s = OV[r.uid] && OV[r.uid].state;
   if (s && STATE_LABEL[s]) return s;           // 지금은 안 쓰는 옛 값(예약확정)은 입찰로 취급
-  if (SHEET_SOLD.has(r.rs.name)) return "done";
-  return r.rs.status === "sold" ? "done" : "bid";
+  if (SHEET_SOLD.has(r.rs.name)) return hasNamedWinner(r.rs.name) ? "bid" : "done";
+  return r.rs.status === "sold" ? (hasNamedWinner(r.rs.name) ? "bid" : "done") : "bid";
 };
 
 /* 다른 기기에서 바꾼 판매상태 가져오기 (공개 조회라 비밀번호 불필요) */
