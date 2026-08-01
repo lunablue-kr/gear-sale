@@ -101,6 +101,10 @@ async function callSheet(payload) {
 }
 
 async function pushStatus(itemName, status, opt) {
+  if (opt && opt.skip) {          // 정산행·미매칭행은 구매페이지에 없는 이름이라 보내봐야 소용없다
+    syncFlag("이 행은 구매페이지에 반영되지 않아요 (정산·미매칭 행)", "");
+    return;
+  }
   const pw = adminPw();
   if (!pw) { syncFlag("구매페이지 미반영 (비밀번호 없음)", "err"); return; }
   syncFlag("구매페이지에 반영 중…");

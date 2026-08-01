@@ -203,7 +203,6 @@ async function reloadBids() {
   try {
     DATA = await load(pw);
     BIDS = loadBidsFrom(DATA.sheets || []);
-    window.__refillSelects = true;   // 새 입찰자·카테고리가 필터에 나오도록
     render(); renderRaw();
   } catch (e) { syncFlag("다시 읽지 못했어요: " + e.message, "err"); }
 }

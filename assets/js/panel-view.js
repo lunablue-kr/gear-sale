@@ -91,13 +91,16 @@ function filtered(rows) {
 
 function fillSelects(rows) {
   const cs = document.getElementById("cat"), ws = document.getElementById("who");
-  if (cs.dataset.done && !window.__refillSelects) return;
-  window.__refillSelects = false;
+  /* 매번 다시 채운다. 예전에는 최초 1회만 채워서 새 입찰자가 목록에 안 나왔고,
+     덧붙이기만 해서 다시 채울 때마다 항목이 한 벌씩 늘어났다.
+     고르고 있던 값은 유지한다. */
+  const keepC = cs.value, keepW = ws.value;
+  cs.length = 1; ws.length = 1;
   const cats = [...new Set(rows.map(r => r.rs.catKey))].filter(Boolean);
   cats.forEach(c => cs.insertAdjacentHTML("beforeend", `<option value="${c}">${esc(CATS[c] || c)}</option>`));
   [...new Set(rows.map(r => r.name))].filter(Boolean).sort((a, b) => a.localeCompare(b, "ko"))
     .forEach(n => ws.insertAdjacentHTML("beforeend", `<option value="${esc(n)}">${esc(n)}</option>`));
-  cs.dataset.done = "1";
+  cs.value = keepC; ws.value = keepW;      // 고르던 필터 복원
 }
 
 /* 표가 비었을 때: 필터 때문인지, 시트를 못 읽은 것인지 화면에 밝힌다.
@@ -379,8 +382,8 @@ function updateSelBar(all) {
   const bar = document.getElementById("selbar");
   const picked = all.filter(r => SEL.has(r.uid));
   if (!picked.length) { bar.classList.add("hide"); document.body.style.paddingBottom = "60px"; return; }
-  const sum = picked.reduce((s, r) => s + (+r.price || 0), 0);
-  const askSum = picked.reduce((s, r) => s + (r.rs.ask || 0), 0);
+  const sum = picked.filter((r,i,a)=>a.findIndex(x=>x.row===r.row&&x.name===r.name&&x.contact===r.contact)===i).reduce((s, r) => s + (+r.price || 0), 0);
+  const askSum = picked.filter((r,i,a)=>a.findIndex(x=>x.rs.key===r.rs.key)===i).reduce((s, r) => s + (r.rs.ask || 0), 0);
   const people = new Set(picked.map(r => r.name));
   bar.classList.remove("hide");
   document.body.style.paddingBottom = "76px";
