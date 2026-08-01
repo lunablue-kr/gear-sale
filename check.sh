@@ -10,12 +10,26 @@ echo "── 1. 파일 문법"
 osascript -l JavaScript -e '
 ObjC.import("Foundation");
 function rd(p){return $.NSString.stringWithContentsOfFileEncodingError(p,4,null).js;}
-var out=[];
+var out=[], bad=0;
+// 인라인 스크립트
 ["index.html","panel-7f3ac91d5b.html"].forEach(function(f){
   var s=rd(f),re=/<script(?![^>]*src=)[^>]*>([\s\S]*?)<\/script>/g,m,b="";
   while((m=re.exec(s))!==null){try{new Function(m[1]);}catch(e){b=e.message;}}
-  out.push((b?"   ✗ ":"   ✓ ")+f+(b?" "+b.slice(0,60):""));
+  if(b){bad++;out.push("   ✗ "+f+" "+b.slice(0,60));} else out.push("   ✓ "+f);
 });
+// 외부 JS (분리 후 여기가 본체다)
+["assets/js/panel-data.js","assets/js/panel-sheet.js","assets/js/panel-view.js","assets/js/panel-app.js",
+ "data/items.js","data/items-head.js","data/status-snapshot.js"].forEach(function(f){
+  var src=rd(f);
+  if(!src){ out.push("   ✗ "+f+" 없음"); bad++; return; }
+  try { new Function(src); out.push("   ✓ "+f.replace("assets/","")); }
+  catch(e){ bad++; out.push("   ✗ "+f+" "+String(e.message).slice(0,60)); }
+});
+// 모듈을 로드 순서대로 이어붙여도 성립하는지 (선언 충돌·순서 문제)
+try {
+  var all=["panel-data","panel-sheet","panel-view","panel-app"].map(function(n){return rd("assets/js/"+n+".js");}).join("\n");
+  new Function(all); out.push("   ✓ 4개 모듈 결합");
+} catch(e){ bad++; out.push("   ✗ 모듈 결합 "+String(e.message).slice(0,60)); }
 out.join("\n");'
 
 echo "── 2. 품목 데이터"

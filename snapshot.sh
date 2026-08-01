@@ -18,11 +18,13 @@ except Exception as e:
 if not st.get("ok"):
     print("✗ 판매상태 응답 이상 — 스냅샷 갱신 안 함"); raise SystemExit(1)
 
+# 💰 정산행은 품목이 아니라 결제 기록이고 구매자 실명이 들어 있다. 공개 파일에 넣지 않는다.
+def clean(lst): return [n for n in lst if not str(n).lstrip().startswith("💰")]
 snap = {
     "t": datetime.datetime.now().isoformat(timespec="seconds"),
-    "reserved": reserved,
-    "sold": st.get("sold", []),
-    "sale": st.get("sale", []),
+    "reserved": clean(reserved),
+    "sold": clean(st.get("sold", [])),
+    "sale": clean(st.get("sale", [])),
     "remain": st.get("remain", {}),
 }
 body = ("/* 배포 시점 판매 상태 — ./snapshot.sh 가 만든다. 직접 고치지 말 것.\n"
