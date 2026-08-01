@@ -66,5 +66,18 @@ print(f"   {'✓' if not both else '✗'} sold·sale 동시 지정 {len(both)} {
 print(f"   {'✓' if not ghost else '⚠'} 품목에 없는 이름이 시트에 {len(ghost)} {ghost[:3]}")
 PY
 
-echo "── 4. 개인정보 유출 경로"
+echo "── 4. 상태 스냅샷 신선도"
+python3 - <<'PY'
+import json, re, datetime, os
+p = "data/status-snapshot.js"
+if not os.path.exists(p): print("   ✗ 스냅샷 없음 — ./snapshot.sh 실행"); raise SystemExit
+m = re.search(r'= (\{.*\});', open(p, encoding="utf-8").read(), re.S)
+d = json.loads(m.group(1))
+age = (datetime.datetime.now() - datetime.datetime.fromisoformat(d["t"])).total_seconds() / 3600
+mark = "✓" if age < 24 else "⚠"
+print(f"   {mark} {d['t']} ({age:.1f}시간 전) · 예약 {len(d['reserved'])} · 판매완료 {len(d['sold'])}")
+if age >= 24: print("     오래됨 — 배포 전 ./snapshot.sh 실행 권장")
+PY
+
+echo "── 5. 개인정보 유출 경로"
 git ls-files | grep -E 'bids-local|apps-script-admin' && echo "   ✗ 개인정보 파일이 추적되고 있음" || echo "   ✓ 개인정보 파일 미추적"

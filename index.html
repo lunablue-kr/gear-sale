@@ -109,6 +109,7 @@
 <script src="data/items/office.js"></script>
 <script src="data/items/etc.js"></script>
 <script src="data/items.js"></script>
+<script src="data/status-snapshot.js" onerror="void 0"></script>
 <script>
 // ============================================================
 // 품목 데이터
@@ -583,8 +584,18 @@ function applyStatus(bidRes, stRes) {
     if (changed) { picked.forEach(id => { if (ITEMS[id] && ITEMS[id].status === "sold") picked.delete(id); }); renderList(); updateBar(); }
 }
 
-applyCachedStatus();     // 캐시 먼저 (즉시)
-syncFromSheet();         // 그다음 실제 조회
+/* 첫 방문자는 캐시가 없어 서버 응답(2~3초)까지 옛 상태를 본다.
+   배포 시점 스냅샷을 먼저 입혀 그 공백을 없앤다. 셋 중 최신이 이긴다. */
+(function () {
+  const snapT = typeof STATUS_SNAPSHOT !== "undefined" ? Date.parse(STATUS_SNAPSHOT.t) : 0;
+  let cacheT = 0;
+  try { cacheT = (JSON.parse(localStorage.getItem(STATUS_CACHE) || "null") || {}).t || 0; } catch {}
+  if (snapT && snapT >= cacheT)
+    applyStatus({ reserved: STATUS_SNAPSHOT.reserved },
+                { ok: true, sold: STATUS_SNAPSHOT.sold, sale: STATUS_SNAPSHOT.sale, remain: STATUS_SNAPSHOT.remain });
+  else applyCachedStatus();
+})();
+syncFromSheet();         // 그다음 실제 조회로 덮는다
 // 탭을 다시 열어보면 최신 상태로 (관리자 변경이 바로 반영되게)
 document.addEventListener("visibilitychange", () => { if (!document.hidden) syncFromSheet(); });
 setInterval(syncFromSheet, 60000);
