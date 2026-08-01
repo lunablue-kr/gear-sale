@@ -656,6 +656,9 @@ async function pullStatus() {
     const d = await (await fetch(ENDPOINT + "?action=status")).json();
     if (d && d.ok) {
       SHEET_SOLD = new Set(d.sold || []);
+      // 남은수량도 받아와야 새로고침 후 "몇 개 남았나" 를 서버 기준으로 묻는다
+      const rm = d.remain || {};
+      ITEMS.forEach(it => { if (it.sku && rm[it.sku] != null) it.remain = +rm[it.sku]; });
       // 시트에서 판매중으로 되돌린 품목은 로컬의 거래완료 표시도 해제
       new Set(d.sale || []).forEach(name => {
         Object.keys(OV).forEach(uid => {
@@ -1106,11 +1109,14 @@ function renderGrid() {
         remain = cur - sold;
         it.remain = remain;
       }
+      const wasDropped = stateOf(row) === "drop";
       setOV(uid, { state: remain != null && remain > 0 ? "bid" : sel.value });
       renderGrid(); renderStats();
+      // 취소를 되돌리는 경우, 시트에 남은 취소 기록도 지워야 새로고침 후 되살아나지 않는다
+      if (wasDropped) pushOverride("state", uid, "", `${row.name} 취소 해제`);
       pushStatus(row.rs.name,
         sel.value === "done" && (remain == null || remain === 0) ? "sold" : "sale",
-        { sku: row.rs.sku, remain });
+        { sku: row.rs.sku, remain, skip: row.rs.settle || row.rs.matched === false });
     };
     sel.onclick = e => e.stopPropagation();
   });
@@ -1496,6 +1502,7 @@ async function saveBid() {
 
 /* 취소 = 입찰 삭제 + 순위 당김 + (마지막 입찰이면) 구매페이지 판매중 복원 */
 async function cancelBid(r) {
+  const wasDone = stateOf(r) === "done";
   const others = [...ROWMAP.values()]
     .filter(o => o.rs.name === r.rs.name && o.uid !== r.uid && !isDropped(o))
     .sort((a, b) => (a.rank || 99) - (b.rank || 99));
@@ -1507,8 +1514,10 @@ async function cancelBid(r) {
   setOV(r.uid, { state: "drop" });
   renderGrid(); renderStats();
   pushOverride("state", r.uid, "drop", `${r.name} 취소`);
-  if (!others.length) pushStatus(r.rs.name, "sale",
-    { sku: r.rs.sku, skip: r.rs.settle || r.rs.matched === false });   // 마지막 입찰이면 구매페이지 되살리기
+  // 거래완료였다면 남은 입찰이 있어도 판매완료를 풀어야 한다 (다음 순위가 살아나야 함)
+  if (!others.length || wasDone) pushStatus(r.rs.name, "sale",
+    { sku: r.rs.sku, remain: (ITEMS.find(x => x.sku === r.rs.sku) || {}).qty || null,
+      skip: r.rs.settle || r.rs.matched === false });
   syncFlag(others.length ? `취소됨 · ${others[0].name} 님이 1순위` : `취소됨 · ${r.rs.name} 다시 판매중`, "ok");
   return true;
 }

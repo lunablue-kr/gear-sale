@@ -366,7 +366,7 @@
 //   판매되면 status만 바꿔서 다시 배포하면 됩니다.
 // ============================================================
 
-const STATUS_LABEL = { sale: "판매중", hold: "🔖 예약중", sold: "판매완료" };
+const STATUS_LABEL = { sale: "판매중", hold: "🔖 입찰 있음", sold: "판매완료" };
 const FORM_ENDPOINT = "https://formsubmit.co/ajax/4daba310c39387b2cac62a9e9796d9c6";
 const SHEET_ENDPOINT = "https://script.google.com/macros/s/AKfycbx4wOLUzlKJYdBJEGH2J8I2NEQAz77lShix8bxDaNELDKEXHcs_XZ7-bZilpfBdANU_yA/exec";
 
@@ -437,7 +437,7 @@ function cardHTML(it) {
     ${it.note ? `<p class="note">${it.note}</p>` : ""}
     <div class="card-foot">
       <button class="pick-btn" data-id="${it.id}" ${soldish ? "disabled" : ""}>
-        ${soldish ? "입찰 마감" : sel ? "✓ 담김" : "입찰 담기"}
+        ${soldish ? "판매완료" : sel ? "✓ 담았어요" : it.status === "hold" ? "후순위로 입찰" : "입찰 담기"}
       </button>
       ${soldish
         ? `<span class="ask sold-ask">거래 완료</span>`
@@ -798,7 +798,8 @@ function syncFromSheet() {
       const rem = stRes.remain || {};
       ITEMS.forEach(it => {
         const r = it.sku != null ? rem[it.sku] : undefined;      // 남은 수량 (sku 기준)
-        if (r != null && it.remain !== +r) { it.remain = +r; changed = true; }
+        if (r != null) { if (it.remain !== +r) { it.remain = +r; changed = true; } }
+        else if (it.remain != null) { delete it.remain; changed = true; }   // 시트에서 지워지면 같이 푼다
         const want = sold.has(it.name) ? "sold"
                    : bidSet.has(it.name) ? "hold"
                    : sale.has(it.name) ? "sale" : null;
