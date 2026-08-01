@@ -540,6 +540,25 @@ function syncFromSheet() {
         note.style.color = "";
       }
     }
+    saveStatusCache(bidRes, stRes);
+    return applyStatus(bidRes, stRes);
+  });
+}
+
+/* 서버 응답이 2~3초 걸려 그동안 옛 상태가 보였다. 지난번 결과를 먼저 입혀 깜빡임을 없앤다. */
+const STATUS_CACHE = "gearStatusCache";
+function saveStatusCache(bidRes, stRes) {
+  if (!bidRes && !stRes) return;
+  try { localStorage.setItem(STATUS_CACHE, JSON.stringify({ t: Date.now(), bidRes, stRes })); } catch {}
+}
+function applyCachedStatus() {
+  try {
+    const c = JSON.parse(localStorage.getItem(STATUS_CACHE) || "null");
+    if (c && Date.now() - c.t < 6 * 3600 * 1000) applyStatus(c.bidRes, c.stRes);
+  } catch {}
+}
+
+function applyStatus(bidRes, stRes) {
     let changed = false;
     /* 판매완료 > 입찰있음(예약중) > 판매상태 시트 순으로 본다.
        시트의 'sale' 은 한 번 적히면 남아 있어서, 그 뒤 새 입찰이 들어와도
@@ -562,9 +581,10 @@ function syncFromSheet() {
       ITEMS.forEach(it => { if (it.status === "sale" && bidSet.has(it.name)) { it.status = "hold"; changed = true; } });
     }
     if (changed) { picked.forEach(id => { if (ITEMS[id] && ITEMS[id].status === "sold") picked.delete(id); }); renderList(); updateBar(); }
-  });
 }
-syncFromSheet();
+
+applyCachedStatus();     // 캐시 먼저 (즉시)
+syncFromSheet();         // 그다음 실제 조회
 // 탭을 다시 열어보면 최신 상태로 (관리자 변경이 바로 반영되게)
 document.addEventListener("visibilitychange", () => { if (!document.hidden) syncFromSheet(); });
 setInterval(syncFromSheet, 60000);
