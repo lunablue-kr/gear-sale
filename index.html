@@ -515,6 +515,8 @@ function updateBar() {
 
 // ---------- 입찰 모달 ----------
 function openSheet() {
+  const sb = document.getElementById("submit-bid");     // 이전 전송 상태를 되돌린다
+  if (sb) { sb.disabled = false; sb.textContent = "입찰 보내기"; }
   const box = document.getElementById("bid-items");
   box.innerHTML = [...picked].map(id => {
     const it = ITEMS[id];
