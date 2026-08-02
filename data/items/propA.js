@@ -1,9 +1,9 @@
 // propA — 이 카테고리만 고치면 됨
 P.propA = [
-  { cat:"propA", sku:"propA-1", name:"화이트 포맥스 단상자", brand:"", qty:1, year:"", note:"40 x 7 x 25 · 수량 3", img:"assets/propA1.jpg", status:"sale" },
-  { cat:"propA", sku:"propA-2", name:"화이트 원기둥", brand:"", qty:1, year:"", note:"지름 9                             높이 10 · 수량 1", img:"assets/propA2.jpg", status:"sale" },
-  { cat:"propA", sku:"propA-3", name:"화이트 큐브", brand:"", qty:1, year:"", note:"7 x 7 x 7                        10 x 10 x 10                 10 x 8 x 15 · 수량 각 1", img:"assets/propA3.jpg", status:"sale" },
-  { cat:"propA", sku:"propA-4", name:"화이트 큐브", brand:"", qty:1, year:"", note:"10 x 10 x 15 · 수량 1", img:"assets/propA4.jpg", status:"sale" },
+  { cat:"propA", sku:"propA-1", name:"화이트 포맥스 단상자", brand:"", qty:1, year:"", note:"40 x 7 x 25 cm · 수량 3", img:"assets/propA1.jpg", status:"sale" },
+  { cat:"propA", sku:"propA-2", name:"화이트 원기둥", brand:"", qty:1, year:"", note:"지름 9 · 높이 10 cm · 목재 · 수량 1", img:"assets/propA2.jpg", status:"sale" },
+  { cat:"propA", sku:"propA-3", name:"화이트 포멕스 상자", brand:"", qty:1, year:"", note:"7 x 7 x 7 cm · 10 x 10 x 10 cm · 10 x 8 x 15 cm 각 1개 · 5cm 정방형 2개", img:"assets/propA3.jpg", status:"sale" },
+  { cat:"propA", sku:"propA-4", name:"화이트 포멕스 상자", brand:"", qty:1, year:"", note:"10 x 10 x 15 cm · 수량 1", img:"assets/propA4.jpg", status:"sale" },
   { cat:"propA", sku:"propA-5", name:"유리 화병", brand:"", qty:1, year:"", note:"바닥 지름 7.5                  높이 18 · 수량 1", img:"assets/propA5.jpg", status:"sale" },
   { cat:"propA", sku:"propA-6", name:"유리 칵테일잔", brand:"", qty:1, year:"", note:"입구 지름 10.5                 높이 8.5 · 수량 1", img:"assets/propA6.jpg", status:"sale" },
   { cat:"propA", sku:"propA-7", name:"원기둥 유리 화병", brand:"", qty:1, year:"", note:"지름 6.5                          높이 15 · 수량 1", img:"assets/propA7.jpg", status:"sale" },
