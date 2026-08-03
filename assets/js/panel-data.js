@@ -102,6 +102,7 @@ const KEYS = {
   item:    ["품목", "제품", "장비", "item", "product"],
   price:   ["금액", "입찰가", "가격", "희망", "price", "amount"],
   message: ["메시지", "메모", "내용", "message", "memo", "note"],
+  qty:     ["수량", "qty"],
 };
 function findCol(headers, key) {
   const cands = KEYS[key];
@@ -154,6 +155,7 @@ function normalize(sheet) {
   const c = {
     ts: findCol(h, "ts"), name: findCol(h, "name"), contact: findCol(h, "contact"),
     item: findCol(h, "item"), price: findCol(h, "price"), message: findCol(h, "message"),
+    qty: findCol(h, "qty"),
   };
 
   /* 헤더 글자로 열을 못 찾는 경우가 있다(헤더가 없거나 다른 말로 적혀 있음).
@@ -169,6 +171,7 @@ function normalize(sheet) {
       if (c.item < 0) c.item = 3;
       if (c.price < 0) c.price = 4;
       if (c.message < 0) c.message = 5;
+      if (c.qty < 0) c.qty = 7;              // H열 (G=sku 다음)
       COLMAP_NOTE = `헤더를 못 읽어 열 위치로 대체함 (헤더: ${JSON.stringify(h)})`;
     }
   }
@@ -193,8 +196,10 @@ function normalize(sheet) {
       item = item.replace(/^\[\d+\]\s*/, "").trim();
       const list = resolveAll(item);
       if (!list) return;                    // 헤더 등 데이터 아닌 값은 제외
+      const qn = parseInt(get(c.qty), 10);
       list.forEach(rs => out.push({
         ts: get(c.ts), name, contact: get(c.contact), message: get(c.message),
+        qty: qn >= 1 && qn <= 99 ? qn : null,           // 신청 수량 (옛 입찰엔 없음)
         item, resolved: rs, price: (price || "").replace(/[^\d]/g, ""), row: ri + 2,
       }));
     });

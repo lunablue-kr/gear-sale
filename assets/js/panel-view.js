@@ -13,6 +13,8 @@ const COLS = [
         ? ` <span class="diff ${r.diff >= 0 ? "up" : "dn"}">${r.diff >= 0 ? "+" : "−"}${Number(Math.abs(r.diff)).toLocaleString()}</span>`
         : "") +
       (r.isTop && r.competing ? `<span class="tag top">최고가</span>` : "") },
+  { k: "qty",   label: "수량",    get: r => r.qty || 0, cls: "num",
+    html: r => r.qty ? (r.qty > 1 ? `<b>${r.qty}개</b>` : "1개") : "—" },
   { k: "rank",  label: "순위",     get: r => r.rank, cls: "num",
     html: r => r.rank ? `${r.rank}${r.rank === 1 ? `<span class="tag r1">최선착</span>` : ""}` : "—" },
   { k: "who",   label: "입찰자",   get: r => r.name },
@@ -47,7 +49,7 @@ const COLS = [
 
 // 열 순서 (뒤쪽): 메모 > 내 메모 > 상태 > 접수 > 수정
 {
-  const ORDER = ["item","cat","num","ask","price","rank","who","contact","msg","note","state","ts","act"];
+  const ORDER = ["item","cat","num","ask","price","qty","rank","who","contact","msg","note","state","ts","act"];
   COLS.sort((a, b) => ORDER.indexOf(a.k) - ORDER.indexOf(b.k));
 }
 

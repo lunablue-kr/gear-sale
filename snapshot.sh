@@ -10,7 +10,7 @@ python3 - "$EP" <<'PY'
 import sys, json, urllib.request, datetime
 EP = sys.argv[1]
 try:
-    reserved = json.load(urllib.request.urlopen(EP, timeout=30)).get("reserved", [])
+    reserved = json.load(urllib.request.urlopen(EP, timeout=30))
     st = json.load(urllib.request.urlopen(EP + "?action=status", timeout=30))
 except Exception as e:
     print("✗ 서버 조회 실패 — 스냅샷 갱신 안 함:", e)
@@ -22,9 +22,15 @@ if not st.get("ok"):
 def clean(lst): return [n for n in lst if not str(n).lstrip().startswith("💰")]
 snap = {
     "t": datetime.datetime.now().isoformat(timespec="seconds"),
-    "reserved": clean(reserved),
+    "reserved": clean(reserved.get("reserved", [])),
+    "reservedSku": reserved.get("reservedSku", []),
+    "reservedNames": clean(reserved.get("reservedNames", [])),
     "sold": clean(st.get("sold", [])),
     "sale": clean(st.get("sale", [])),
+    "skuSold": st.get("skuSold", []),
+    "skuSale": st.get("skuSale", []),
+    "nameSold": clean(st.get("nameSold", [])),
+    "nameSale": clean(st.get("nameSale", [])),
     "remain": st.get("remain", {}),
 }
 body = ("/* 배포 시점 판매 상태 — ./snapshot.sh 가 만든다. 직접 고치지 말 것.\n"

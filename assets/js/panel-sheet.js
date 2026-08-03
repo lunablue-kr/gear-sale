@@ -24,7 +24,8 @@ function setNote(k, v) {
   saveNotes();
 }
 
-let SHEET_SOLD = new Set();                    // 시트에 저장된 판매완료 품목
+let SHEET_SOLD = new Set();                    // 시트에 저장된 판매완료 (이름 키 — 옛 기록)
+let SHEET_SOLD_SKU = new Set();                // 시트에 저장된 판매완료 (sku 키 — 새 기록)
 
 /* 이 품목에 '거래완료'로 명시된 입찰이 따로 있으면, 품목명 단위 폴백을 쓰지 않는다.
    폴백은 "누가 샀는지 모를 때"의 최후 수단인데, 낙찰자가 정해진 뒤에도 적용되면
@@ -38,7 +39,7 @@ const hasNamedWinner = name => Object.keys(OV).some(k => {
 const stateOf = r => {
   const s = OV[r.uid] && OV[r.uid].state;
   if (s && STATE_LABEL[s]) return s;           // 지금은 안 쓰는 옛 값(예약확정)은 입찰로 취급
-  if (SHEET_SOLD.has(r.rs.name)) return hasNamedWinner(r.rs.name) ? "bid" : "done";
+  if (SHEET_SOLD_SKU.has(r.rs.sku) || SHEET_SOLD.has(r.rs.name)) return hasNamedWinner(r.rs.name) ? "bid" : "done";
   return r.rs.status === "sold" ? (hasNamedWinner(r.rs.name) ? "bid" : "done") : "bid";
 };
 
@@ -47,7 +48,8 @@ async function pullStatus() {
   try {
     const d = await (await fetch(ENDPOINT + "?action=status")).json();
     if (d && d.ok) {
-      SHEET_SOLD = new Set(d.sold || []);
+      SHEET_SOLD = new Set(d.nameSold || d.sold || []);   // sku 있는 행은 아래 집합으로만
+      SHEET_SOLD_SKU = new Set(d.skuSold || []);
       // 남은수량도 받아와야 새로고침 후 "몇 개 남았나" 를 서버 기준으로 묻는다
       const rm = d.remain || {};
       ITEMS.forEach(it => { if (it.sku && rm[it.sku] != null) it.remain = +rm[it.sku]; });
