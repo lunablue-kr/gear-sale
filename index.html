@@ -274,6 +274,8 @@ function openSheet() {
     return `
     <div class="bid-item" data-id="${id}">
       <span class="bname"><span class="pnum">${it.num}</span>${it.name}${it.ask ? `<small>희망 ₩${it.ask.toLocaleString("ko-KR")}${it.askUnit ? " /" + it.askUnit : ""}</small>` : ""}</span>
+      <select class="bid-qty" title="수량">${Array.from({ length: it.qty || 1 }, (_, i) =>
+        `<option value="${i + 1}">${i + 1}개</option>`).join("")}</select>
       <input type="text" inputmode="numeric" class="bid-price" value="${it.ask ? it.ask.toLocaleString("ko-KR") : ""}" placeholder="희망가">
       <span class="won">원</span>
       <button class="rm" title="빼기">✕</button>
@@ -325,7 +327,8 @@ async function submitBid() {
   const lines = rows.map(row => {
     const it = ITEMS[+row.dataset.id];
     const price = row.querySelector(".bid-price").value.trim();
-    return `[${it.num}] ${it.name} — ${price}원`;
+    const q = +(row.querySelector(".bid-qty") || {}).value || 1;
+    return `[${it.num}] ${it.name}${q > 1 ? ` ×${q}` : ""} — ${price}원`;
   });
   /* 시트를 열어둔 사이 팔린 품목이 섞여 들어가지 않게 한 번 더 거른다 */
   const goneNow = rows.map(r => ITEMS[+r.dataset.id]).filter(it => it && it.status === "sold");
@@ -338,7 +341,9 @@ async function submitBid() {
   }
   const bidsForSheet = rows.map(row => {
     const it = ITEMS[+row.dataset.id];
-    return { sku: it.sku, name: it.name, price: row.querySelector(".bid-price").value.replace(/[^\d]/g, "") };
+    return { sku: it.sku, name: it.name,
+             qty: +(row.querySelector(".bid-qty") || {}).value || 1,
+             price: row.querySelector(".bid-price").value.replace(/[^\d]/g, "") };
   });
   const btn = document.getElementById("submit-bid");
   if (btn.disabled) return;                 // 중복 전송 방지 (더블클릭 차단)

@@ -252,3 +252,9 @@
   @media (max-width: 340px) {
     .grid.compact { grid-template-columns: 1fr; }
   }
+
+/* 입찰서 수량 선택 (2026-08-02) */
+.bid-qty {
+  flex: 0 0 auto; padding: 8px 6px; border: 1px solid var(--line);
+  border-radius: 8px; font-size: 14px; background: var(--card); font-family: inherit;
+}
