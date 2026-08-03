@@ -464,9 +464,46 @@ function applySticky() {
   table.querySelectorAll("tr.grouphead td").forEach(td => { td.style.left = "0px"; });
 }
 
+/* 선택한 입찰 일괄 완료·취소 — 확인 한 번으로 전부 처리 */
+async function bulkApply(next, picked) {
+  const label = next === "done" ? "거래완료" : "취소";
+  const todo = picked.filter(r => stateOf(r) !== next);
+  if (!todo.length) { syncFlag(`선택한 건이 이미 전부 ${label} 상태예요`, ""); return; }
+  const multiQty = next === "done"
+    ? [...new Set(todo.filter(r => ((ITEMS.find(x => x.sku === r.rs.sku) || {}).qty || 1) > 1).map(r => r.rs.name))]
+    : [];
+  if (!confirm(`선택 ${todo.length}건을 ${label} 처리할까요?` +
+    (next === "drop" ? "\n(목록에는 취소 기록으로 남습니다)" : "") +
+    (multiQty.length ? `\n\n수량이 여러 개인 품목은 전량 판매완료로 처리돼요:\n· ${multiQty.join("\n· ")}\n부분 판매는 행별 상태 칸에서 따로 처리하세요.` : ""))) return;
+
+  for (const r of todo) {
+    setOV(r.uid, { state: next });
+    await pushOverride("state", r.uid, next, `${r.name} ${label}`);
+  }
+  /* 구매페이지 반영 — 품목 단위로 한 번씩 */
+  const items = new Map();
+  todo.forEach(r => items.set(r.rs.sku || r.rs.name, r));
+  for (const r of items.values()) {
+    const skip = r.rs.settle || r.rs.matched === false;
+    if (next === "done") {
+      await pushStatus(r.rs.name, "sold", { sku: r.rs.sku, skip });
+    } else {
+      const others = [...ROWMAP.values()]
+        .filter(o => o.rs.name === r.rs.name && stateOf(o) !== "drop" && !isDropped(o));
+      if (!others.length) await pushStatus(r.rs.name, "sale",
+        { sku: r.rs.sku, remain: (ITEMS.find(x => x.sku === r.rs.sku) || {}).qty || null, skip });
+    }
+  }
+  SEL.clear();
+  renderGrid(); renderStats();
+  syncFlag(`${todo.length}건 ${label} 처리됨`, "ok");
+}
+
 function updateSelBar(all) {
   const bar = document.getElementById("selbar");
   const picked = all.filter(r => SEL.has(r.uid));
+  document.getElementById("seldone").onclick = () => bulkApply("done", picked);
+  document.getElementById("seldrop").onclick = () => bulkApply("drop", picked);
   if (!picked.length) { bar.classList.add("hide"); document.body.style.paddingBottom = "60px"; return; }
   const sum = picked.filter((r,i,a)=>a.findIndex(x=>x.row===r.row&&x.name===r.name&&x.contact===r.contact)===i).reduce((s, r) => s + (+r.price || 0), 0);
   const askSum = picked.filter((r,i,a)=>a.findIndex(x=>x.rs.key===r.rs.key)===i).reduce((s, r) => s + (r.rs.ask || 0), 0);
@@ -495,17 +532,6 @@ function render() {
 function renderStats() {
   const map = group(BIDS);
   const unmatched = [...map.values()].filter(l => !l[0].resolved.matched).length;
-  /* 금액 합계는 시트의 입찰 1건을 1번만 센다.
-     이름이 같은 품목(원단 Gray 실크 10·13번 등)은 화면에선 번호별로 나뉘지만
-     실제로 낸 돈은 한 번이므로, 나뉜 것을 다 더하면 합계가 부풀려진다. */
-  const counted = new Set();
-  const total = BIDS.reduce((s, b) => {
-    if (isDropped(b)) return s;                       // 취소한 입찰은 빼고 센다
-    const key = b.row + "|" + b.name + "|" + b.contact;
-    if (counted.has(key)) return s;
-    counted.add(key);
-    return s + (+b.price || 0);
-  }, 0);
   document.getElementById("stats").innerHTML = PREVIEW
     ? `<div class="stat"><b>${map.size}</b>예약된 품목</div>` +
       `<div class="stat"><b>${map.size - unmatched}</b>현재 품목과 매칭됨</div>` +
@@ -526,6 +552,25 @@ function renderStats() {
         const n = s => uniq(rows.filter(r => stateOf(r) === s)).length;
         const doneSum = uniq(rows.filter(r => stateOf(r) === "done")).reduce((s, r) => s + (+r.price || 0), 0);
         const bidCount = uniq(rows).length;
+        /* 예상 수령: 아직 완료 안 된 품목마다 1순위 입찰 하나만 더한다.
+           경쟁 입찰을 다 더하면 부풀려지고, 완료 품목은 거래완료 합계에 이미 있다.
+           같은 입찰이 동명이품으로 나뉜 건 uniq 와 같은 키로 1번만 센다. */
+        const byItem = new Map();
+        rows.forEach(r => {
+          if (stateOf(r) === "drop") return;
+          if (!byItem.has(r.rs.key)) byItem.set(r.rs.key, []);
+          byItem.get(r.rs.key).push(r);
+        });
+        const seenTop = new Set();
+        let expSum = 0;
+        byItem.forEach(list => {
+          if (list.some(r => stateOf(r) === "done")) return;
+          const top = list.slice().sort((a, b) => (a.rank || 99) - (b.rank || 99))[0];
+          const k = top.row + "|" + top.name + "|" + top.contact;
+          if (seenTop.has(k)) return;
+          seenTop.add(k);
+          expSum += +top.price || 0;
+        });
         return `<div class="stat"><b>${map.size}</b>입찰된 품목</div>` +
           `<div class="stat"><b>${bidCount}</b>총 입찰 건수</div>` +
           `<div class="stat"><b>${new Set(BIDS.map(b => b.name + "|" + b.contact)).size}</b>입찰자 수</div>` +
@@ -533,7 +578,7 @@ function renderStats() {
           `<div class="stat warn"><b>${n("bid")}</b>미처리</div>` +
           `<div class="stat"><b>${n("contact") + n("prog")}</b>연락·진행중</div>` +
           `<div class="stat"><b>${n("done")}</b>거래완료 <small>${won(doneSum) || "₩0"}</small></div>` +
-          `<div class="stat"><b>${won(total) || "₩0"}</b>입찰가 총합</div>`;
+          `<div class="stat"><b>${won(expSum) || "₩0"}</b>예상 수령 <small>품목별 1순위만</small></div>`;
       })();
 }
 
