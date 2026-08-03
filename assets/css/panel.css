@@ -258,3 +258,28 @@
     input.nedit { width: 150px; }
     table.grid td.note .notetxt, table.grid td.msg .msgtxt { max-width: 130px; }
   }
+
+/* ===== 처리 단계 (2026-08-02) ===== */
+#quickfil { display: inline-flex; gap: 4px; }
+#quickfil button {
+  padding: 6px 11px; border: 1px solid var(--line); background: var(--card);
+  border-radius: 8px; font-size: 12.5px; cursor: pointer; color: var(--sub); font-family: inherit;
+}
+#quickfil button:hover { border-color: var(--accent); color: var(--accent); }
+#quickfil button.on { background: var(--ink); color: #fff; border-color: var(--ink); }
+
+.stat.warn b { color: #b04a3a; }
+
+/* 상태별 색 — 미처리는 눈에 띄게, 진행될수록 차분하게 */
+select.stsel.bid     { border-color: #e2b4ab; color: #b04a3a; }
+select.stsel.contact { border-color: #e8d5a8; color: #8a6510; background: #fdf8ec; }
+select.stsel.prog    { border-color: #a9c4e2; color: #2b5c8f; background: #f0f6fc; }
+tr.st-bid td.item    { box-shadow: inset 3px 0 0 #e8b0a6; }   /* 미처리 표시선 */
+tr.st-contact td.item{ box-shadow: inset 3px 0 0 #e8d5a8; }
+tr.st-prog td.item   { box-shadow: inset 3px 0 0 #a9c4e2; }
+
+button.bcontact {
+  border: 1px solid var(--line); background: var(--card); border-radius: 6px;
+  padding: 2px 7px; font-size: 12px; cursor: pointer; margin-left: 4px; vertical-align: 1px;
+}
+button.bcontact:hover { border-color: var(--accent); color: var(--accent); }

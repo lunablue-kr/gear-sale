@@ -1,13 +1,13 @@
 /* ============================================================
    표 보기
    ============================================================ */
-let VIEW = "grid", SORT = { col: "cat", dir: 1 }, SEL = new Set();
+let VIEW = "grid", SORT = { col: "ts", dir: -1 }, SEL = new Set();   // 기본: 접수 최신순
 
 /* ============================================================
    상태 · 입찰가 수정 (브라우저 localStorage에 저장 → 내보내기로 반영)
    ============================================================ */
-const STATE_LABEL = { bid: "입찰", done: "거래완료", drop: "취소 (입찰 삭제)" };
-const STATE_ORDER = { bid: 0, done: 1, drop: 2 };
+const STATE_LABEL = { bid: "입찰", contact: "연락함", prog: "거래 진행중", done: "거래완료", drop: "취소 (입찰 삭제)" };
+const STATE_ORDER = { bid: 0, contact: 1, prog: 2, done: 3, drop: 4 };
 const OV_KEY = "gearAdminOverrides", NOTE_KEY = "gearAdminNotes";
 let OV = {}, NOTES = {};
 try { OV = JSON.parse(localStorage.getItem(OV_KEY) || "{}"); } catch { OV = {}; }

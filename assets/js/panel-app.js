@@ -94,6 +94,13 @@ function localMode() {
   render();
   // 시트에 저장된 판매상태·금액수정·거래메모를 가져와 반영 (다른 기기 포함)
   refreshFromSheet();
+  document.querySelectorAll("#quickfil button").forEach(b => {
+    b.onclick = () => {
+      document.getElementById("state").value = b.dataset.st;
+      document.querySelectorAll("#quickfil button").forEach(x => x.classList.toggle("on", x === b && b.dataset.st !== ""));
+      render();
+    };
+  });
   document.getElementById("reload").onclick = async () => {
     const b = document.getElementById("reload");
     b.disabled = true; b.textContent = "불러오는 중…";

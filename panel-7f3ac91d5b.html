@@ -35,9 +35,14 @@
       <div id="filters">
       <select id="cat"><option value="">전체 카테고리</option></select>
       <select id="who"><option value="">전체 입찰자</option></select>
+      <span id="quickfil">
+        <button data-st="bid">미처리</button><button data-st="contact">연락함</button><button data-st="prog">진행중</button><button data-st="">전체</button>
+      </span>
       <select id="state">
         <option value="">전체 상태</option>
-        <option value="bid">입찰 (진행중)</option>
+        <option value="bid">입찰 (미처리)</option>
+        <option value="contact">연락함</option>
+        <option value="prog">거래 진행중</option>
         <option value="done">거래완료</option>
         <option value="drop">취소 (입찰 삭제)</option>
       </select>

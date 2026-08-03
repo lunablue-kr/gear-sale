@@ -16,7 +16,8 @@ const COLS = [
   { k: "rank",  label: "순위",     get: r => r.rank, cls: "num",
     html: r => r.rank ? `${r.rank}${r.rank === 1 ? `<span class="tag r1">최선착</span>` : ""}` : "—" },
   { k: "who",   label: "입찰자",   get: r => r.name },
-  { k: "contact", label: "연락처", get: r => r.contact, html: r => esc(fmtContact(r.contact)) },
+  { k: "contact", label: "연락처", get: r => r.contact,
+    html: r => `${esc(fmtContact(r.contact))} <button class="bcontact" data-uid="${esc(r.uid)}" title="문자 양식 열기 (연락함으로 표시)">✉</button>` },
   { k: "msg",   label: "메모",     get: r => r.message, cls: "msg",
     html: r => r.message
       ? `<span class="msgtxt" title="${esc(r.message)}">${esc(r.message)}</span>` : "" },
@@ -235,6 +236,31 @@ function renderGrid() {
   });
 
   // 입찰 고치기 / 삭제
+  /* 연락하기 — 문자 양식을 만들어 열고(모바일) 또는 복사하고(PC/카톡), 미처리 건을 '연락함'으로 */
+  document.querySelectorAll("button.bcontact").forEach(b => {
+    b.onclick = async e => {
+      e.stopPropagation();
+      const r = ROWMAP.get(b.dataset.uid);
+      if (!r) return;
+      const mine = [...ROWMAP.values()].filter(x => x.name === r.name && x.contact === r.contact && stateOf(x) !== "drop");
+      const first = (mine[0] || r).rs.name, extra = Math.max(0, mine.length - 1);
+      const msg = `안녕하세요, ${r.name}님.\n장비 구매 신청하신 스튜디오 루나블루입니다.\n신청해주신 ${first}${extra ? ` 외 ${extra}건` : ""} 확인하고 연락드립니다.`;
+      const d = String(r.contact || "").replace(/[^\d]/g, "");
+      const phone = /^1\d{9}$/.test(d) ? "0" + d : (/^01\d{8,9}$/.test(d) ? d : null);
+      const ios = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+      if (phone && (ios || /Android/i.test(navigator.userAgent))) {
+        location.href = "sms:" + phone + (ios ? "&" : "?") + "body=" + encodeURIComponent(msg);
+      } else {
+        try {
+          await navigator.clipboard.writeText(msg);
+          syncFlag(phone ? `양식 복사됨 — 문자로 붙여넣기 (${fmtContact(r.contact)})` : "양식 복사됨 — 카톡에 붙여넣기", "ok");
+        } catch { prompt("복사해서 보내세요", msg); }
+      }
+      mine.filter(x => stateOf(x) === "bid")
+        .forEach(x => { setOV(x.uid, { state: "contact" }); pushOverride("state", x.uid, "contact", `${x.name} 연락함`); });
+      renderGrid(); renderStats();
+    };
+  });
   document.querySelectorAll("button.bedit").forEach(b => {
     b.onclick = e => {
       e.stopPropagation();
@@ -265,7 +291,11 @@ function renderGrid() {
         if (closed) return; closed = true;
         const v = inp.value.trim();
         setNote(k, v);
-        renderGrid();
+        /* 메모를 적었다 = 연락해서 내용이 오갔다. 그 사람의 미처리·연락함 건을 진행중으로 올린다 */
+        if (v) [...ROWMAP.values()]
+          .filter(b => noteKey(b) === k && ["bid", "contact"].includes(stateOf(b)))
+          .forEach(b => { setOV(b.uid, { state: "prog" }); pushOverride("state", b.uid, "prog", `${b.name} 진행중`); });
+        renderGrid(); renderStats();
         pushOverride("note", k, v, `${row.name} 메모`);
       };
       inp.onblur = commit;
@@ -444,6 +474,8 @@ function renderStats() {
           `<div class="stat"><b>${bidCount}</b>총 입찰 건수</div>` +
           `<div class="stat"><b>${new Set(BIDS.map(b => b.name + "|" + b.contact)).size}</b>입찰자 수</div>` +
           `<div class="stat"><b>${[...map.values()].filter(l => l.length > 1).length}</b>경쟁 품목</div>` +
+          `<div class="stat warn"><b>${n("bid")}</b>미처리</div>` +
+          `<div class="stat"><b>${n("contact") + n("prog")}</b>연락·진행중</div>` +
           `<div class="stat"><b>${n("done")}</b>거래완료 <small>${won(doneSum) || "₩0"}</small></div>` +
           `<div class="stat"><b>${won(total) || "₩0"}</b>입찰가 총합</div>`;
       })();
