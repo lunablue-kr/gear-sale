@@ -214,6 +214,7 @@ function promoteNoted() {
   const canPush = !!sessionStorage.getItem("adminPw");
   [...ROWMAP.values()].forEach(b => {
     if (!noteOf(b) || !["bid", "contact"].includes(stateOf(b))) return;
+    if ((OV[b.uid] || {}).state === "bid") return;   // 미처리로 수동 되돌린 건 승격하지 않는다
     setOV(b.uid, { state: "prog" });
     if (canPush) pushOverride("state", b.uid, "prog", `${b.name} 진행중`);
     n++;

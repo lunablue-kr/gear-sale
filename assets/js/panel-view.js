@@ -28,9 +28,15 @@ const COLS = [
     } },
   { k: "state", label: "상태",     get: r => STATE_ORDER[stateOf(r)] ?? 9, cls: "state",
     html: r => {
-      const s = stateOf(r), v0 = selState(s);   // 연락함·진행중은 색으로만 구분, 선택지는 셋
+      /* 연락함·진행중(자동)은 현재 상태를 보여주고 "미처리로" 되돌림 옵션을 붙인다 —
+         실수로 ✉ 를 눌렀거나 메모 자동 승격을 취소할 길이 있어야 한다 */
+      const s = stateOf(r), auto = s === "contact" || s === "prog";
+      const opts = auto
+        ? [[s, STATE_LABEL[s]], ["bid", "입찰 (미처리로)"], ["done", "거래완료"], ["drop", "취소"]]
+        : Object.entries(SEL_STATE_LABEL);
+      const v0 = auto ? s : selState(s);
       return `<select class="stsel ${s}" data-uid="${esc(r.uid)}">` +
-        Object.entries(SEL_STATE_LABEL).map(([k, v]) =>
+        opts.map(([k, v]) =>
           `<option value="${k}" ${v0 === k ? "selected" : ""}>${v}</option>`).join("") + `</select>`;
     } },
   { k: "act",   label: "수정", get: () => "", cls: "act",
@@ -338,11 +344,10 @@ function renderGrid() {
       setOV(uid, { state: next });
       renderGrid(); renderStats();
       /* 상태는 입찰 한 건 단위로 시트에 남겨야 한다.
-         예전에는 '취소'만 저장해서, 거래완료로 바꿔도 새로고침하면 사라지고
-         품목명 단위 폴백으로 떨어져 같은 품목의 다른 입찰까지 거래완료로 보였다.
-         'bid' 는 기본값이므로 빈 값으로 저장해 행을 지운다. */
-      pushOverride("state", uid, next === "bid" ? "" : next,
-        `${row.name} ${STATE_LABEL[next] || next}`);
+         'bid' 도 이제 명시적으로 저장한다 — 미처리로 되돌린 건이 다른 기기에서
+         메모 자동 승격(promoteNoted)으로 다시 진행중이 되지 않게 하기 위해서다. */
+      pushOverride("state", uid, next,
+        `${row.name} ${next === "bid" ? "미처리로 되돌림" : (STATE_LABEL[next] || next)}`);
       pushStatus(row.rs.name,
         sel.value === "done" && (remain == null || remain === 0) ? "sold" : "sale",
         { sku: row.rs.sku, remain, skip: row.rs.settle || row.rs.matched === false });
