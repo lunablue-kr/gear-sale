@@ -1,11 +1,8 @@
 const COLS = [
   { k: "item",  label: "품목",     get: r => r.rs.name, cls: "item",
     html: r => (r.rs.settle ? `<span class="tag settle">정산</span>` : "") +
+               (r.rs.num ? `<span class="pnum" title="${esc(r.rs.cat || "")}">${r.rs.num}</span>` : "") +
                `${esc(r.rs.name)}${r.rs.split ? `<span class="tag split">번호분리</span>` : ""}` },
-  { k: "cat",   label: "카테고리", get: r => r.rs.cat, cls: "hide-m" },
-  { k: "num",   label: "번호",     get: r => r.rs.num, cls: "num hide-m" },
-  { k: "ask",   label: "희망가",   get: r => r.rs.ask, cls: "money",
-    html: r => r.rs.ask ? won(r.rs.ask) + (r.rs.askUnit ? `<small>/${esc(r.rs.askUnit)}</small>` : "") : "—" },
   { k: "price", label: "입찰가 (차액)", get: r => +r.price || 0, cls: "money price",
     html: r => (r.price ? won(r.price) : `<span style="color:var(--sub)">미기재</span>`) +
       (r.edited ? `<span class="tag edited">수정</span>` : "") +
@@ -13,8 +10,8 @@ const COLS = [
         ? ` <span class="diff ${r.diff >= 0 ? "up" : "dn"}">${r.diff >= 0 ? "+" : "−"}${Number(Math.abs(r.diff)).toLocaleString()}</span>`
         : "") +
       (r.isTop && r.competing ? `<span class="tag top">최고가</span>` : "") },
-  { k: "qty",   label: "수량",    get: r => r.qty || 0, cls: "num",
-    html: r => r.qty ? (r.qty > 1 ? `<b>${r.qty}개</b>` : "1개") : "—" },
+  { k: "qty",   label: "수량",    get: r => r.qty || 1, cls: "num",
+    html: r => (r.qty || 1) > 1 ? `<b>${r.qty}개</b>` : "1개" },
   { k: "rank",  label: "순위",     get: r => r.rank, cls: "num",
     html: r => r.rank ? `${r.rank}${r.rank === 1 ? `<span class="tag r1">최선착</span>` : ""}` : "—" },
   { k: "who",   label: "입찰자",   get: r => r.name },
@@ -31,10 +28,10 @@ const COLS = [
     } },
   { k: "state", label: "상태",     get: r => STATE_ORDER[stateOf(r)] ?? 9, cls: "state",
     html: r => {
-      const s = stateOf(r);
+      const s = stateOf(r), v0 = selState(s);   // 연락함·진행중은 색으로만 구분, 선택지는 셋
       return `<select class="stsel ${s}" data-uid="${esc(r.uid)}">` +
-        Object.entries(STATE_LABEL).map(([k, v]) =>
-          `<option value="${k}" ${s === k ? "selected" : ""}>${v}</option>`).join("") + `</select>`;
+        Object.entries(SEL_STATE_LABEL).map(([k, v]) =>
+          `<option value="${k}" ${v0 === k ? "selected" : ""}>${v}</option>`).join("") + `</select>`;
     } },
   { k: "act",   label: "수정", get: () => "", cls: "act",
     html: r => PREVIEW ? "" :
@@ -49,7 +46,7 @@ const COLS = [
 
 // 열 순서 (뒤쪽): 메모 > 내 메모 > 상태 > 접수 > 수정
 {
-  const ORDER = ["item","cat","num","ask","price","qty","rank","who","contact","msg","note","state","ts","act"];
+  const ORDER = ["item","price","qty","rank","who","contact","msg","note","state","ts","act"];
   COLS.sort((a, b) => ORDER.indexOf(a.k) - ORDER.indexOf(b.k));
 }
 
@@ -87,7 +84,7 @@ function filtered(rows) {
   return rows.filter(r =>
     (!cat || r.rs.catKey === cat) &&
     (!who || r.name === who) &&
-    (!st || stateOf(r) === st) &&
+    (!st || (st === "active" ? !["done", "drop"].includes(stateOf(r)) : stateOf(r) === st)) &&
     (!q || (r.rs.name + " " + r.item + " " + r.name + " " + r.contact + " " + r.rs.cat)
       .toLowerCase().includes(q)));
 }
@@ -101,7 +98,9 @@ function fillSelects(rows) {
   cs.length = 1; ws.length = 1;
   const cats = [...new Set(rows.map(r => r.rs.catKey))].filter(Boolean);
   cats.forEach(c => cs.insertAdjacentHTML("beforeend", `<option value="${c}">${esc(CATS[c] || c)}</option>`));
-  [...new Set(rows.map(r => r.name))].filter(Boolean).sort((a, b) => a.localeCompare(b, "ko"))
+  /* 입찰자 목록엔 진행중(완료·취소 제외) 입찰이 있는 사람만 */
+  [...new Set(rows.filter(r => !["done", "drop"].includes(stateOf(r))).map(r => r.name))]
+    .filter(Boolean).sort((a, b) => a.localeCompare(b, "ko"))
     .forEach(n => ws.insertAdjacentHTML("beforeend", `<option value="${esc(n)}">${esc(n)}</option>`));
   cs.value = keepC; ws.value = keepW;      // 고르던 필터 복원
 }
@@ -208,7 +207,7 @@ function renderGrid() {
   // 메모 카드는 바깥을 누르거나 표를 스크롤하면 닫힘
   if (!window.__notepopBound) {
     window.__notepopBound = true;
-    document.addEventListener("click", e => { if (!e.target.closest("td.note, td.msg, #notepop")) closeNotePop(); });
+    document.addEventListener("click", e => { if (!e.target.closest("td.note, td.msg, td.price, #notepop")) closeNotePop(); });
     document.addEventListener("keydown", e => { if (e.key === "Escape") closeNotePop(); });
     window.addEventListener("scroll", closeNotePop, true);
   }
@@ -250,8 +249,13 @@ function renderGrid() {
       const d = String(r.contact || "").replace(/[^\d]/g, "");
       const phone = /^1\d{9}$/.test(d) ? "0" + d : (/^01\d{8,9}$/.test(d) ? d : null);
       const ios = /iPhone|iPad|iPod/i.test(navigator.userAgent);
-      if (phone && (ios || /Android/i.test(navigator.userAgent))) {
-        location.href = "sms:" + phone + (ios ? "&" : "?") + "body=" + encodeURIComponent(msg);
+      const android = /Android/i.test(navigator.userAgent);
+      const mac = !ios && /Mac/i.test(navigator.userAgent);   // 맥은 메시지 앱이 sms: 를 받는다
+      if (phone && (ios || android || mac)) {
+        // 맥 메시지 앱은 본문(body)을 무시하는 버전이 있어 클립보드에도 같이 넣어둔다
+        try { await navigator.clipboard.writeText(msg); } catch { /* 무시 */ }
+        location.href = "sms:" + phone + (android ? "?" : "&") + "body=" + encodeURIComponent(msg);
+        if (mac) syncFlag(`메시지 앱 열림 · 본문이 안 채워지면 붙여넣기 (복사해뒀어요)`, "ok");
       } else {
         try {
           await navigator.clipboard.writeText(msg);
@@ -314,7 +318,7 @@ function renderGrid() {
       const uid = sel.dataset.uid, row = ROWMAP.get(uid);
       if (sel.value === "drop") {          // 취소는 확인을 거쳐야 하므로 따로 처리
         if (!row) return;
-        sel.value = stateOf(row);          // 확인창을 접으면 원래 상태로 되돌림
+        sel.value = selState(stateOf(row));   // 확인창을 접으면 원래 상태로 되돌림
         await cancelBid(row);
         return;
       }
@@ -325,7 +329,7 @@ function renderGrid() {
       if (sel.value === "done" && total > 1) {
         const cur = it.remain != null ? it.remain : total;
         const ans = prompt(`${row.rs.name}\n\n지금 ${cur}개 남아 있어요. 몇 개 파셨나요?\n(전부면 ${cur} 입력)`, String(cur));
-        if (ans === null) { sel.value = stateOf(row); return; }     // 취소하면 상태를 되돌린다
+        if (ans === null) { sel.value = selState(stateOf(row)); return; }   // 취소하면 상태를 되돌린다
         const sold = Math.max(0, Math.min(cur, parseInt(ans, 10) || 0));
         remain = cur - sold;
         it.remain = remain;
@@ -346,13 +350,24 @@ function renderGrid() {
     sel.onclick = e => e.stopPropagation();
   });
 
-  // 입찰가 수정: 칸 클릭 → 입력창, Enter/포커스아웃 저장, Esc 취소
+  // 연락처 칸 아무 데나 눌러도 ✉ 와 같게
+  document.querySelectorAll("table.grid td[data-k='contact']").forEach(td => {
+    td.onclick = e => {
+      const b = td.querySelector(".bcontact");
+      if (b && !e.target.closest(".bcontact")) b.click();
+    };
+  });
+
+  // 입찰가 수정: 칸 클릭 → 입력창 + 원래 희망가 힌트, Enter/포커스아웃 저장, Esc 취소
   document.querySelectorAll("table.grid td.price").forEach(td => {
     td.onclick = () => {
       if (td.querySelector("input")) return;
       const uid = td.dataset.uid, row = ROWMAP.get(uid);
       if (!row) return;
-      td.innerHTML = `<input class="pedit" value="${esc(row.price || "")}" inputmode="numeric">`;
+      td.innerHTML = `<input class="pedit" value="${esc(row.price || "")}" inputmode="numeric" placeholder="${row.rs.ask || ""}">`;
+      openNotePop(td, `희망가 ${row.rs.ask
+        ? won(row.rs.ask) + (row.rs.askUnit ? `/${row.rs.askUnit}` : "")
+        : "미정"} · Enter 저장 · Esc 취소`);
       const inp = td.querySelector("input");
       inp.focus(); inp.select();
       let closed = false;
@@ -370,6 +385,40 @@ function renderGrid() {
       };
     };
   });
+  // 수량 수정: 칸 클릭 → 입력창 (입찰가와 같은 방식, 시트 H열에 저장)
+  document.querySelectorAll("table.grid td[data-k='qty']").forEach(td => {
+    td.onclick = () => {
+      if (PREVIEW || td.querySelector("input")) return;
+      const row = ROWMAP.get(td.dataset.uid);
+      if (!row) return;
+      td.innerHTML = `<input class="pedit" style="width:40px" value="${row.qty || 1}" inputmode="numeric">`;
+      const inp = td.querySelector("input");
+      inp.focus(); inp.select();
+      let closed = false;
+      const commit = async () => {
+        if (closed) return; closed = true;
+        const q = Math.max(1, Math.min(99, parseInt(inp.value, 10) || 1));
+        if (q === (row.qty || 1)) { renderGrid(); return; }
+        row.qty = q;
+        renderGrid(); renderStats();
+        try {
+          const pw = adminPw();
+          if (!pw) { syncFlag("시트 미저장 (비밀번호 없음) — 새로고침하면 되돌아가요", "err"); return; }
+          await callSheet({ action: "editBid", pw, op: "update", row: row.row,
+            bid: { ts: row.ts, name: row.name, contact: row.contact, item: row.item,
+                   price: row.rawPrice ?? row.price, message: row.message, qty: q },
+            expect: { name: row.name, item: row.item } });
+          syncFlag(`수량 저장됨 · ${row.rs.name} ${q}개`, "ok");
+        } catch (e) { syncFlag("수량 저장 실패: " + e.message, "err"); }
+      };
+      inp.onblur = commit;
+      inp.onkeydown = e => {
+        if (e.key === "Enter") { e.preventDefault(); commit(); }
+        if (e.key === "Escape") { closed = true; renderGrid(); }
+      };
+    };
+  });
+
   document.querySelectorAll("table.grid tbody tr[data-uid]").forEach(row => {
     row.querySelector(".cb").onclick = e => {
       e.stopPropagation();
@@ -488,12 +537,18 @@ function renderCards() {
   const sortBy = document.getElementById("sort").value;
   const map = group(BIDS);
 
-  let groups = [...map.entries()].map(([key, list]) => ({
-    key, list, rs: list[0].resolved,
-    item: list[0].resolved.name,
-    max: Math.max(...list.map(b => +b.price || 0)),
-    last: Math.max(...list.map(b => Date.parse(b.ts) || b.row)),
-  }));
+  /* 카드 보기에도 상태 필터 적용 — 기본은 완료·취소 숨김 (표와 동일) */
+  const st = PREVIEW ? "" : document.getElementById("state").value;
+  const stOK = b => !st || (st === "active" ? !["done", "drop"].includes(stateOf(b)) : stateOf(b) === st);
+  let groups = [...map.entries()]
+    .map(([key, list]) => ({ key, list: list.filter(stOK) }))
+    .filter(g => g.list.length)
+    .map(({ key, list }) => ({
+      key, list, rs: list[0].resolved,
+      item: list[0].resolved.name,
+      max: Math.max(...list.map(b => +b.price || 0)),
+      last: Math.max(...list.map(b => Date.parse(b.ts) || b.row)),
+    }));
 
   if (q) groups = groups.filter(g =>
     (g.item + " " + g.list[0].item + " " + (g.rs.cat || "")).toLowerCase().includes(q) ||

@@ -274,9 +274,35 @@
 select.stsel.bid     { border-color: #e2b4ab; color: #b04a3a; }
 select.stsel.contact { border-color: #e8d5a8; color: #8a6510; background: #fdf8ec; }
 select.stsel.prog    { border-color: #a9c4e2; color: #2b5c8f; background: #f0f6fc; }
-tr.st-bid td.item    { box-shadow: inset 3px 0 0 #e8b0a6; }   /* 미처리 표시선 */
-tr.st-contact td.item{ box-shadow: inset 3px 0 0 #e8d5a8; }
-tr.st-prog td.item   { box-shadow: inset 3px 0 0 #a9c4e2; }
+/* 품목 셀 채우기 — 진행 상태를 색으로 구분 (완료·취소는 채우지 않음) */
+tr.st-bid td.item,     table.grid tbody tr.st-bid:hover td.item     { background: #fbeeec; }
+tr.st-contact td.item, table.grid tbody tr.st-contact:hover td.item { background: #fdf6dd; }
+tr.st-prog td.item,    table.grid tbody tr.st-prog:hover td.item    { background: #e9f2fb; }
+
+/* 색 설명 줄 */
+#legend { font-size: 12px; color: var(--sub); margin: 2px 0 10px; }
+#legend i { display: inline-block; width: 11px; height: 11px; border-radius: 3px;
+  border: 1px solid var(--line); vertical-align: -1px; margin: 0 3px 0 8px; }
+#legend i:first-child { margin-left: 0; }
+#legend .lg-bid { background: #fbeeec; }
+#legend .lg-contact { background: #fdf6dd; }
+#legend .lg-prog { background: #e9f2fb; }
+
+/* 일정 보기 (내 메모의 날짜) */
+#schedpop { position: fixed; inset: 0; background: rgba(30,30,28,.4); display: none;
+  align-items: flex-start; justify-content: center; z-index: 60; padding: 60px 14px 20px; }
+#schedpop.show { display: flex; }
+#schedpop .box { background: var(--card); border-radius: 14px; padding: 18px 18px 12px;
+  width: 100%; max-width: 480px; max-height: 78vh; overflow: auto; }
+#schedpop h3 { margin: 0 0 4px; font-size: 16px; }
+#schedpop .hint { font-size: 12px; color: var(--sub); margin-bottom: 10px; }
+#schedpop .srow { display: flex; gap: 10px; padding: 9px 2px; border-top: 1px solid var(--line);
+  font-size: 13.5px; align-items: baseline; }
+#schedpop .swhen { flex: 0 0 96px; font-weight: 700; white-space: nowrap; }
+#schedpop .swhen.past { color: var(--sub); font-weight: 400; text-decoration: line-through; }
+#schedpop .swhen.none { color: var(--sub); font-weight: 400; }
+#schedpop .swho b { margin-right: 6px; }
+#schedpop .snote { color: var(--sub); font-size: 12.5px; margin-top: 2px; }
 
 button.bcontact {
   border: 1px solid var(--line); background: var(--card); border-radius: 6px;

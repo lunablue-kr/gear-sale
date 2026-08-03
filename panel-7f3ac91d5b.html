@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="noindex, nofollow">
 <title>입찰 현황 — 관리자</title>
-<link rel="stylesheet" href="assets/css/panel.css">
+<link rel="stylesheet" href="assets/css/panel.css?v=25">
 </head>
 <body>
 
@@ -36,15 +36,13 @@
       <select id="cat"><option value="">전체 카테고리</option></select>
       <select id="who"><option value="">전체 입찰자</option></select>
       <span id="quickfil">
-        <button data-st="bid">미처리</button><button data-st="contact">연락함</button><button data-st="prog">진행중</button><button data-st="">전체</button>
+        <button data-st="active" class="on">진행중</button><button data-st="done">완료</button><button data-st="drop">취소</button><button data-st="">전체</button>
       </span>
       <select id="state">
+        <option value="active" selected>진행중 (기본)</option>
         <option value="">전체 상태</option>
-        <option value="bid">입찰 (미처리)</option>
-        <option value="contact">연락함</option>
-        <option value="prog">거래 진행중</option>
         <option value="done">거래완료</option>
-        <option value="drop">취소 (입찰 삭제)</option>
+        <option value="drop">취소</option>
       </select>
       <select id="group">
         <option value="none">그룹 없음</option>
@@ -58,6 +56,7 @@
         <option value="name">품목 이름순</option>
       </select>
       <button class="ghost" id="addbid">+ 입찰 추가</button>
+      <button class="ghost" id="sched">📅 일정</button>
       <button class="ghost" id="view">카드로 보기</button>
       <button class="ghost" id="export">백업 텍스트 복사</button>
       <button class="ghost" id="reload">새로고침</button>
@@ -69,6 +68,7 @@
     <div id="banner" class="hide"></div>
     <div id="syncmsg" class="syncmsg"></div>
     <div class="stats" id="stats"></div>
+    <div id="legend"><i class="lg-bid"></i>미처리 <i class="lg-contact"></i>연락함 <i class="lg-prog"></i>진행중 (메모 있음) <span>· 완료·취소 건은 위 필터에서</span></div>
     <div id="grid"></div>
     <div id="list" class="hide"></div>
     <details class="raw">
@@ -90,8 +90,10 @@
       </div>
       <div class="two">
         <div><label>금액</label><input id="bm-price" inputmode="numeric" placeholder="50000"></div>
-        <div><label>접수 시각</label><input id="bm-ts" placeholder="2026-07-14 12:58:52"></div>
+        <div style="flex:0 0 76px"><label>수량</label><input id="bm-qty" inputmode="numeric" value="1"></div>
       </div>
+      <label>접수 시각</label>
+      <input id="bm-ts" placeholder="2026-07-14 12:58:52">
       <label>메모</label>
       <input id="bm-msg" placeholder="선택">
       <div class="msg" id="bm-msg-out"></div>
@@ -126,9 +128,9 @@
 <script src="data/items.js"></script>
 <!-- 로컬 전용 입찰 스냅샷 (.gitignore — 배포본엔 없음, 없으면 조용히 무시됨) -->
 <script src="data/bids-local.js" onerror="void 0"></script>
-<script src="assets/js/panel-data.js"></script>
-<script src="assets/js/panel-sheet.js"></script>
-<script src="assets/js/panel-view.js"></script>
-<script src="assets/js/panel-app.js"></script>
+<script src="assets/js/panel-data.js?v=25"></script>
+<script src="assets/js/panel-sheet.js?v=25"></script>
+<script src="assets/js/panel-view.js?v=25"></script>
+<script src="assets/js/panel-app.js?v=25"></script>
 </body>
 </html>

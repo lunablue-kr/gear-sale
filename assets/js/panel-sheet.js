@@ -8,6 +8,9 @@ let VIEW = "grid", SORT = { col: "ts", dir: -1 }, SEL = new Set();   // 기본: 
    ============================================================ */
 const STATE_LABEL = { bid: "입찰", contact: "연락함", prog: "거래 진행중", done: "거래완료", drop: "취소 (입찰 삭제)" };
 const STATE_ORDER = { bid: 0, contact: 1, prog: 2, done: 3, drop: 4 };
+/* 표의 상태 선택지는 셋만 — 연락함·진행중은 자동(✉·메모)이라 색으로만 구분 */
+const SEL_STATE_LABEL = { bid: "입찰", done: "거래완료", drop: "취소" };
+const selState = s => (s === "contact" || s === "prog") ? "bid" : s;
 const OV_KEY = "gearAdminOverrides", NOTE_KEY = "gearAdminNotes";
 let OV = {}, NOTES = {};
 try { OV = JSON.parse(localStorage.getItem(OV_KEY) || "{}"); } catch { OV = {}; }
@@ -127,7 +130,7 @@ async function pushStatus(itemName, status, opt) {
 /* 메모 카드 — 표가 overflow:auto 라 셀 안에 두면 잘려서, 화면에 고정으로 띄운다 */
 function closeNotePop() {
   document.getElementById("notepop")?.classList.remove("show");
-  document.querySelectorAll("td.note.open, td.msg.open").forEach(o => o.classList.remove("open"));
+  document.querySelectorAll("td.note.open, td.msg.open, td.price.open").forEach(o => o.classList.remove("open"));
 }
 function openNotePop(td, text) {
   let pop = document.getElementById("notepop");
@@ -202,6 +205,20 @@ function migrateOV(obj) {
   const out = {};
   Object.entries(obj || {}).forEach(([k, v]) => { out[migrateUid(k)] = v; });
   return out;
+}
+
+/* 메모가 있는 입찰자의 미처리·연락함 건은 진행중으로 올린다.
+   (메모 저장 때 자동으로 되지만, 그 전에 적어둔 메모를 일괄 이관하는 용도) */
+function promoteNoted() {
+  let n = 0;
+  const canPush = !!sessionStorage.getItem("adminPw");
+  [...ROWMAP.values()].forEach(b => {
+    if (!noteOf(b) || !["bid", "contact"].includes(stateOf(b))) return;
+    setOV(b.uid, { state: "prog" });
+    if (canPush) pushOverride("state", b.uid, "prog", `${b.name} 진행중`);
+    n++;
+  });
+  return n;
 }
 
 function setOV(uid, patch) {

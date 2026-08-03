@@ -58,7 +58,8 @@ async function previewMode() {
     b.innerHTML = `<b>미리보기 모드</b> — 공개 데이터로 <b>예약된 품목 ${BIDS.length}개</b>만 표시 중입니다.
       입찰자 이름·연락처·금액·순위는 Apps Script에 <code>adminBids_</code> 설치 후 비밀번호로 들어와야 보여요.`;
     document.getElementById("sort").value = "name";
-    ["addbid", "export"].forEach(id => document.getElementById(id)?.classList.add("hide"));
+    document.getElementById("state").value = "";   // 미리보기엔 상태 정보가 없어 기본 필터를 푼다
+    ["addbid", "export", "sched"].forEach(id => document.getElementById(id)?.classList.add("hide"));
     render(); document.getElementById("raw").innerHTML = "<p style='font-size:13px;color:var(--sub)'>미리보기 모드에선 원본 데이터를 불러올 수 없어요.</p>";
   } catch (e) {
     msg.textContent = "불러오지 못했어요: " + e.message; msg.className = "err";
@@ -71,6 +72,7 @@ async function refreshFromSheet() {
   const gotOv = await pullOverrides();
   BIDS.forEach(b => { if (b.rawPrice !== undefined) b.price = b.rawPrice; });  // 덮어쓴 값 초기화 후 재적용
   render();                       // 카드 보기에서도 반영되도록 (renderGrid 만 부르면 표만 갱신됨)
+  if (promoteNoted()) render();   // 메모 있는 입찰자는 진행중으로 (예전 메모 일괄 이관)
   if (gotStatus && gotOv) syncFlag("시트에서 최신 내용 불러옴", "ok");
   else if (gotStatus) syncFlag("판매상태만 갱신됨 (금액·메모는 비밀번호 필요)", "");
   else syncFlag("시트 조회 실패 — 로컬 저장분으로 표시 중", "err");
@@ -94,13 +96,6 @@ function localMode() {
   render();
   // 시트에 저장된 판매상태·금액수정·거래메모를 가져와 반영 (다른 기기 포함)
   refreshFromSheet();
-  document.querySelectorAll("#quickfil button").forEach(b => {
-    b.onclick = () => {
-      document.getElementById("state").value = b.dataset.st;
-      document.querySelectorAll("#quickfil button").forEach(x => x.classList.toggle("on", x === b && b.dataset.st !== ""));
-      render();
-    };
-  });
   document.getElementById("reload").onclick = async () => {
     const b = document.getElementById("reload");
     b.disabled = true; b.textContent = "불러오는 중…";
@@ -134,6 +129,7 @@ function openBidModal(row) {
   document.getElementById("bm-name").value    = src ? src.name : "";
   document.getElementById("bm-contact").value = src ? src.contact : "";
   document.getElementById("bm-price").value   = src ? (src.rawPrice ?? src.price ?? "") : "";
+  document.getElementById("bm-qty").value     = src ? (src.qty || 1) : 1;
   document.getElementById("bm-ts").value      = src ? src.ts : "";
   document.getElementById("bm-msg").value     = src ? src.message : "";
   document.getElementById("bm-msg-out").textContent = "";
@@ -155,6 +151,7 @@ async function saveBid() {
     name: document.getElementById("bm-name").value.trim(),
     contact: document.getElementById("bm-contact").value.trim(),
     price: document.getElementById("bm-price").value.replace(/[^\d]/g, ""),
+    qty: Math.max(1, Math.min(99, parseInt(document.getElementById("bm-qty").value, 10) || 1)),
     ts: document.getElementById("bm-ts").value.trim(),
     message: document.getElementById("bm-msg").value.trim(),
   };
@@ -222,6 +219,74 @@ document.getElementById("bidmodal").addEventListener("click", e => {
 });
 
 document.getElementById("state").onchange = render;
+/* 퀵필터 — 진행중(기본)·완료·취소·전체 (서버 모드에서도 동작해야 해서 여기서 묶는다) */
+document.querySelectorAll("#quickfil button").forEach(b => {
+  b.onclick = () => {
+    document.getElementById("state").value = b.dataset.st;
+    document.querySelectorAll("#quickfil button").forEach(x =>
+      x.classList.toggle("on", x === b && b.dataset.st !== ""));
+    render();
+  };
+});
+
+/* ============================================================
+   일정 보기 — 내 메모에 적힌 날짜(8/5, 8월 5일, 3시 …)를 뽑아 시간순 정리
+   ============================================================ */
+function parseWhen(t) {
+  const s = String(t || "");
+  const m = s.match(/(\d{1,2})\s*[\/월.]\s*(\d{1,2})\s*일?/);
+  if (!m) return null;
+  const now = new Date();
+  const d = new Date(now.getFullYear(), +m[1] - 1, +m[2], 23, 59, 0, 0);  // 시각 없으면 그날 끝으로
+  const h = s.match(/(오전|오후|저녁|밤)?\s*(\d{1,2})\s*시(?:\s*(\d{1,2})\s*분)?/) ||
+            s.match(/()(\d{1,2}):(\d{2})/);
+  if (h) {
+    let hh = +h[2];
+    const pm = /오후|저녁|밤/.test(h[1] || "");
+    // 표기 없는 1~8시는 오후로 본다 (새벽 거래는 없으니까)
+    if (hh < 12 && (pm || (!/오전/.test(h[1] || "") && hh <= 8))) hh += 12;
+    d.setHours(hh, +h[3] || 0, 0, 0);
+  }
+  return d;
+}
+
+function openSched() {
+  buildRows();                                   // ROWMAP 최신화
+  const rows = [...ROWMAP.values()];
+  const DAY = ["일", "월", "화", "수", "목", "금", "토"];
+  const fmt = d => `${d.getMonth() + 1}/${d.getDate()}(${DAY[d.getDay()]})` +
+    (d.getHours() === 23 && d.getMinutes() === 59 ? "" :
+      ` ${d.getHours()}시${d.getMinutes() ? String(d.getMinutes()).padStart(2, "0") + "분" : ""}`);
+
+  const list = Object.entries(NOTES).map(([k, note]) => {
+    const mine = rows.filter(b => noteKey(b) === k && !["done", "drop"].includes(stateOf(b)));
+    const uniq = new Map();
+    mine.forEach(b => uniq.set(b.row + "|" + b.name, b));
+    const sum = [...uniq.values()].reduce((s, b) => s + (+b.price || 0), 0);
+    return { name: k.split("|")[0], note, when: parseWhen(note), count: uniq.size, sum };
+  });
+  const now = new Date();
+  list.sort((a, b) => (a.when ? a.when.getTime() : Infinity) - (b.when ? b.when.getTime() : Infinity));
+
+  let el = document.getElementById("schedpop");
+  if (!el) {
+    el = document.createElement("div");
+    el.id = "schedpop";
+    document.body.appendChild(el);
+    el.onclick = e => { if (e.target === el) el.classList.remove("show"); };
+  }
+  const row = x => `<div class="srow">
+      <span class="swhen ${x.when ? (x.when < now ? "past" : "") : "none"}">${x.when ? fmt(x.when) : "날짜 없음"}</span>
+      <span class="swho"><b>${esc(x.name)}</b>${x.count ? `${x.count}건 · ${won(x.sum) || "₩0"}` : "완료·취소만"}
+        <div class="snote">${esc(x.note)}</div></span>
+    </div>`;
+  el.innerHTML = `<div class="box"><h3>거래 일정</h3>
+    <div class="hint">내 메모에서 날짜를 읽어요 — "8/5 3시 강남역"처럼 적으면 자동 정리 · 빈 곳 누르면 닫힘</div>
+    ${list.length ? list.map(row).join("") : `<div class="srow">아직 메모가 없어요.</div>`}</div>`;
+  el.classList.add("show");
+}
+document.getElementById("sched").onclick = openSched;
+
 document.getElementById("filtoggle").onclick = () => {
   const f = document.getElementById("filters");
   const on = f.classList.toggle("open");
