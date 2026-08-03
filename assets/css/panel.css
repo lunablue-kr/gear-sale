@@ -278,6 +278,10 @@ select.stsel.prog    { border-color: #a9c4e2; color: #2b5c8f; background: #f0f6f
 tr.st-contact td.item, table.grid tbody tr.st-contact:hover td.item { background: #fdf6dd; }
 tr.st-prog td.item,    table.grid tbody tr.st-prog:hover td.item    { background: #e9f2fb; }
 
+/* 선택 바 일괄 상태 변경 */
+#selstate { padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px;
+  font-size: 12.5px; background: var(--card); font-family: inherit; cursor: pointer; }
+
 /* 색 설명 줄 */
 #legend { font-size: 12px; color: var(--sub); margin: 2px 0 10px; }
 #legend i { display: inline-block; width: 11px; height: 11px; border-radius: 3px;

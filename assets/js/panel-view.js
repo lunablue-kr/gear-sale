@@ -464,11 +464,11 @@ function applySticky() {
   table.querySelectorAll("tr.grouphead td").forEach(td => { td.style.left = "0px"; });
 }
 
-/* 선택한 입찰 일괄 완료·취소 — 확인 한 번으로 전부 처리 */
+/* 선택한 입찰 일괄 상태 변경 (미처리·완료·취소) — 확인 한 번으로 전부 처리 */
 async function bulkApply(next, picked) {
-  const label = next === "done" ? "거래완료" : "취소";
-  const todo = picked.filter(r => stateOf(r) !== next);
-  if (!todo.length) { syncFlag(`선택한 건이 이미 전부 ${label} 상태예요`, ""); return; }
+  const label = { bid: "미처리로 되돌림", done: "거래완료", drop: "취소" }[next];
+  const todo = picked.filter(r => selState(stateOf(r)) !== next || (next === "bid" && stateOf(r) !== "bid"));
+  if (!todo.length) { syncFlag(`선택한 건이 이미 전부 그 상태예요`, ""); return; }
   const multiQty = next === "done"
     ? [...new Set(todo.filter(r => ((ITEMS.find(x => x.sku === r.rs.sku) || {}).qty || 1) > 1).map(r => r.rs.name))]
     : [];
@@ -485,13 +485,18 @@ async function bulkApply(next, picked) {
   todo.forEach(r => items.set(r.rs.sku || r.rs.name, r));
   for (const r of items.values()) {
     const skip = r.rs.settle || r.rs.matched === false;
+    const fullQty = (ITEMS.find(x => x.sku === r.rs.sku) || {}).qty || null;
     if (next === "done") {
       await pushStatus(r.rs.name, "sold", { sku: r.rs.sku, skip });
+    } else if (next === "bid") {
+      /* 완료였던 걸 미처리로 되돌리면 판매중 복원 — 단, 같은 품목에 아직 완료 입찰이 남아 있으면 그대로 */
+      const wasSold = SHEET_SOLD_SKU.has(r.rs.sku) || SHEET_SOLD.has(r.rs.name) || r.rs.status === "sold";
+      const hasDone = [...ROWMAP.values()].some(o => o.rs.name === r.rs.name && stateOf(o) === "done");
+      if (wasSold && !hasDone) await pushStatus(r.rs.name, "sale", { sku: r.rs.sku, remain: fullQty, skip });
     } else {
       const others = [...ROWMAP.values()]
         .filter(o => o.rs.name === r.rs.name && stateOf(o) !== "drop" && !isDropped(o));
-      if (!others.length) await pushStatus(r.rs.name, "sale",
-        { sku: r.rs.sku, remain: (ITEMS.find(x => x.sku === r.rs.sku) || {}).qty || null, skip });
+      if (!others.length) await pushStatus(r.rs.name, "sale", { sku: r.rs.sku, remain: fullQty, skip });
     }
   }
   SEL.clear();
@@ -502,8 +507,9 @@ async function bulkApply(next, picked) {
 function updateSelBar(all) {
   const bar = document.getElementById("selbar");
   const picked = all.filter(r => SEL.has(r.uid));
-  document.getElementById("seldone").onclick = () => bulkApply("done", picked);
-  document.getElementById("seldrop").onclick = () => bulkApply("drop", picked);
+  const ss = document.getElementById("selstate");
+  ss.value = "";
+  ss.onchange = () => { const v = ss.value; ss.value = ""; if (v) bulkApply(v, picked); };
   if (!picked.length) { bar.classList.add("hide"); document.body.style.paddingBottom = "60px"; return; }
   const sum = picked.filter((r,i,a)=>a.findIndex(x=>x.row===r.row&&x.name===r.name&&x.contact===r.contact)===i).reduce((s, r) => s + (+r.price || 0), 0);
   const askSum = picked.filter((r,i,a)=>a.findIndex(x=>x.rs.key===r.rs.key)===i).reduce((s, r) => s + (r.rs.ask || 0), 0);
