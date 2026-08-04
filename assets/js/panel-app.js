@@ -167,6 +167,8 @@ async function saveBid() {
     const before = EDIT_ROW ? [...ROWMAP.values()].find(b => b.row === EDIT_ROW) : null;
     const expect = before ? { name: before.name, item: before.rs.name } : null;
     await callSheet({ action: "editBid", pw, op: EDIT_ROW ? "update" : "add", row: EDIT_ROW, bid, expect });
+    /* 수량은 관리메모 경로로도 남긴다 — 시트 H열은 Apps Script 갱신 후에야 쓰인다 */
+    if (before && bid.qty !== (before.qty || 1)) await setQty(before.uid, bid.qty);
     closeBidModal();
     syncFlag(EDIT_ROW ? "입찰을 고쳤어요" : "입찰을 추가했어요", "ok");
     await reloadBids();

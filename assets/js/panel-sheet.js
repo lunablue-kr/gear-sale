@@ -21,6 +21,29 @@ const saveNotes = () => localStorage.setItem(NOTE_KEY, JSON.stringify(NOTES));
 
 /* 거래 메모는 입찰자 단위 (만날 시간·장소·거래 방법) */
 const noteKey = r => r.name + "|" + r.contact;
+
+/* 입찰 수량 보정값 — 시트 H열은 Apps Script 가 갱신될 때만 쓸 수 있어서,
+   갱신 전에도 수량 수정이 남도록 관리메모(note)에 'qty:<uid>' 키로 따로 저장한다.
+   메모 목록에 섞이지 않게 읽을 때 분리한다. */
+const QTY_PREFIX = "qty:", QTY_KEY = "gearAdminQty";
+let QTY = {};
+try { QTY = JSON.parse(localStorage.getItem(QTY_KEY) || "{}"); } catch { QTY = {}; }
+const saveQty = () => localStorage.setItem(QTY_KEY, JSON.stringify(QTY));
+const qtyOverride = uid => QTY[uid];
+function splitQtyFromNotes() {
+  Object.keys(NOTES).forEach(k => {
+    if (!k.startsWith(QTY_PREFIX)) return;
+    const n = parseInt(NOTES[k], 10);
+    if (n >= 1 && n <= 99) QTY[k.slice(QTY_PREFIX.length)] = n;
+    delete NOTES[k];
+  });
+  saveQty();
+}
+splitQtyFromNotes();          // 이전 버전이 NOTES 에 섞어 저장했을 수 있다
+function setQty(uid, q) {
+  QTY[uid] = q; saveQty();
+  return pushOverride("note", QTY_PREFIX + uid, String(q), `수량 ${q}개`);
+}
 const noteOf = r => NOTES[noteKey(r)] || "";
 function setNote(k, v) {
   if (v) NOTES[k] = v; else delete NOTES[k];
@@ -205,6 +228,8 @@ async function pullOverrides() {
       OV[k] = Object.assign({}, OV[k], { state: v });
     });
     NOTES = Object.assign({}, NOTES, d.note || {});
+    QTY = {};                     // 시트 값이 기준 (다른 기기에서 지운 것도 반영)
+    splitQtyFromNotes();
     saveOV(); saveNotes();
     return true;
   } catch (e) {

@@ -10,6 +10,8 @@ function buildRows() {
       if (b.rawPrice === undefined) b.rawPrice = b.price;   // 원본 보존
       b.price = priceOf(b);
       b.edited = b.price !== b.rawPrice;
+      if (b.rawQty === undefined) b.rawQty = b.qty;        // 시트 원본 수량 보존
+      b.qty = qtyOverride(b.uid) ?? b.rawQty;              // 어드민에서 고친 수량이 우선
     });
     const max = Math.max(...list.map(b => +b.price || 0));
     list.forEach(b => {
@@ -353,17 +355,12 @@ function renderGrid() {
         if (closed) return; closed = true;
         const q = Math.max(1, Math.min(99, parseInt(inp.value, 10) || 1));
         if (q === (row.qty || 1)) { renderGrid(); return; }
+        /* 관리메모 경로로 저장한다 — 입찰 시트 H열은 Apps Script 갱신이 있어야 쓰이고,
+           행을 통째로 덮어쓰는 editBid 는 그 사이 바뀐 값까지 날릴 위험이 있다. */
         row.qty = q;
         renderGrid(); renderStats();
-        try {
-          const pw = adminPw();
-          if (!pw) { syncFlag("시트 미저장 (비밀번호 없음) — 새로고침하면 되돌아가요", "err"); return; }
-          await callSheet({ action: "editBid", pw, op: "update", row: row.row,
-            bid: { ts: row.ts, name: row.name, contact: row.contact, item: row.item,
-                   price: row.rawPrice ?? row.price, message: row.message, qty: q },
-            expect: { name: row.name, item: row.item } });
-          syncFlag(`수량 저장됨 · ${row.rs.name} ${q}개`, "ok");
-        } catch (e) { syncFlag("수량 저장 실패: " + e.message, "err"); }
+        await setQty(row.uid, q);
+        syncFlag(`수량 저장됨 · ${row.rs.name} ${q}개`, "ok");
       };
       inp.onblur = commit;
       inp.onkeydown = e => {
