@@ -16,25 +16,16 @@ function qtyOf(rs) {
   const total = it.qty || 1;
   return { total, remain: it.remain != null ? it.remain : total };
 }
-/* 품목의 첫 행에만 붙는 요약 소줄: 진행중·연락함은 이름×수량, 미처리는 "대기 N명" */
+/* 품목의 첫 행에만 붙는 요약 소줄: 거래 진행중인 사람과 수량만 (나머지는 탭 팝업으로) */
 function briefHTML(r) {
   const key = r.rs.key;
   if (BRIEF_SEEN.has(key)) return "";
   BRIEF_SEEN.add(key);
-  const list = BRIEF.get(key) || [];
-  const act = list.filter(x => !["done", "drop"].includes(stateOf(x)));
-  const prog = act.filter(x => stateOf(x) === "prog");
-  const con = act.filter(x => stateOf(x) === "contact");
-  const wait = act.filter(x => stateOf(x) === "bid");
-  const { total, remain } = qtyOf(r.rs);
-  if (!prog.length && !con.length && total <= 1 && act.length <= 1) return "";
-  const nm = x => esc(x.name) + ((x.qty || 1) > 1 ? `×${x.qty}` : "");
-  const parts = [];
-  if (total > 1) parts.push(`${remain}/${total}개`);
-  prog.forEach(x => parts.push(`<i class="d d-prog"></i>${nm(x)}`));
-  con.forEach(x => parts.push(`<i class="d d-con"></i>${nm(x)}`));
-  if (wait.length) parts.push(`대기 ${wait.length}명`);
-  return parts.length ? `<span class="ibrief">${parts.join(" · ")}</span>` : "";
+  const prog = (BRIEF.get(key) || []).filter(x => stateOf(x) === "prog");
+  if (!prog.length) return "";
+  const parts = prog.map(x =>
+    `<i class="d d-prog"></i>${esc(x.name)} ${x.qty || 1}개`);
+  return `<span class="ibrief">${parts.join(" · ")}</span>`;
 }
 /* 품목 셀 탭 → 그 품목의 전체 현황 팝업 (순위·수량·상태·거래 메모) */
 function itemPopText(key) {
