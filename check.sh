@@ -18,7 +18,7 @@ var out=[], bad=0;
   if(b){bad++;out.push("   ✗ "+f+" "+b.slice(0,60));} else out.push("   ✓ "+f);
 });
 // 외부 JS (분리 후 여기가 본체다)
-["assets/js/panel-data.js","assets/js/panel-sheet.js","assets/js/panel-view.js","assets/js/panel-app.js",
+["assets/js/panel-data.js","assets/js/panel-sheet.js","assets/js/panel-cols.js","assets/js/panel-view.js","assets/js/panel-bulk.js","assets/js/panel-stats.js","assets/js/panel-app.js",
  "data/items.js","data/items-head.js","data/status-snapshot.js"].forEach(function(f){
   var src=rd(f);
   if(!src){ out.push("   ✗ "+f+" 없음"); bad++; return; }
@@ -27,8 +27,8 @@ var out=[], bad=0;
 });
 // 모듈을 로드 순서대로 이어붙여도 성립하는지 (선언 충돌·순서 문제)
 try {
-  var all=["panel-data","panel-sheet","panel-view","panel-app"].map(function(n){return rd("assets/js/"+n+".js");}).join("\n");
-  new Function(all); out.push("   ✓ 4개 모듈 결합");
+  var all=["panel-data","panel-sheet","panel-cols","panel-view","panel-bulk","panel-stats","panel-app"].map(function(n){return rd("assets/js/"+n+".js");}).join("\n");
+  new Function(all); out.push("   ✓ 7개 모듈 결합");
 } catch(e){ bad++; out.push("   ✗ 모듈 결합 "+String(e.message).slice(0,60)); }
 out.join("\n");'
 

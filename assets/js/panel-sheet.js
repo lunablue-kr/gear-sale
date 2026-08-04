@@ -126,6 +126,28 @@ async function pushStatus(itemName, status, opt) {
   }
 }
 
+/* 여러 품목의 판매상태를 한 번의 요청으로 반영 — 건별로 보내면 왕복(2~3초)이 건수만큼 쌓인다.
+   서버 setStatus 는 원래 items 배열을 받으므로 서버 수정 없이 배치가 된다. */
+async function pushStatusBatch(list) {
+  const send = list.filter(x => !x.skip);
+  if (!send.length) return;
+  const pw = adminPw();
+  if (!pw) { syncFlag("구매페이지 미반영 (비밀번호 없음)", "err"); return; }
+  syncFlag(`구매페이지에 반영 중… (${send.length}건)`);
+  try {
+    await callSheet({ action: "setStatus", pw, items: send.map(x => {
+      const it = { name: x.name, status: x.status };
+      if (x.sku) it.sku = x.sku;
+      if (x.remain != null) it.remain = x.remain;
+      return it;
+    }) });
+    syncFlag(`구매페이지 반영됨 · ${send.length}건`, "ok");
+  } catch (e) {
+    if (/비밀번호/.test(e.message)) sessionStorage.removeItem("adminPw");
+    syncFlag("구매페이지 반영 실패: " + e.message + " (로컬에는 저장됨)", "err");
+  }
+}
+
 /* 금액수정·거래메모를 시트에 저장 (기기·브라우저 바뀌어도 유지) */
 /* 메모 카드 — 표가 overflow:auto 라 셀 안에 두면 잘려서, 화면에 고정으로 띄운다 */
 function closeNotePop() {
