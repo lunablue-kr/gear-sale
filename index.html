@@ -147,11 +147,11 @@ function renderChips() {
   const el = document.getElementById("chips");
   const cats = [["all", "전체"], ...Object.entries(CATS)];
   // 보고 있던 분류가 다 팔려 칩이 사라지면 전체로 되돌린다
-  if (activeCat !== "all" && !ITEMS.some(i => i.cat === activeCat && i.status !== "sold"))
+  if (activeCat !== "all" && !ITEMS.some(i => !i.gone && i.cat === activeCat && i.status !== "sold"))
     activeCat = "all";
   el.innerHTML = cats.map(([k, label]) => {
     // 목록과 같은 기준으로 — 살 수 있는 것만 센다
-    const live = ITEMS.filter(i => i.status !== "sold" && (k === "all" || i.cat === k));
+    const live = ITEMS.filter(i => !i.gone && i.status !== "sold" && (k === "all" || i.cat === k));
     const n = live.length;
     if (!n) return "";                     // 다 팔린 분류는 칩도 감춘다
     return `<button class="chip ${activeCat === k ? "on" : ""}" data-cat="${k}">${label} ${n}</button>`;
@@ -160,7 +160,10 @@ function renderChips() {
     b.addEventListener("click", () => { activeCat = b.dataset.cat; renderChips(); renderList(); }));
 }
 
+/* gone: 판매 목록에서 내린 품목. 번호(num)가 카테고리 내 순번이라 배열에서 빼면
+   뒷번호가 전부 당겨져 옛 입찰과 어긋나므로, 데이터는 남기고 화면에서만 감춘다. */
 function matches(it) {
+  if (it.gone) return false;
   if (activeCat !== "all" && it.cat !== activeCat) return false;
   if (!query) return true;
   const q = query.toLowerCase();

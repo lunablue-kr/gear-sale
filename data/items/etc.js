@@ -4,7 +4,7 @@ P.etc = [
   { cat:"etc", sku:"etc-2", name:"코드릴 ×5 일괄", brand:"seise", qty:1, year:"", note:"seise HJR-4·HJR-2A · LUG 등 5개 일괄", ask:60000, askUnit:"일괄", imgs:["assets/loc_et2_1.jpg", "assets/loc_et2_2.jpg", "assets/loc_et2_3.jpg"], status:"sale" },
   { cat:"etc", sku:"etc-3", name:"3단 사다리", brand:"", qty:1, year:"", note:"", ask:5000, imgs:["assets/loc_et3_1.jpg"], status:"sold" },
   { cat:"etc", sku:"etc-4", name:"멀티탭 ×2", brand:"", qty:2, year:"", note:"", imgs:["assets/loc_et4_1.jpg"], status:"sale" },
-  { cat:"etc", sku:"etc-5", name:"도킹스테이션 (Lenovo USB-C 허브)", brand:"Lenovo", qty:1, year:"", note:"USB-C to USB 3.0 · SD/microSD 슬롯 + USB 3.0 ×3 · 모델 C605", imgs:["assets/loc_et5_1.jpg", "assets/loc_et5_2.jpg", "assets/loc_et5_3.jpg", "assets/loc_et5_4.jpg"], status:"sale" },
+  { cat:"etc", sku:"etc-5", name:"도킹스테이션 (Lenovo USB-C 허브)", brand:"Lenovo", qty:1, year:"", note:"USB-C to USB 3.0 · SD/microSD 슬롯 + USB 3.0 ×3 · 모델 C605", imgs:["assets/loc_et5_1.jpg", "assets/loc_et5_2.jpg", "assets/loc_et5_3.jpg", "assets/loc_et5_4.jpg"], gone:true, status:"sale" },
   { cat:"etc", sku:"etc-6", name:"메모리카드 리더기", brand:"", qty:1, year:"", note:"", status:"sale" },
   { cat:"etc", sku:"etc-7", name:"IpTIME AX2004 공유기", brand:"ipTIME", qty:1, year:"2023.09 구입", note:"", status:"sale" },
   { cat:"etc", sku:"etc-8", name:"Sanyo 충전지 세트 (AA ×7 · AAA ×8)", brand:"Sanyo", qty:1, year:"", note:"", status:"sale" },

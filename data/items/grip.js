@@ -10,7 +10,7 @@ P.grip = [
   { cat:"grip", sku:"grip-8", name:"Manfrotto Auto pole ×4", brand:"Manfrotto", qty:2, year:"", note:"연장 1세트만 남음 · 사진 속 그립 제외", ask:100000, imgs:["assets/loc_gr8_1.jpg"], status:"sale" },
   { cat:"grip", sku:"grip-9", name:"Manfrotto 카운터 웨이트 ×2", brand:"Manfrotto", qty:2, year:"", note:"무게 3파운드", ask:10000, askUnit:"개", imgs:["assets/loc_gr9_1.jpg", "assets/loc_gr9_2.jpg"], status:"sold" },
   { cat:"grip", sku:"grip-10", name:"A 클램프 ×4", brand:"", qty:4, year:"", note:"", ask:10000, askUnit:"일괄", imgs:["assets/loc_gr10_1.jpg", "assets/loc_gr10_2.jpg"], status:"sold" },
-  { cat:"grip", sku:"grip-11", name:"Manfrotto MT190XPRO3 삼각대", brand:"Manfrotto", qty:1, year:"", note:"", ask:120000, imgs:["assets/loc_gr11_1.jpg", "assets/loc_gr11_2.jpg"], status:"sale" },
+  { cat:"grip", sku:"grip-11", name:"Manfrotto MT190XPRO3 삼각대", brand:"Manfrotto", qty:1, year:"", note:"", ask:120000, imgs:["assets/loc_gr11_1.jpg", "assets/loc_gr11_2.jpg"], gone:true, status:"sale" },
   { cat:"grip", sku:"grip-12", name:"KUPO KCP-200 그립헤드 ×2", brand:"KUPO", qty:2, year:"", note:"", ask:25000, askUnit:"개", imgs:["assets/loc_gr13_1.jpg"], status:"sale" },
   { cat:"grip", sku:"grip-13", name:"KUPO 40인치 그립암 ×2", brand:"KUPO", qty:2, year:"", note:"KCP-241 (육각핀) / KCP-240 구성", ask:30000, askUnit:"개", imgs:["assets/loc_gr14_1.jpg"], status:"sale" },
   { cat:"grip", sku:"grip-14", name:"KUPO KCP-210 그립헤드 (고정핀)", brand:"KUPO", qty:1, year:"", note:"", ask:30000, imgs:["assets/loc_gr15_1.jpg"], status:"sale" },

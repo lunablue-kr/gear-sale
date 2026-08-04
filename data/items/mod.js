@@ -6,7 +6,7 @@ P.mod = [
   { cat:"mod", sku:"mod-4", name:"Aurora Jemball Diffuser JBL-80", brand:"Aurora", qty:1, year:"2022.01 구입", note:"내부 은박 까진 부분 있음 · 프로포토/보웬스 마운트 증정", ask:3000, imgs:["assets/loc_md4_1.jpg", "assets/loc_md4_2.jpg", "assets/loc_md4_3.jpg", "assets/loc_md4_4.jpg", "assets/loc_md4_5.jpg"], status:"sold" },
   { cat:"mod", sku:"mod-5", name:"7인치 허니컴 그리드 50°", brand:"", qty:1, year:"2021.06 구입", note:"", ask:1000, imgs:["assets/loc_md5_1.jpg", "assets/loc_md5_2.jpg"], status:"sold" },
   { cat:"mod", sku:"mod-6", name:"Profoto 7\" Grid Reflector", brand:"Profoto", qty:1, year:"2023.11 구입", note:"안쪽에 미세한 찍힘 있음", ask:80000, imgs:["assets/loc_md6_1.jpg", "assets/loc_md6_2.jpg"], status:"sale" },
-  { cat:"mod", sku:"mod-7", name:"Aurora 원형 반사판 실버", brand:"Aurora", qty:1, year:"", note:"", imgs:["assets/loc_md7_1.jpg", "assets/loc_md7_2.jpg"], status:"sale" },
+  { cat:"mod", sku:"mod-7", name:"Aurora 원형 반사판 실버", brand:"Aurora", qty:1, year:"", note:"", imgs:["assets/loc_md7_1.jpg", "assets/loc_md7_2.jpg"], gone:true, status:"sale" },
   { cat:"mod", sku:"mod-8", name:"Aurora 원형 반사판 LD-60 S/W", brand:"Aurora", qty:1, year:"2024.12 구입", note:"", ask:3000, imgs:["assets/loc_md8_1.jpg", "assets/loc_md8_2.jpg"], status:"sale" },
   { cat:"mod", sku:"mod-9", name:"PERI Butterfly (240×240cm)", brand:"PERI", qty:1, year:"2019.06 구입", note:"스탠드 미포함 · 디퓨저 천 사용감 있음 · 전용 가방 있음", ask:250000, imgs:["assets/loc_md9_1.jpg"], status:"sold" },
   { cat:"mod", sku:"mod-10", name:"뷰티디쉬 Softlight Silver (프로포토)", brand:"Profoto", qty:1, year:"", note:"허니컴 + 디퓨저 포함 · 사용감 있음 · 가방 있음", ask:300000, imgs:["assets/loc_md10_1.jpg", "assets/loc_md10_2.jpg"], status:"sale" },
