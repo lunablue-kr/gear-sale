@@ -531,7 +531,7 @@ async function bulkApply(next, picked) {
     : [];
   if (!confirm(`선택 ${todo.length}건을 ${label} 처리할까요?` +
     (next === "drop" ? "\n(목록에는 취소 기록으로 남습니다)" : "") +
-    (multiQty.length ? `\n\n수량이 여러 개인 품목은 전량 판매완료로 처리돼요:\n· ${multiQty.join("\n· ")}\n부분 판매는 행별 상태 칸에서 따로 처리하세요.` : ""))) return;
+    (multiQty.length ? `\n\n수량이 여러 개인 품목은 입찰서의 수량만큼만 차감되고 나머지는 판매중으로 남아요:\n· ${multiQty.join("\n· ")}` : ""))) return;
 
   for (const r of todo) {
     setOV(r.uid, { state: next });
@@ -542,9 +542,18 @@ async function bulkApply(next, picked) {
   todo.forEach(r => items.set(r.rs.sku || r.rs.name, r));
   for (const r of items.values()) {
     const skip = r.rs.settle || r.rs.matched === false;
-    const fullQty = (ITEMS.find(x => x.sku === r.rs.sku) || {}).qty || null;
+    const it = ITEMS.find(x => x.sku === r.rs.sku) || {};
+    const fullQty = it.qty || null;
     if (next === "done") {
-      await pushStatus(r.rs.name, "sold", { sku: r.rs.sku, skip });
+      /* 입찰서의 수량만큼만 차감 — 2개 중 1개 거래면 1개는 판매중으로 남는다.
+         예전엔 무조건 전량 판매완료로 밀어서 남은 재고가 사라져 보였다. */
+      const total = it.qty || 1;
+      const soldQ = todo.filter(o => o.rs.key === r.rs.key).reduce((s2, o) => s2 + (o.qty || 1), 0);
+      const cur = it.remain != null ? it.remain : total;
+      const remain = Math.max(0, cur - soldQ);
+      if (total > 1) it.remain = remain;
+      await pushStatus(r.rs.name, remain === 0 ? "sold" : "sale",
+        { sku: r.rs.sku, remain: total > 1 ? remain : null, skip });
     } else if (next === "bid") {
       /* 완료였던 걸 미처리로 되돌리면 판매중 복원 — 단, 같은 품목에 아직 완료 입찰이 남아 있으면 그대로 */
       const wasSold = SHEET_SOLD_SKU.has(r.rs.sku) || SHEET_SOLD.has(r.rs.name) || r.rs.status === "sold";
