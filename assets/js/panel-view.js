@@ -1,7 +1,7 @@
 /* ---------- 품목 단위 거래 현황 (품목 셀 소줄 + 탭 팝업) ----------
    입찰자별·품목별 화면을 오가며 헷갈리지 않게, 품목 셀만 봐도
    "누구랑 몇 개 진행중인지" 보이게 한다. */
-let BRIEF = new Map(), BRIEF_SEEN = new Set();
+let BRIEF = new Map();
 function makeBrief(rows) {
   const m = new Map();
   rows.forEach(r => {
@@ -16,12 +16,10 @@ function qtyOf(rs) {
   const total = it.qty || 1;
   return { total, remain: it.remain != null ? it.remain : total };
 }
-/* 품목의 첫 행에만 붙는 요약 소줄: 거래 진행중인 사람과 수량만 (나머지는 탭 팝업으로) */
+/* 품목의 모든 행에 붙는 요약 소줄: 거래 진행중인 사람과 수량만 (나머지는 탭 팝업으로)
+   — 첫 행에만 붙이면 정렬·묶기에 따라 엉뚱한 곳에 가 있어서 매 행에 보여준다 */
 function briefHTML(r) {
-  const key = r.rs.key;
-  if (BRIEF_SEEN.has(key)) return "";
-  BRIEF_SEEN.add(key);
-  const prog = (BRIEF.get(key) || []).filter(x => stateOf(x) === "prog");
+  const prog = (BRIEF.get(r.rs.key) || []).filter(x => stateOf(x) === "prog");
   if (!prog.length) return "";
   const parts = prog.map(x =>
     `<i class="d d-prog"></i>${esc(x.name)} ${x.qty || 1}개`);
@@ -206,7 +204,6 @@ function renderGrid() {
   closeNotePop();          // 표를 새로 그리면 떠 있던 메모 카드는 닫는다
   const all = buildRows();
   BRIEF = makeBrief(all);  // 필터와 무관하게 품목 전체 현황을 요약한다
-  BRIEF_SEEN = new Set();
   fillSelects(all);
   let rows = filtered(all);
 
