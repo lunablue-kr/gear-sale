@@ -21,9 +21,18 @@ function qtyOf(rs) {
 function briefHTML(r) {
   const prog = (BRIEF.get(r.rs.key) || []).filter(x => stateOf(x) === "prog");
   if (!prog.length) return "";
-  const parts = prog.map(x =>
-    `<i class="d d-prog"></i>${esc(x.name)} ${x.qty || 1}개`);
-  return `<span class="ibrief">${parts.join(" · ")}</span>`;
+  /* 남은 수량을 넘는 건은 표기하지 않는다 (상태는 그대로 진행중) —
+     1개 남았는데 진행중 2명이면 앞순위 1명만 보여준다. */
+  const { remain } = qtyOf(r.rs);
+  const parts = [];
+  let used = 0;
+  for (const x of prog) {                    // BRIEF 는 순위순 정렬돼 있다
+    const q = x.qty || 1;
+    if (used + q > remain) continue;
+    used += q;
+    parts.push(`<i class="d d-prog"></i>${esc(x.name)} ${q}개`);
+  }
+  return parts.length ? `<span class="ibrief">${parts.join(" · ")}</span>` : "";
 }
 /* 품목 셀 탭 → 그 품목의 전체 현황 팝업 (순위·수량·상태·거래 메모) */
 function itemPopText(key) {
