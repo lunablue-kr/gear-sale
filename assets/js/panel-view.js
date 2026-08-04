@@ -1,8 +1,68 @@
+/* ---------- 품목 단위 거래 현황 (품목 셀 소줄 + 탭 팝업) ----------
+   입찰자별·품목별 화면을 오가며 헷갈리지 않게, 품목 셀만 봐도
+   "누구랑 몇 개 진행중인지" 보이게 한다. */
+let BRIEF = new Map(), BRIEF_SEEN = new Set();
+function makeBrief(rows) {
+  const m = new Map();
+  rows.forEach(r => {
+    if (!m.has(r.rs.key)) m.set(r.rs.key, []);
+    m.get(r.rs.key).push(r);
+  });
+  m.forEach(list => list.sort((a, b) => (a.rank || 99) - (b.rank || 99)));
+  return m;
+}
+function qtyOf(rs) {
+  const it = ITEMS.find(x => x.sku === rs.sku) || {};
+  const total = it.qty || 1;
+  return { total, remain: it.remain != null ? it.remain : total };
+}
+/* 품목의 첫 행에만 붙는 요약 소줄: 진행중·연락함은 이름×수량, 미처리는 "대기 N명" */
+function briefHTML(r) {
+  const key = r.rs.key;
+  if (BRIEF_SEEN.has(key)) return "";
+  BRIEF_SEEN.add(key);
+  const list = BRIEF.get(key) || [];
+  const act = list.filter(x => !["done", "drop"].includes(stateOf(x)));
+  const prog = act.filter(x => stateOf(x) === "prog");
+  const con = act.filter(x => stateOf(x) === "contact");
+  const wait = act.filter(x => stateOf(x) === "bid");
+  const { total, remain } = qtyOf(r.rs);
+  if (!prog.length && !con.length && total <= 1 && act.length <= 1) return "";
+  const nm = x => esc(x.name) + ((x.qty || 1) > 1 ? `×${x.qty}` : "");
+  const parts = [];
+  if (total > 1) parts.push(`${remain}/${total}개`);
+  prog.forEach(x => parts.push(`<i class="d d-prog"></i>${nm(x)}`));
+  con.forEach(x => parts.push(`<i class="d d-con"></i>${nm(x)}`));
+  if (wait.length) parts.push(`대기 ${wait.length}명`);
+  return parts.length ? `<span class="ibrief">${parts.join(" · ")}</span>` : "";
+}
+/* 품목 셀 탭 → 그 품목의 전체 현황 팝업 (순위·수량·상태·거래 메모) */
+function itemPopText(key) {
+  const list = BRIEF.get(key) || [];
+  if (!list.length) return "";
+  const lbl = { bid: "미처리", contact: "연락함", prog: "진행중", done: "판매완료" };
+  const { total, remain } = qtyOf(list[0].rs);
+  const L = [];
+  if (total > 1) L.push(`${total}개 중 ${remain}개 남음`);
+  list.forEach(x => {
+    const s = stateOf(x);
+    if (s === "drop") return;
+    const note = noteOf(x);
+    L.push(`${x.rank || "-"}순위 ${x.name} ×${x.qty || 1} — ${lbl[s] || s}` +
+      (x.price ? ` · ${won(x.price)}` : "") +
+      (note && s !== "done" ? `\n   📌 ${note}` : ""));
+  });
+  const drops = list.filter(x => stateOf(x) === "drop").length;
+  if (drops) L.push(`(취소 ${drops}건 제외)`);
+  return L.join("\n");
+}
+
 const COLS = [
   { k: "item",  label: "품목",     get: r => r.rs.name, cls: "item",
     html: r => (r.rs.settle ? `<span class="tag settle">정산</span>` : "") +
                (r.rs.num ? `<span class="pnum" title="${esc(r.rs.cat || "")}">${r.rs.num}</span>` : "") +
-               `${esc(r.rs.name)}${r.rs.split ? `<span class="tag split">번호분리</span>` : ""}` },
+               `${esc(r.rs.name)}${r.rs.split ? `<span class="tag split">번호분리</span>` : ""}` +
+               briefHTML(r) },
   { k: "price", label: "입찰가 (차액)", get: r => +r.price || 0, cls: "money price",
     html: r => (r.price ? won(r.price) : `<span style="color:var(--sub)">미기재</span>`) +
       (r.edited ? `<span class="tag edited">수정</span>` : "") +
@@ -154,6 +214,8 @@ function emptyGridHTML() {
 function renderGrid() {
   closeNotePop();          // 표를 새로 그리면 떠 있던 메모 카드는 닫는다
   const all = buildRows();
+  BRIEF = makeBrief(all);  // 필터와 무관하게 품목 전체 현황을 요약한다
+  BRIEF_SEEN = new Set();
   fillSelects(all);
   let rows = filtered(all);
 
@@ -213,7 +275,7 @@ function renderGrid() {
   // 메모 카드는 바깥을 누르거나 표를 스크롤하면 닫힘
   if (!window.__notepopBound) {
     window.__notepopBound = true;
-    document.addEventListener("click", e => { if (!e.target.closest("td.note, td.msg, td.price, #notepop")) closeNotePop(); });
+    document.addEventListener("click", e => { if (!e.target.closest("td.note, td.msg, td.price, td.item, #notepop")) closeNotePop(); });
     document.addEventListener("keydown", e => { if (e.key === "Escape") closeNotePop(); });
     window.addEventListener("scroll", closeNotePop, true);
   }
@@ -237,9 +299,16 @@ function renderGrid() {
     };
   });
 
-  // 모바일에서 좁게 줄인 품목 칸 — 누르면 전체 이름 표시
+  // 품목 칸 탭 → 이름 펼침 + 그 품목의 거래 현황 팝업 (누구랑 몇 개 진행중인지)
   document.querySelectorAll("table.grid td.item").forEach(td => {
-    td.onclick = () => td.classList.toggle("open");
+    td.onclick = () => {
+      const was = td.classList.contains("open");
+      closeNotePop();
+      if (was) return;
+      td.classList.add("open");
+      const row = ROWMAP.get(td.dataset.uid);
+      if (row) openNotePop(td, itemPopText(row.rs.key));
+    };
   });
 
   // 입찰 고치기 / 삭제

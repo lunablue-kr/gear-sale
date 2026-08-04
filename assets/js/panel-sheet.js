@@ -130,7 +130,7 @@ async function pushStatus(itemName, status, opt) {
 /* 메모 카드 — 표가 overflow:auto 라 셀 안에 두면 잘려서, 화면에 고정으로 띄운다 */
 function closeNotePop() {
   document.getElementById("notepop")?.classList.remove("show");
-  document.querySelectorAll("td.note.open, td.msg.open, td.price.open").forEach(o => o.classList.remove("open"));
+  document.querySelectorAll("td.note.open, td.msg.open, td.price.open, td.item.open").forEach(o => o.classList.remove("open"));
 }
 function openNotePop(td, text) {
   let pop = document.getElementById("notepop");

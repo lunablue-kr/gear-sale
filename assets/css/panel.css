@@ -282,6 +282,19 @@ tr.st-prog td.item,    table.grid tbody tr.st-prog:hover td.item    { background
 #selstate { padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px;
   font-size: 12.5px; background: var(--card); font-family: inherit; cursor: pointer; }
 
+/* 품목 셀 거래 현황 소줄 */
+.ibrief { display: block; font-size: 11px; font-weight: 400; color: var(--sub);
+  margin-top: 2px; line-height: 1.4; }
+.ibrief .d { display: inline-block; width: 7px; height: 7px; border-radius: 50%;
+  margin-right: 3px; vertical-align: 0; }
+.ibrief .d-prog { background: #5b8fc4; }
+.ibrief .d-con { background: #d9b24a; }
+table.grid td.item { cursor: pointer; }
+@media (max-width: 720px) {
+  /* 모바일 축소 상태에선 소줄 생략 — 탭하면 팝업으로 전체 확인 */
+  table.grid td.item.stick:not(.open) .ibrief { display: none; }
+}
+
 /* 색 설명 줄 */
 #legend { font-size: 12px; color: var(--sub); margin: 2px 0 10px; }
 #legend i { display: inline-block; width: 11px; height: 11px; border-radius: 3px;
