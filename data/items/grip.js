@@ -7,7 +7,7 @@ P.grip = [
   { cat:"grip", sku:"grip-5", name:"KUPO 021 2-IN-1 STAND", brand:"KUPO", qty:1, year:"", note:"", ask:70000, imgs:["assets/loc_gr5_1.jpg", "assets/loc_gr5_2.jpg", "assets/loc_gr5_3.jpg", "assets/loc_gr5_4.jpg"], status:"sale" },
   { cat:"grip", sku:"grip-6", name:"배경지 스탠드", brand:"", qty:1, year:"", note:"알리익스프레스 구매 · 브랜드 없음 · 아주 가벼움 · 배경지 거는 용도로만 사용", ask:3000, imgs:["assets/loc_gr6_1.jpg"], status:"sale" },
   { cat:"grip", sku:"grip-7", name:"Manfrotto 003M 미니 백라이트 베이스", brand:"Manfrotto", qty:1, year:"", note:"", ask:30000, imgs:["assets/loc_gr7_1.jpg"], status:"sale" },
-  { cat:"grip", sku:"grip-8", name:"Manfrotto Auto pole ×4", brand:"Manfrotto", qty:4, year:"", note:"기본 1세트 + 연장 1세트 · 사진 속 그립 제외 · 기본 7만 / 연장 10만", ask:70000, imgs:["assets/loc_gr8_1.jpg"], status:"sale" },
+  { cat:"grip", sku:"grip-8", name:"Manfrotto Auto pole ×4", brand:"Manfrotto", qty:2, year:"", note:"연장 1세트만 남음 · 사진 속 그립 제외", ask:100000, imgs:["assets/loc_gr8_1.jpg"], status:"sale" },
   { cat:"grip", sku:"grip-9", name:"Manfrotto 카운터 웨이트 ×2", brand:"Manfrotto", qty:2, year:"", note:"무게 3파운드", ask:10000, askUnit:"개", imgs:["assets/loc_gr9_1.jpg", "assets/loc_gr9_2.jpg"], status:"sold" },
   { cat:"grip", sku:"grip-10", name:"A 클램프 ×4", brand:"", qty:4, year:"", note:"", ask:10000, askUnit:"일괄", imgs:["assets/loc_gr10_1.jpg", "assets/loc_gr10_2.jpg"], status:"sold" },
   { cat:"grip", sku:"grip-11", name:"Manfrotto MT190XPRO3 삼각대", brand:"Manfrotto", qty:1, year:"", note:"", ask:120000, imgs:["assets/loc_gr11_1.jpg", "assets/loc_gr11_2.jpg"], status:"sale" },

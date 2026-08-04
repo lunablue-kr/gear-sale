@@ -132,6 +132,7 @@
   .badge.sale { background: var(--accent-soft); color: var(--accent); }
   .badge.hold { background: #e8730c; color: #fff; box-shadow: 0 0 0 2px #fbe0c4; }
   .badge.sold { background: #eee; color: #6a6a6a; }
+  .badge.qtyb { background: #f0f6fc; color: #2b5c8f; border: 1px solid #cfe0ef; }
   .meta { display: flex; flex-wrap: wrap; gap: 5px; }
   .tag { font-size: 11.5px; color: var(--sub); background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 2px 7px; }
   .tag.partial { color: #8a5a10; background: #fdf3e3; border-color: #f0dcbb; font-weight: 600; }

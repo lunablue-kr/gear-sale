@@ -175,6 +175,7 @@ function cardHTML(it) {
   <div class="card ${sel ? "picked" : ""} ${it.status === "sold" ? "sold" : ""} ${it.status === "hold" ? "reserved" : ""}" id="card-${it.id}">
     <div class="card-top">
       <h3><span class="pnum">${it.num}</span>${it.name}</h3>
+      ${!soldish && (it.qty || 1) > 1 ? `<span class="badge qtyb">${remainOf(it)}/${it.qty}개</span>` : ""}
       <span class="badge ${it.status}">${STATUS_LABEL[it.status]}</span>
     </div>
     ${thumbs.length
@@ -274,7 +275,7 @@ function openSheet() {
     return `
     <div class="bid-item" data-id="${id}">
       <span class="bname"><span class="pnum">${it.num}</span>${it.name}${it.ask ? `<small>희망 ₩${it.ask.toLocaleString("ko-KR")}${it.askUnit ? " /" + it.askUnit : ""}</small>` : ""}</span>
-      <select class="bid-qty" title="수량">${Array.from({ length: it.qty || 1 }, (_, i) =>
+      <select class="bid-qty" title="수량">${Array.from({ length: remainOf(it) || 1 }, (_, i) =>
         `<option value="${i + 1}">${i + 1}개</option>`).join("")}</select>
       <input type="text" inputmode="numeric" class="bid-price" value="${it.ask ? it.ask.toLocaleString("ko-KR") : ""}" placeholder="희망가">
       <span class="won">원</span>
