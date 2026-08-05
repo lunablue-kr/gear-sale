@@ -356,10 +356,12 @@ function renderGrid() {
         const q = Math.max(1, Math.min(99, parseInt(inp.value, 10) || 1));
         if (q === (row.qty || 1)) { renderGrid(); return; }
         /* 관리메모 경로로 저장한다 — 입찰 시트 H열은 Apps Script 갱신이 있어야 쓰이고,
-           행을 통째로 덮어쓰는 editBid 는 그 사이 바뀐 값까지 날릴 위험이 있다. */
-        row.qty = q;
+           행을 통째로 덮어쓰는 editBid 는 그 사이 바뀐 값까지 날릴 위험이 있다.
+           ⚠️ setQty 를 먼저 불러야 한다. 다시 그리기(buildRows)가 저장소에서 수량을
+              읽어오므로, 저장 전에 그리면 방금 넣은 값이 옛 값으로 덮여 리셋된다. */
+        const saving = setQty(row.uid, q);      // 저장소 반영은 동기, 서버 전송은 비동기
         renderGrid(); renderStats();
-        await setQty(row.uid, q);
+        await saving;
         syncFlag(`수량 저장됨 · ${row.rs.name} ${q}개`, "ok");
       };
       inp.onblur = commit;
