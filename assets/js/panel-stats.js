@@ -1,4 +1,5 @@
 function render() {
+  if (typeof updateSchedBadge === "function") setTimeout(updateSchedBadge, 0);   // 표를 그린 뒤 배지 갱신
   renderStats();
   if (VIEW === "grid") { renderGrid(); return; }
   renderCards();

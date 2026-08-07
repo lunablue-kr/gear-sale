@@ -278,6 +278,12 @@ select.stsel.prog    { border-color: #a9c4e2; color: #2b5c8f; background: #f0f6f
 tr.st-contact td.item, table.grid tbody tr.st-contact:hover td.item { background: #fdf6dd; }
 tr.st-prog td.item,    table.grid tbody tr.st-prog:hover td.item    { background: #e9f2fb; }
 
+/* 일정 버튼 배지 */
+.sbadge { display: inline-block; padding: 1px 6px; border-radius: 999px;
+  font-size: 11px; font-weight: 700; margin-left: 2px; }
+.sbadge.today { background: #fbe6d6; color: #b5541f; }
+.sbadge.over { background: #fbe0dc; color: var(--danger); }
+
 /* 무산 — 품목이 매진돼 더 진행할 수 없는 입찰 (전체 보기에서만 보인다) */
 tr.lost-row td:not(.state) { color: #b8b8b3; }
 tr.lost-row td.item { background: #f4f4f2 !important; }
@@ -319,8 +325,21 @@ table.grid td.item { cursor: pointer; }
 #schedpop .srow { display: flex; gap: 10px; padding: 9px 2px; border-top: 1px solid var(--line);
   font-size: 13.5px; align-items: baseline; }
 #schedpop .swhen { flex: 0 0 96px; font-weight: 700; white-space: nowrap; }
-#schedpop .swhen.past { color: var(--sub); font-weight: 400; text-decoration: line-through; }
+#schedpop .swhen.past { color: var(--danger); font-weight: 700; }
+#schedpop .swhen.today { color: #b5541f; font-weight: 800; }
+#schedpop .swhen.soon { color: #2b5c8f; font-weight: 700; }
 #schedpop .swhen.none { color: var(--sub); font-weight: 400; }
+#schedpop .swhen.settled { color: var(--sub); font-weight: 400; text-decoration: line-through; }
+#schedpop .done-row { opacity: .62; }
+#schedpop .sdone { color: var(--accent); font-size: 12px; margin-left: 6px; }
+#schedpop .scall { display: inline-block; margin-left: 6px; font-size: 12px; color: #2b5c8f; text-decoration: none; }
+#schedpop .scall:hover { text-decoration: underline; }
+#schedpop .sitems { font-size: 12px; color: var(--sub); margin-top: 2px; }
+#schedpop .ssum { display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap;
+  font-size: 12.5px; color: var(--sub); padding: 6px 2px 8px; border-bottom: 1px solid var(--line); }
+#schedpop .ssum .t-today { color: #b5541f; }
+#schedpop .ssum .t-over { color: var(--danger); }
+#schedpop .sdiv { margin: 14px 0 2px; font-size: 12px; color: var(--sub); font-weight: 700; }
 #schedpop .swho b { margin-right: 6px; }
 #schedpop .snote { color: var(--sub); font-size: 12.5px; margin-top: 2px; }
 

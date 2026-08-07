@@ -206,8 +206,13 @@ function renderGrid() {
       const mine = [...ROWMAP.values()].filter(x =>
         x.name === r.name && x.contact === r.contact &&
         !["drop", "done"].includes(stateOf(x)) && !soldOutItem(x.rs));
+      /* 품목이 매진돼 더 진행할 수 없는 건이면 안내 문구를 바꾼다 —
+         "확인하고 연락드립니다" 가 나가면 다시 기다리게 만든다 */
+      const lost = isLost(r) && !mine.length;
       const first = (mine[0] || r).rs.name, extra = Math.max(0, mine.length - 1);
-      const msg = `안녕하세요, ${r.name}님.\n장비 구매 신청하신 스튜디오 루나블루입니다.\n신청해주신 ${first}${extra ? ` 외 ${extra}건` : ""} 확인하고 연락드립니다.`;
+      const msg = lost
+        ? `안녕하세요, ${r.name}님.\n장비 구매 신청하신 스튜디오 루나블루입니다.\n신청해주신 ${r.rs.name}은(는) 아쉽게도 먼저 신청하신 분께 판매되었습니다.\n관심 가져주셔서 감사합니다. 다른 품목도 편하게 문의해 주세요.`
+        : `안녕하세요, ${r.name}님.\n장비 구매 신청하신 스튜디오 루나블루입니다.\n신청해주신 ${first}${extra ? ` 외 ${extra}건` : ""} 확인하고 연락드립니다.`;
       const d = String(r.contact || "").replace(/[^\d]/g, "");
       const phone = /^1\d{9}$/.test(d) ? "0" + d : (/^01\d{8,9}$/.test(d) ? d : null);
       const ios = /iPhone|iPad|iPod/i.test(navigator.userAgent);

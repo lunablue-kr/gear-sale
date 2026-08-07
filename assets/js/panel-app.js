@@ -260,15 +260,27 @@ function openSched() {
     (d.getHours() === 23 && d.getMinutes() === 59 ? "" :
       ` ${d.getHours()}시${d.getMinutes() ? String(d.getMinutes()).padStart(2, "0") + "분" : ""}`);
 
+  /* 거래가 끝났는지도 함께 본다 — 완료된 약속을 계속 챙길 일정으로 보면 안 된다 */
   const list = Object.entries(NOTES).map(([k, note]) => {
-    const mine = rows.filter(b => noteKey(b) === k && !["done", "drop"].includes(stateOf(b)));
     const uniq = new Map();
-    mine.forEach(b => uniq.set(b.row + "|" + b.name, b));
-    const sum = [...uniq.values()].reduce((s, b) => s + (+b.price || 0), 0);
-    return { name: k.split("|")[0], note, when: parseWhen(note), count: uniq.size, sum };
+    rows.filter(b => noteKey(b) === k).forEach(b => uniq.set(b.row + "|" + b.name, b));
+    const mine = [...uniq.values()];
+    const live = mine.filter(b => !["done", "drop"].includes(stateOf(b)) && !soldOutItem(b.rs));
+    const done = mine.filter(b => stateOf(b) === "done");
+    return {
+      name: k.split("|")[0], contact: (mine[0] || {}).contact || k.split("|")[1] || "",
+      note, when: parseWhen(note),
+      count: live.length, sum: live.reduce((s, b) => s + (+b.price || 0), 0),
+      doneCount: done.length, doneSum: done.reduce((s, b) => s + (+b.price || 0), 0),
+      settled: live.length === 0 && done.length > 0,      // 남은 거래 없이 전부 완료
+      items: live.slice(0, 3).map(b => b.rs.name),
+    };
   });
   const now = new Date();
-  list.sort((a, b) => (a.when ? a.when.getTime() : Infinity) - (b.when ? b.when.getTime() : Infinity));
+  /* 아직 남은 약속을 위로, 끝난 약속은 아래로. 같은 그룹 안에서는 날짜순 */
+  list.sort((a, b) =>
+    (a.settled ? 1 : 0) - (b.settled ? 1 : 0) ||
+    (a.when ? a.when.getTime() : Infinity) - (b.when ? b.when.getTime() : Infinity));
 
   let el = document.getElementById("schedpop");
   if (!el) {
@@ -277,17 +289,77 @@ function openSched() {
     document.body.appendChild(el);
     el.onclick = e => { if (e.target === el) el.classList.remove("show"); };
   }
-  const row = x => `<div class="srow">
-      <span class="swhen ${x.when ? (x.when < now ? "past" : "") : "none"}">${x.when ? fmt(x.when) : "날짜 없음"}</span>
-      <span class="swho"><b>${esc(x.name)}</b>${x.count ? `${x.count}건 · ${won(x.sum) || "₩0"}` : "완료·취소만"}
-        <div class="snote">${esc(x.note)}</div></span>
+  /* 오늘·내일은 날짜 대신 그렇게 적어야 눈에 들어온다 */
+  const midnight = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const dayGap = d => Math.floor((new Date(d.getFullYear(), d.getMonth(), d.getDate()) - midnight) / 86400000);
+  const label = d => {
+    const g = dayGap(d);
+    const t = (d.getHours() === 23 && d.getMinutes() === 59) ? ""
+      : ` ${d.getHours()}시${d.getMinutes() ? String(d.getMinutes()).padStart(2, "0") + "분" : ""}`;
+    return g === 0 ? `오늘${t}` : g === 1 ? `내일${t}` : fmt(d);
+  };
+  const phoneOf = c => {
+    const d = String(c || "").replace(/[^\d]/g, "");
+    return /^1\d{9}$/.test(d) ? "0" + d : (/^01\d{8,9}$/.test(d) ? d : "");
+  };
+
+  const row = x => {
+    const g = x.when ? dayGap(x.when) : null;
+    const cls = x.settled ? "settled" : (x.when ? (x.when < now ? "past" : (g === 0 ? "today" : g === 1 ? "soon" : "")) : "none");
+    const ph = phoneOf(x.contact);
+    return `<div class="srow ${x.settled ? "done-row" : ""}">
+      <span class="swhen ${cls}">${x.when ? label(x.when) : "날짜 없음"}</span>
+      <span class="swho">
+        <b>${esc(x.name)}</b>
+        ${x.settled
+          ? `<span class="sdone">✅ 거래완료 ${x.doneCount}건 · ${won(x.doneSum) || "₩0"}</span>`
+          : `${x.count}건 · ${won(x.sum) || "₩0"}` +
+            (x.doneCount ? `<span class="sdone">✅ ${x.doneCount}건 완료</span>` : "")}
+        ${ph ? `<a class="scall" href="tel:${ph}">${fmtContact(x.contact)}</a>` : ""}
+        ${x.items.length ? `<div class="sitems">${x.items.map(n => esc(n)).join(" · ")}${x.count > 3 ? ` 외 ${x.count - 3}건` : ""}</div>` : ""}
+        <div class="snote">${esc(x.note)}</div>
+      </span>
     </div>`;
+  };
+  const live = list.filter(x => !x.settled), settled = list.filter(x => x.settled);
+  /* 시각이 지난 건은 '지난 약속'으로만 센다 — 오늘 건이 양쪽에 겹쳐 잡히지 않게 */
+  const overdue = live.filter(x => x.when && x.when < now).length;
+  const today = live.filter(x => x.when && x.when >= now && dayGap(x.when) === 0).length;
   el.innerHTML = `<div class="box"><h3>거래 일정</h3>
     <div class="hint">내 메모에서 날짜를 읽어요 — "8/5 3시 강남역"처럼 적으면 자동 정리 · 빈 곳 누르면 닫힘</div>
-    ${list.length ? list.map(row).join("") : `<div class="srow">아직 메모가 없어요.</div>`}</div>`;
+    ${live.length || settled.length ? `<div class="ssum">` +
+      (today ? `<b class="t-today">오늘 ${today}건</b>` : "") +
+      (overdue ? `<b class="t-over">지난 약속 ${overdue}건</b>` : "") +
+      `<span>진행 ${live.length}명 · 완료 ${settled.length}명</span></div>` : ""}
+    ${live.map(row).join("")}
+    ${settled.length ? `<div class="sdiv">거래 끝난 약속</div>${settled.map(row).join("")}` : ""}
+    ${!list.length ? `<div class="srow">아직 메모가 없어요.</div>` : ""}</div>`;
   el.classList.add("show");
 }
 document.getElementById("sched").onclick = openSched;
+
+/* 일정 버튼에 오늘·지난 약속 수를 붙인다 — 열어보지 않아도 눈에 띄게 */
+function updateSchedBadge() {
+  const btn = document.getElementById("sched");
+  if (!btn || PREVIEW) return;
+  const rows = [...ROWMAP.values()];
+  const now = new Date();
+  const midnight = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  let today = 0, over = 0;
+  Object.entries(NOTES).forEach(([k, note]) => {
+    const mine = rows.filter(b => noteKey(b) === k);
+    if (!mine.length) return;
+    const live = mine.filter(b => !["done", "drop"].includes(stateOf(b)) && !soldOutItem(b.rs));
+    if (!live.length) return;                       // 거래가 끝난 약속은 세지 않는다
+    const w = parseWhen(note);
+    if (!w) return;
+    const gap = Math.floor((new Date(w.getFullYear(), w.getMonth(), w.getDate()) - midnight) / 86400000);
+    if (w < now) over++; else if (gap === 0) today++;      // 일정 팝업과 같은 기준
+  });
+  btn.innerHTML = "📅 일정" +
+    (today ? ` <span class="sbadge today">오늘 ${today}</span>` : "") +
+    (over ? ` <span class="sbadge over">지남 ${over}</span>` : "");
+}
 
 document.getElementById("filtoggle").onclick = () => {
   const f = document.getElementById("filters");
