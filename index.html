@@ -6,7 +6,7 @@
 <title>스튜디오 루나블루 장비 판매 — 비공개 입찰</title>
 <meta property="og:title" content="스튜디오 루나블루 장비 판매">
 <meta property="og:description" content="스튜디오 전 장비를 정리합니다. (2026년 9월 초)">
-<link rel="stylesheet" href="assets/css/sale.css?v=2">
+<link rel="stylesheet" href="assets/css/sale.css?v=3">
 </head>
 <body>
 
@@ -585,8 +585,12 @@ function applyStatus(bidRes, stRes) {
         const r = it.sku != null ? rem[it.sku] : undefined;      // 남은 수량 (sku 기준)
         if (r != null) { if (it.remain !== +r) { it.remain = +r; changed = true; } }
         else if (it.remain != null) { delete it.remain; changed = true; }   // 시트에서 지워지면 같이 푼다
+        /* 부분 판매를 정리한 품목(남은수량이 시트에 적힌 것)은 관리자가 방금 맞춰둔
+           상태이므로 예약 목록보다 우선한다. 예약 목록에는 이미 거래가 끝난 입찰도
+           들어 있어(서버가 완료 여부를 모른다) 재고가 남은 품목이 계속 예약중으로 보였다. */
+        const settled = r != null && (skuSale.has(it.sku) || sale.has(it.name));
         const want = (skuSold.has(it.sku) || sold.has(it.name)) ? "sold"
-                   : (bidSku.has(it.sku) || bidSet.has(it.name)) ? "hold"
+                   : (!settled && (bidSku.has(it.sku) || bidSet.has(it.name))) ? "hold"
                    : (skuSale.has(it.sku) || sale.has(it.name)) ? "sale" : null;
         if (want && it.status !== want) { it.status = want; changed = true; }
         if (it.remain === 0 && it.status !== "sold") { it.status = "sold"; changed = true; }
