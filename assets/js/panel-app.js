@@ -272,7 +272,9 @@ function openSched() {
       note, when: parseWhen(note),
       count: live.length, sum: live.reduce((s, b) => s + (+b.price || 0), 0),
       doneCount: done.length, doneSum: done.reduce((s, b) => s + (+b.price || 0), 0),
-      settled: live.length === 0 && done.length > 0,      // 남은 거래 없이 전부 완료
+      /* 한 건이라도 거래를 마쳤으면 그 약속은 소화된 것으로 본다.
+         남은 입찰이 있어도 그건 표에서 처리할 일이지 '만날 약속'이 아니다. */
+      settled: done.length > 0,
       items: live.slice(0, 3).map(b => b.rs.name),
     };
   });
@@ -312,9 +314,9 @@ function openSched() {
       <span class="swho">
         <b>${esc(x.name)}</b>
         ${x.settled
-          ? `<span class="sdone">✅ 거래완료 ${x.doneCount}건 · ${won(x.doneSum) || "₩0"}</span>`
-          : `${x.count}건 · ${won(x.sum) || "₩0"}` +
-            (x.doneCount ? `<span class="sdone">✅ ${x.doneCount}건 완료</span>` : "")}
+          ? `<span class="sdone">✅ 거래완료 ${x.doneCount}건 · ${won(x.doneSum) || "₩0"}</span>` +
+            (x.count ? `<span class="sleft">남은 입찰 ${x.count}건</span>` : "")
+          : `${x.count}건 · ${won(x.sum) || "₩0"}`}
         ${ph ? `<a class="scall" href="tel:${ph}">${fmtContact(x.contact)}</a>` : ""}
         ${x.items.length ? `<div class="sitems">${x.items.map(n => esc(n)).join(" · ")}${x.count > 3 ? ` 외 ${x.count - 3}건` : ""}</div>` : ""}
         <div class="snote">${esc(x.note)}</div>
@@ -349,8 +351,9 @@ function updateSchedBadge() {
   Object.entries(NOTES).forEach(([k, note]) => {
     const mine = rows.filter(b => noteKey(b) === k);
     if (!mine.length) return;
+    if (mine.some(b => stateOf(b) === "done")) return;   // 거래를 마친 약속은 세지 않는다 (일정 목록과 같은 기준)
     const live = mine.filter(b => !["done", "drop"].includes(stateOf(b)) && !soldOutItem(b.rs));
-    if (!live.length) return;                       // 거래가 끝난 약속은 세지 않는다
+    if (!live.length) return;
     const w = parseWhen(note);
     if (!w) return;
     const gap = Math.floor((new Date(w.getFullYear(), w.getMonth(), w.getDate()) - midnight) / 86400000);

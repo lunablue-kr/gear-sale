@@ -57,11 +57,17 @@ for k, it in items.items():
 if not bad: print("   ✓ 이상 없음")
 
 print("── 2. 수량 여러 개인데 전량 판매완료 (부분판매 누락 의심)")
+# 사용자가 2026-08-07 에 전량 판매가 맞다고 확인한 품목은 더 묻지 않는다
+CONFIRMED_FULL = {
+    'etc-1','grip-1','grip-10','grip-12','grip-13','grip-16','grip-2','grip-3','grip-9',
+    'mod-14','mod-15','mod-19','mod-20','mod-21',
+}
 n = 0
 for k, it in items.items():
+    if k in CONFIRMED_FULL: continue
     if it['qty'] > 1 and (k in skuSold or it['name'] in nameSold) and remain.get(k) is None:
         print(f"   ! {k} {it['name'][:40]} (총 {it['qty']}개) — 정말 전량 판매인지 확인"); n += 1; warn += 1
-if not n: print("   ✓ 없음")
+if not n: print("   ✓ 없음 (확인 완료분 %d개 제외)" % len(CONFIRMED_FULL))
 
 print("── 3. 예약(입찰) 목록과 품목 대조")
 skus = set(items)

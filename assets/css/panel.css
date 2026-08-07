@@ -332,6 +332,7 @@ table.grid td.item { cursor: pointer; }
 #schedpop .swhen.settled { color: var(--sub); font-weight: 400; text-decoration: line-through; }
 #schedpop .done-row { opacity: .62; }
 #schedpop .sdone { color: var(--accent); font-size: 12px; margin-left: 6px; }
+#schedpop .sleft { color: #b5541f; font-size: 12px; margin-left: 6px; }
 #schedpop .scall { display: inline-block; margin-left: 6px; font-size: 12px; color: #2b5c8f; text-decoration: none; }
 #schedpop .scall:hover { text-decoration: underline; }
 #schedpop .sitems { font-size: 12px; color: var(--sub); margin-top: 2px; }

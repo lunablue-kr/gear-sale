@@ -1,11 +1,13 @@
 function render() {
-  if (typeof updateSchedBadge === "function") setTimeout(updateSchedBadge, 0);   // 표를 그린 뒤 배지 갱신
   renderStats();
   if (VIEW === "grid") { renderGrid(); return; }
   renderCards();
 }
 
 function renderStats() {
+  /* 상태를 바꾸면 renderGrid+renderStats 만 부르는 곳이 많다.
+     배지를 여기에 걸어야 거래완료 즉시 일정에도 반영된다. */
+  if (typeof updateSchedBadge === "function") setTimeout(updateSchedBadge, 0);
   const map = group(BIDS);
   const unmatched = [...map.values()].filter(l => !l[0].resolved.matched).length;
   document.getElementById("stats").innerHTML = PREVIEW
