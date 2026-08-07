@@ -69,6 +69,17 @@ const stateOf = r => {
   return r.rs.status === "sold" ? (hasNamedWinner(r.rs.name) ? "bid" : "done") : "bid";
 };
 
+/* 품목이 다 팔렸는가 — 남은 수량이 0이거나 판매완료로 기록된 경우.
+   매진된 품목에 걸린 후순위 입찰은 더 처리할 게 없으므로 기본 목록에서 뺀다
+   (기록은 지우지 않는다. '전체' 필터에서 그대로 보인다). */
+function soldOutItem(rs) {
+  const it = ITEMS.find(x => x.sku === rs.sku) || {};
+  if (it.remain != null) return it.remain <= 0;
+  return SHEET_SOLD_SKU.has(rs.sku) || SHEET_SOLD.has(rs.name) || rs.status === "sold";
+}
+/* 낙찰 못 받고 남은 입찰 (품목은 매진, 이 건은 미처리) */
+const isLost = r => !["done", "drop"].includes(stateOf(r)) && soldOutItem(r.rs);
+
 /* 다른 기기에서 바꾼 판매상태 가져오기 (공개 조회라 비밀번호 불필요) */
 async function pullStatus() {
   try {
@@ -261,6 +272,7 @@ function promoteNoted() {
   const canPush = !!sessionStorage.getItem("adminPw");
   [...ROWMAP.values()].forEach(b => {
     if (!noteOf(b) || !["bid", "contact"].includes(stateOf(b))) return;
+    if (soldOutItem(b.rs)) return;                   // 매진된 품목은 승격해도 의미 없다
     if ((OV[b.uid] || {}).state === "bid") return;   // 미처리로 수동 되돌린 건 승격하지 않는다
     setOV(b.uid, { state: "prog" });
     if (canPush) pushOverride("state", b.uid, "prog", `${b.name} 진행중`);

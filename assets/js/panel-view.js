@@ -33,7 +33,8 @@ function filtered(rows) {
   return rows.filter(r =>
     (!cat || r.rs.catKey === cat) &&
     (!who || r.name === who) &&
-    (!st || (st === "active" ? !["done", "drop"].includes(stateOf(r)) : stateOf(r) === st)) &&
+    (!st || (st === "active" ? !["done", "drop"].includes(stateOf(r)) && !soldOutItem(r.rs)
+                             : stateOf(r) === st)) &&
     (!q || (r.rs.name + " " + r.item + " " + r.name + " " + r.contact + " " + r.rs.cat)
       .toLowerCase().includes(q)));
 }
@@ -47,8 +48,8 @@ function fillSelects(rows) {
   cs.length = 1; ws.length = 1;
   const cats = [...new Set(rows.map(r => r.rs.catKey))].filter(Boolean);
   cats.forEach(c => cs.insertAdjacentHTML("beforeend", `<option value="${c}">${esc(CATS[c] || c)}</option>`));
-  /* 입찰자 목록엔 진행중(완료·취소 제외) 입찰이 있는 사람만 */
-  [...new Set(rows.filter(r => !["done", "drop"].includes(stateOf(r))).map(r => r.name))]
+  /* 입찰자 목록엔 아직 처리할 입찰이 남은 사람만 (완료·취소·매진품목 제외) */
+  [...new Set(rows.filter(r => !["done", "drop"].includes(stateOf(r)) && !soldOutItem(r.rs)).map(r => r.name))]
     .filter(Boolean).sort((a, b) => a.localeCompare(b, "ko"))
     .forEach(n => ws.insertAdjacentHTML("beforeend", `<option value="${esc(n)}">${esc(n)}</option>`));
   cs.value = keepC; ws.value = keepW;      // 고르던 필터 복원
@@ -115,7 +116,7 @@ function renderGrid() {
     COLS.map(x => `<th class="${(x.cls || "").includes("hide-m") ? "hide-m" : ""}" ${x.k === "act" ? "" : `data-k="${x.k}"`}>${x.label}${SORT.col === x.k ? `<span class="arw">${SORT.dir > 0 ? "▲" : "▼"}</span>` : ""}</th>`).join("") +
     `</tr></thead>`;
 
-  const tr = r => `<tr data-uid="${esc(r.uid)}" class="st-${stateOf(r)} ${r.rs.settle ? "settle-row" : ""} ${SEL.has(r.uid) ? "sel" : ""}">` +
+  const tr = r => `<tr data-uid="${esc(r.uid)}" class="st-${stateOf(r)} ${isLost(r) ? "lost-row" : ""} ${r.rs.settle ? "settle-row" : ""} ${SEL.has(r.uid) ? "sel" : ""}">` +
     `<td class="cbx"><input type="checkbox" class="cb" ${SEL.has(r.uid) ? "checked" : ""}></td>` +
     COLS.map(x => `<td class="${x.cls || ""}" data-uid="${esc(r.uid)}" data-k="${x.k}">` +
       `${x.html ? x.html(r) : esc(x.get(r) ?? "")}</td>`).join("") + `</tr>`;
@@ -200,7 +201,11 @@ function renderGrid() {
       e.stopPropagation();
       const r = ROWMAP.get(b.dataset.uid);
       if (!r) return;
-      const mine = [...ROWMAP.values()].filter(x => x.name === r.name && x.contact === r.contact && stateOf(x) !== "drop");
+      /* 아직 얘기할 게 남은 건만 문자에 담는다 — 이미 거래를 마쳤거나
+         품목이 매진된 건까지 "신청해주신 …" 에 섞여 나가던 문제 */
+      const mine = [...ROWMAP.values()].filter(x =>
+        x.name === r.name && x.contact === r.contact &&
+        !["drop", "done"].includes(stateOf(x)) && !soldOutItem(x.rs));
       const first = (mine[0] || r).rs.name, extra = Math.max(0, mine.length - 1);
       const msg = `안녕하세요, ${r.name}님.\n장비 구매 신청하신 스튜디오 루나블루입니다.\n신청해주신 ${first}${extra ? ` 외 ${extra}건` : ""} 확인하고 연락드립니다.`;
       const d = String(r.contact || "").replace(/[^\d]/g, "");
@@ -291,7 +296,10 @@ function renderGrid() {
         remain = cur - sold;
         it.remain = remain;
       }
-      const next = remain != null && remain > 0 ? "bid" : sel.value;
+      /* 부분 판매여도 이 입찰 건은 거래완료다. 예전에는 남은 수량이 있으면
+         상태를 '미처리'로 되돌려, 이미 거래를 마친 사람이 목록에 계속 남았다.
+         남은 물량은 품목의 remain 으로만 관리한다 (일괄 처리와 동작을 맞춤). */
+      const next = sel.value;
       setOV(uid, { state: next });
       renderGrid(); renderStats();
       /* 상태는 입찰 한 건 단위로 시트에 남겨야 한다.

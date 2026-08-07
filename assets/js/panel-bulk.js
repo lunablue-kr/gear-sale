@@ -2,12 +2,25 @@ async function bulkApply(next, picked) {
   const label = { bid: "미처리로 되돌림", done: "거래완료", drop: "취소" }[next];
   const todo = picked.filter(r => selState(stateOf(r)) !== next || (next === "bid" && stateOf(r) !== "bid"));
   if (!todo.length) { syncFlag(`선택한 건이 이미 전부 그 상태예요`, ""); return; }
-  const multiQty = next === "done"
-    ? [...new Set(todo.filter(r => ((ITEMS.find(x => x.sku === r.rs.sku) || {}).qty || 1) > 1).map(r => r.rs.name))]
-    : [];
+  /* 수량이 여러 개인 품목은 "몇 개를 빼고 몇 개가 남는지"를 확인창에 그대로 보여준다.
+     예전에는 품목명만 알려줘서 입찰 수량이 반영되는지 확인할 방법이 없었다. */
+  const multiQty = [];
+  if (next === "done") {
+    const seen = new Set();
+    todo.forEach(r => {
+      const it = ITEMS.find(x => x.sku === r.rs.sku) || {};
+      const total = it.qty || 1;
+      if (total <= 1 || seen.has(r.rs.key)) return;
+      seen.add(r.rs.key);
+      const soldQ = todo.filter(o => o.rs.key === r.rs.key).reduce((s, o) => s + (o.qty || 1), 0);
+      const cur = it.remain != null ? it.remain : total;
+      const left = Math.max(0, cur - soldQ);
+      multiQty.push(`${r.rs.name} — ${soldQ}개 판매, ${left === 0 ? "전량 판매완료" : `${left}개 남음`}`);
+    });
+  }
   if (!confirm(`선택 ${todo.length}건을 ${label} 처리할까요?` +
     (next === "drop" ? "\n(목록에는 취소 기록으로 남습니다)" : "") +
-    (multiQty.length ? `\n\n수량이 여러 개인 품목은 입찰서의 수량만큼만 차감되고 나머지는 판매중으로 남아요:\n· ${multiQty.join("\n· ")}` : ""))) return;
+    (multiQty.length ? `\n\n수량이 여러 개인 품목:\n· ${multiQty.join("\n· ")}` : ""))) return;
 
   /* 로컬 반영·화면 갱신을 먼저 끝내고, 서버 전송은 한꺼번에 병렬로 보낸다.
      건별로 await 하면 왕복(2~3초)이 건수만큼 쌓여 10건에 30초씩 걸렸다. */

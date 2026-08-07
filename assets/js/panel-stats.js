@@ -25,6 +25,8 @@ function renderStats() {
           return out;
         };
         const n = s => uniq(rows.filter(r => stateOf(r) === s)).length;
+        const nLive = s => uniq(rows.filter(r => stateOf(r) === s && !soldOutItem(r.rs))).length;
+        const lost = uniq(rows.filter(isLost)).length;
         const doneSum = uniq(rows.filter(r => stateOf(r) === "done")).reduce((s, r) => s + (+r.price || 0), 0);
         const bidCount = uniq(rows).length;
         /* 예상 수령: 아직 완료 안 된 품목마다 1순위 입찰 하나만 더한다.
@@ -39,7 +41,7 @@ function renderStats() {
         const seenTop = new Set();
         let expSum = 0;
         byItem.forEach(list => {
-          if (list.some(r => stateOf(r) === "done")) return;
+          if (list.some(r => stateOf(r) === "done") || soldOutItem(list[0].rs)) return;
           const top = list.slice().sort((a, b) => (a.rank || 99) - (b.rank || 99))[0];
           const k = top.row + "|" + top.name + "|" + top.contact;
           if (seenTop.has(k)) return;
@@ -50,8 +52,10 @@ function renderStats() {
           `<div class="stat"><b>${bidCount}</b>총 입찰 건수</div>` +
           `<div class="stat"><b>${new Set(BIDS.map(b => b.name + "|" + b.contact)).size}</b>입찰자 수</div>` +
           `<div class="stat"><b>${[...map.values()].filter(l => l.length > 1).length}</b>경쟁 품목</div>` +
-          `<div class="stat warn"><b>${n("bid")}</b>미처리</div>` +
-          `<div class="stat"><b>${n("contact") + n("prog")}</b>연락·진행중</div>` +
+          /* 매진된 품목에 걸린 건은 처리할 게 없으므로 미처리에서 뺀다 */
+          `<div class="stat warn"><b>${nLive("bid")}</b>미처리</div>` +
+          `<div class="stat"><b>${nLive("contact") + nLive("prog")}</b>연락·진행중</div>` +
+          (lost ? `<div class="stat"><b>${lost}</b>무산 <small>품목 매진</small></div>` : "") +
           `<div class="stat"><b>${n("done")}</b>거래완료 <small>${won(doneSum) || "₩0"}</small></div>` +
           `<div class="stat"><b>${won(expSum) || "₩0"}</b>예상 수령 <small>품목별 1순위만</small></div>`;
       })();
@@ -64,7 +68,8 @@ function renderCards() {
 
   /* 카드 보기에도 상태 필터 적용 — 기본은 완료·취소 숨김 (표와 동일) */
   const st = PREVIEW ? "" : document.getElementById("state").value;
-  const stOK = b => !st || (st === "active" ? !["done", "drop"].includes(stateOf(b)) : stateOf(b) === st);
+  const stOK = b => !st || (st === "active" ? !["done", "drop"].includes(stateOf(b)) && !soldOutItem(b.rs)
+                                            : stateOf(b) === st);
   let groups = [...map.entries()]
     .map(([key, list]) => ({ key, list: list.filter(stOK) }))
     .filter(g => g.list.length)
