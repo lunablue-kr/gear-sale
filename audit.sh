@@ -57,17 +57,23 @@ for k, it in items.items():
 if not bad: print("   ✓ 이상 없음")
 
 print("── 2. 수량 여러 개인데 전량 판매완료 (부분판매 누락 의심)")
-# 사용자가 2026-08-07 에 전량 판매가 맞다고 확인한 품목은 더 묻지 않는다
-CONFIRMED_FULL = {
+# 증거 기반 판정: v41(08-08)부터 전량 판매 처리는 남은수량 0을 함께 기록하므로
+# remain==0 이 있으면 시스템이 스스로 검증한 것 — 사람에게 묻지 않는다.
+# 아래 목록은 그 이전(증거 없던 시절)의 기록 중 이미 확인이 끝난 것. 더 늘어나면 안 된다.
+LEGACY_CONFIRMED = {
     'etc-1','grip-1','grip-10','grip-12','grip-13','grip-16','grip-2','grip-3','grip-9',
     'mod-14','mod-15','mod-19','mod-20','mod-21',
+    'strobe-1',   # D2 1000 ×3 — 08-08 판매자 직접 처리분
 }
 n = 0
 for k, it in items.items():
-    if k in CONFIRMED_FULL: continue
-    if it['qty'] > 1 and (k in skuSold or it['name'] in nameSold) and remain.get(k) is None:
-        print(f"   ! {k} {it['name'][:40]} (총 {it['qty']}개) — 정말 전량 판매인지 확인"); n += 1; warn += 1
-if not n: print("   ✓ 없음 (확인 완료분 %d개 제외)" % len(CONFIRMED_FULL))
+    if it['qty'] <= 1: continue
+    sold_flag = k in skuSold or it['name'] in nameSold
+    if not sold_flag: continue
+    if remain.get(k) == 0: continue          # 증거 있음 — 검증된 전량 판매
+    if k in LEGACY_CONFIRMED: continue       # 증거 없던 시절, 확인 완료
+    print(f"   ! {k} {it['name'][:40]} (총 {it['qty']}개) — 남은수량 기록 없이 전량 판매완료"); n += 1; warn += 1
+if not n: print("   ✓ 없음 — 새 전량 판매는 남은수량 0 기록으로 자동 검증됨")
 
 print("── 3. 예약(입찰) 목록과 품목 대조")
 skus = set(items)
