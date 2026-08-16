@@ -63,7 +63,7 @@ print("── 2. 수량 여러 개인데 전량 판매완료 (부분판매 누�
 LEGACY_CONFIRMED = {
     'etc-1','grip-1','grip-10','grip-12','grip-13','grip-16','grip-2','grip-3','grip-9',
     'mod-14','mod-15','mod-19','mod-20','mod-21',
-    'strobe-1',   # D2 1000 ×3 — 08-08 판매자 직접 처리분
+    'strobe-1','grip-24',   # 08-08 판매자 직접 처리분 (v41 배포 직전 배치)
 }
 n = 0
 for k, it in items.items():
