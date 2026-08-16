@@ -25,6 +25,8 @@ async function bulkApply(next, picked) {
   /* 로컬 반영·화면 갱신을 먼저 끝내고, 서버 전송은 한꺼번에 병렬로 보낸다.
      건별로 await 하면 왕복(2~3초)이 건수만큼 쌓여 10건에 30초씩 걸렸다. */
   adminPw();                                    // 비밀번호를 먼저 확보 (병렬 중 프롬프트 방지)
+  /* 상태를 바꾸기 전에 "완료였던 건"을 기억해 둔다 — 복원 수량 계산에 필요 */
+  const prevDone = new Set(todo.filter(r => stateOf(r) === "done").map(r => r.uid));
   todo.forEach(r => setOV(r.uid, { state: next }));
   SEL.clear();
   renderGrid(); renderStats();
@@ -39,7 +41,6 @@ async function bulkApply(next, picked) {
   for (const r of items.values()) {
     const skip = r.rs.settle || r.rs.matched === false;
     const it = ITEMS.find(x => x.sku === r.rs.sku) || {};
-    const fullQty = it.qty || null;
     if (next === "done") {
       /* 입찰서의 수량만큼만 차감 — 2개 중 1개 거래면 1개는 판매중으로 남는다.
          예전엔 무조건 전량 판매완료로 밀어서 남은 재고가 사라져 보였다. */
@@ -50,15 +51,20 @@ async function bulkApply(next, picked) {
       if (total > 1) it.remain = remain;
       statusList.push({ name: r.rs.name, status: remain === 0 ? "sold" : "sale",
         sku: r.rs.sku, remain: total > 1 ? remain : null, skip });
-    } else if (next === "bid") {
-      /* 완료였던 걸 미처리로 되돌리면 판매중 복원 — 단, 같은 품목에 아직 완료 입찰이 남아 있으면 그대로 */
-      const wasSold = SHEET_SOLD_SKU.has(r.rs.sku) || SHEET_SOLD.has(r.rs.name) || r.rs.status === "sold";
-      const hasDone = [...ROWMAP.values()].some(o => o.rs.name === r.rs.name && stateOf(o) === "done");
-      if (wasSold && !hasDone) statusList.push({ name: r.rs.name, status: "sale", sku: r.rs.sku, remain: fullQty, skip });
     } else {
-      const others = [...ROWMAP.values()]
-        .filter(o => o.rs.name === r.rs.name && stateOf(o) !== "drop" && !isDropped(o));
-      if (!others.length) statusList.push({ name: r.rs.name, status: "sale", sku: r.rs.sku, remain: fullQty, skip });
+      /* 미처리 복귀·취소 공통: 이번에 무효가 된 완료 거래의 수량만큼만 남은수량을 되살린다.
+         전체 수량(fullQty)으로 되돌리면 이미 팔린 몫이 부활한다. 판정은 전부 sku(key) 기준 —
+         이름 비교는 동명이품을 오염시킨다. */
+      const addBack = todo.filter(o => o.rs.key === r.rs.key && prevDone.has(o.uid))
+        .reduce((s2, o) => s2 + (o.qty || 1), 0);
+      const lastGone = next === "drop" && ![...ROWMAP.values()]
+        .some(o => o.rs.key === r.rs.key && stateOf(o) !== "drop" && !isDropped(o));
+      /* 완료였던 거래가 무효화됐으면(addBack>0) 그 몫만큼 복원.
+         일괄 취소로 그 품목의 마지막 입찰이 사라졌으면 판매중 복원(수량은 유지). */
+      if (addBack > 0 || lastGone) {
+        const { remain } = restoredRemain(r.rs, addBack);
+        statusList.push({ name: r.rs.name, status: "sale", sku: r.rs.sku, remain, skip });
+      }
     }
   }
   if (statusList.length) jobs.push(pushStatusBatch(statusList));

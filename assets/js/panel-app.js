@@ -183,7 +183,7 @@ async function saveBid() {
 async function cancelBid(r) {
   const wasDone = stateOf(r) === "done";
   const others = [...ROWMAP.values()]
-    .filter(o => o.rs.name === r.rs.name && o.uid !== r.uid && !isDropped(o))
+    .filter(o => o.rs.key === r.rs.key && o.uid !== r.uid && !isDropped(o) && stateOf(o) !== "drop")
     .sort((a, b) => (a.rank || 99) - (b.rank || 99));
   const label = `${r.rs.name} · ${r.name}` + (r.price ? ` · ${Number(r.price).toLocaleString()}원` : "");
   const tail = others.length
@@ -194,9 +194,12 @@ async function cancelBid(r) {
   renderGrid(); renderStats();
   pushOverride("state", r.uid, "drop", `${r.name} 취소`);
   // 거래완료였다면 남은 입찰이 있어도 판매완료를 풀어야 한다 (다음 순위가 살아나야 함)
-  if (!others.length || wasDone) pushStatus(r.rs.name, "sale",
-    { sku: r.rs.sku, remain: (ITEMS.find(x => x.sku === r.rs.sku) || {}).qty || null,
-      skip: r.rs.settle || r.rs.matched === false });
+  // 남은수량은 "현재 + 취소된 거래 몫"만 복원 — 전체 수량으로 되돌리면 이미 팔린 몫이 부활한다
+  if (!others.length || wasDone) {
+    const { remain } = restoredRemain(r.rs, wasDone ? (r.qty || 1) : 0);
+    pushStatus(r.rs.name, "sale",
+      { sku: r.rs.sku, remain, skip: r.rs.settle || r.rs.matched === false });
+  }
   syncFlag(others.length ? `취소됨 · ${others[0].name} 님이 1순위` : `취소됨 · ${r.rs.name} 다시 판매중`, "ok");
   return true;
 }
@@ -236,8 +239,10 @@ document.querySelectorAll("#quickfil button").forEach(b => {
    ============================================================ */
 function parseWhen(t) {
   const s = String(t || "");
-  const m = s.match(/(\d{1,2})\s*[\/월.]\s*(\d{1,2})\s*일?/);
+  /* '1.5만' 같은 소수·금액이 날짜로 오인되지 않게: 일(day) 뒤에 만/천/원이 붙으면 제외, 월·일 범위 검사 */
+  const m = s.match(/(\d{1,2})\s*[\/월.]\s*(\d{1,2})(?!\s*[만천원%])\s*일?/);
   if (!m) return null;
+  if (+m[1] < 1 || +m[1] > 12 || +m[2] < 1 || +m[2] > 31) return null;
   const now = new Date();
   const d = new Date(now.getFullYear(), +m[1] - 1, +m[2], 23, 59, 0, 0);  // 시각 없으면 그날 끝으로
   const h = s.match(/(오전|오후|저녁|밤)?\s*(\d{1,2})\s*시(?:\s*(\d{1,2})\s*분)?/) ||

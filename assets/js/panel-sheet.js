@@ -56,17 +56,18 @@ let SHEET_SOLD_SKU = new Set();                // 시트에 저장된 판매완�
 /* 이 품목에 '거래완료'로 명시된 입찰이 따로 있으면, 품목명 단위 폴백을 쓰지 않는다.
    폴백은 "누가 샀는지 모를 때"의 최후 수단인데, 낙찰자가 정해진 뒤에도 적용되면
    같은 품목의 탈락자까지 거래완료로 보이고 매출 합계가 부풀려진다. */
-const hasNamedWinner = name => Object.keys(OV).some(k => {
+/* sku(key) 단위 비교 — 이름으로 비교하면 동명이품(도기 그릇 10개 등)이 서로 오염된다 */
+const hasNamedWinner = rs => Object.keys(OV).some(k => {
   if (OV[k].state !== "done") return false;
   const b = ROWMAP && ROWMAP.get(k);
-  return b && b.rs.name === name;
+  return b && b.rs.key === rs.key;
 });
 
 const stateOf = r => {
   const s = OV[r.uid] && OV[r.uid].state;
   if (s && STATE_LABEL[s]) return s;           // 지금은 안 쓰는 옛 값(예약확정)은 입찰로 취급
-  if (SHEET_SOLD_SKU.has(r.rs.sku) || SHEET_SOLD.has(r.rs.name)) return hasNamedWinner(r.rs.name) ? "bid" : "done";
-  return r.rs.status === "sold" ? (hasNamedWinner(r.rs.name) ? "bid" : "done") : "bid";
+  if (SHEET_SOLD_SKU.has(r.rs.sku) || SHEET_SOLD.has(r.rs.name)) return hasNamedWinner(r.rs) ? "bid" : "done";
+  return r.rs.status === "sold" ? (hasNamedWinner(r.rs) ? "bid" : "done") : "bid";
 };
 
 /* 품목이 다 팔렸는가 — 남은 수량이 0이거나 판매완료로 기록된 경우.
@@ -79,6 +80,19 @@ function soldOutItem(rs) {
 }
 /* 낙찰 못 받고 남은 입찰 (품목은 매진, 이 건은 미처리) */
 const isLost = r => !["done", "drop"].includes(stateOf(r)) && soldOutItem(r.rs);
+
+/* 취소·미처리 복귀로 판매중을 복원할 때 시트에 보낼 남은수량.
+   ⚠️ 절대 전체 수량으로 되돌리지 않는다 — 이미 팔린 몫이 부활하는 사고의 뿌리.
+   addBack = 이번에 무효가 된 거래의 수량(완료였던 건만). 로컬 remain 도 함께 갱신. */
+function restoredRemain(rs, addBack) {
+  const it = ITEMS.find(x => x.sku === rs.sku) || {};
+  const total = it.qty || 1;
+  if (total <= 1) return { remain: null, it };
+  const cur = it.remain != null ? it.remain : (soldOutItem(rs) ? 0 : total);
+  const remain = Math.max(0, Math.min(total, cur + (addBack || 0)));
+  it.remain = remain;
+  return { remain, it };
+}
 
 /* 다른 기기에서 바꾼 판매상태 가져오기 (공개 조회라 비밀번호 불필요) */
 async function pullStatus() {
@@ -202,14 +216,16 @@ function openNotePop(td, text) {
 
 async function pushOverride(kind, key, value, label) {
   const pw = adminPw();
-  if (!pw) { syncFlag("시트 미저장 (비밀번호 없음) — 이 브라우저에만 남아요", "err"); return; }
+  if (!pw) { syncFlag("시트 미저장 (비밀번호 없음) — 이 브라우저에만 남아요", "err"); return false; }
   syncFlag("저장 중…");
   try {
     await callSheet({ action: "setOverride", pw, kind, key, value });
     syncFlag(`저장됨 · ${label}`, "ok");
+    return true;
   } catch (e) {
     if (/비밀번호/.test(e.message)) sessionStorage.removeItem("adminPw");
     syncFlag("시트 저장 실패: " + e.message + " (로컬에는 저장됨)", "err");
+    return false;                    // 호출한 쪽이 성공 메시지로 덮지 않게
   }
 }
 

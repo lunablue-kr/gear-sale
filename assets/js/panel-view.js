@@ -265,8 +265,10 @@ function renderGrid() {
         const v = inp.value.trim();
         setNote(k, v);
         /* 메모를 적었다 = 연락해서 내용이 오갔다. 그 사람의 미처리·연락함 건을 진행중으로 올린다 */
+        /* 매진 품목·수동으로 미처리 고정한 건은 승격하지 않는다 (promoteNoted 와 같은 기준) */
         if (v) [...ROWMAP.values()]
-          .filter(b => noteKey(b) === k && ["bid", "contact"].includes(stateOf(b)))
+          .filter(b => noteKey(b) === k && ["bid", "contact"].includes(stateOf(b))
+                    && !soldOutItem(b.rs) && (OV[b.uid] || {}).state !== "bid")
           .forEach(b => { setOV(b.uid, { state: "prog" }); pushOverride("state", b.uid, "prog", `${b.name} 진행중`); });
         renderGrid(); renderStats();
         pushOverride("note", k, v, `${row.name} 메모`);
@@ -290,6 +292,7 @@ function renderGrid() {
         return;
       }
       if (!row) return;
+      const prev = stateOf(row);                 // setOV 전에 원래 상태를 기억
       const it = ITEMS.find(x => x.sku === row.rs.sku) || {};
       const total = it.qty || 1;
       let remain = null;
@@ -312,9 +315,17 @@ function renderGrid() {
          메모 자동 승격(promoteNoted)으로 다시 진행중이 되지 않게 하기 위해서다. */
       pushOverride("state", uid, next,
         `${row.name} ${next === "bid" ? "미처리로 되돌림" : (STATE_LABEL[next] || next)}`);
-      pushStatus(row.rs.name,
-        sel.value === "done" && (remain == null || remain === 0) ? "sold" : "sale",
-        { sku: row.rs.sku, remain, skip: row.rs.settle || row.rs.matched === false });
+      const skip = row.rs.settle || row.rs.matched === false;
+      if (sel.value === "done") {
+        pushStatus(row.rs.name, (remain == null || remain === 0) ? "sold" : "sale",
+          { sku: row.rs.sku, remain, skip });
+      } else if (prev === "done") {
+        /* 완료였던 거래를 미처리로 되돌리면 그 몫만큼 판매중 복원.
+           완료가 아니었던 건(후순위 등)의 복귀는 판매 상태를 건드리지 않는다 —
+           예전엔 무조건 sale+빈 remain 을 보내 판매완료 해제·부분판매 기록 삭제가 일어났다 */
+        const { remain: rr } = restoredRemain(row.rs, row.qty || 1);
+        pushStatus(row.rs.name, "sale", { sku: row.rs.sku, remain: rr, skip });
+      }
     };
     sel.onclick = e => e.stopPropagation();
   });
@@ -374,8 +385,8 @@ function renderGrid() {
               읽어오므로, 저장 전에 그리면 방금 넣은 값이 옛 값으로 덮여 리셋된다. */
         const saving = setQty(row.uid, q);      // 저장소 반영은 동기, 서버 전송은 비동기
         renderGrid(); renderStats();
-        await saving;
-        syncFlag(`수량 저장됨 · ${row.rs.name} ${q}개`, "ok");
+        if (await saving) syncFlag(`수량 저장됨 · ${row.rs.name} ${q}개`, "ok");
+        /* 실패하면 pushOverride 가 띄운 오류 표시를 성공 메시지로 덮지 않는다 */
       };
       inp.onblur = commit;
       inp.onkeydown = e => {
